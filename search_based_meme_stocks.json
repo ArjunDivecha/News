@@ -1,0 +1,248 @@
+{
+  "timestamp": "2025-10-17T17:09:34.934886",
+  "search_queries": [
+    "wallstreetbets trending stocks today",
+    "WSB YOLO plays this week",
+    "meme stocks trending today",
+    "penny stocks reddit today",
+    "trending stocks stocktwits",
+    "short squeeze stocks today"
+  ],
+  "total_found": 9,
+  "meme_stocks": [
+    {
+      "symbol": "AMC",
+      "name": "AMC Entertainment Holdings, Inc.",
+      "mentions": 11,
+      "sources": [
+        "feargreedmeter.com",
+        "altindex.com",
+        "apewisdom.io",
+        "www.ig.com",
+        "money.usnews.com",
+        "www.benzinga.com",
+        "www.quiverquant.com",
+        "en.wikipedia.org"
+      ],
+      "volume_spike": 2.55,
+      "price_change_1d": -0.36,
+      "price_change_5d": -4.53,
+      "current_volume": 35146339,
+      "avg_volume": 13781750,
+      "market_cap_b": 1.41,
+      "reasons": [
+        "2.6x volume"
+      ],
+      "sample_context": [
+        "ric Industries](https://apewisdom.io/stocks/HE/) | HE | 4 | -33% | -4 | | 97 | [AMC Entertainment](https://apewisdom.io/stocks/AMC/) | AMC | 4 | -75% | 6 | | 98",
+        "| 1 | inf% | | [ANET](https://www.quiverquant.com/stock/ANET/) | 1 | inf% | | [AMC](https://www.quiverquant.com/stock/AMC/) | 1 | inf% | | [AMA!](https://www.q"
+      ],
+      "meme_score": 28.154302892050474
+    },
+    {
+      "symbol": "HIMS",
+      "name": "Hims & Hers Health, Inc.",
+      "mentions": 10,
+      "sources": [
+        "stock-screener.org",
+        "feargreedmeter.com",
+        "apewisdom.io",
+        "www.quiverquant.com",
+        "stocktwits.com"
+      ],
+      "volume_spike": 1.81,
+      "price_change_1d": -15.84,
+      "price_change_5d": -9.04,
+      "current_volume": 53974671,
+      "avg_volume": 29780298,
+      "market_cap_b": 11.25,
+      "reasons": [
+        "1.8x volume",
+        "-15.8% (1d)"
+      ],
+      "sample_context": [
+        "ris Energy](https://apewisdom.io/stocks/IREN/) | IREN | 12 | N/A | 16 | | 51 | [Hims & Hers Health](https://apewisdom.io/stocks/HIMS/) | HIMS | 12 | 300% | 25 |",
+        "79 | inf% | | [NVDA](https://www.quiverquant.com/stock/NVDA/) | 194 | inf% | | [HIMS](https://www.quiverquant.com/stock/HIMS/) | 139 | inf% | | [CELH](https://w"
+      ],
+      "meme_score": 20.995372396753673
+    },
+    {
+      "symbol": "BTC",
+      "name": "Grayscale Bitcoin Mini Trust ETF",
+      "mentions": 9,
+      "sources": [
+        "stock-screener.org",
+        "feargreedmeter.com",
+        "apewisdom.io",
+        "stockstotrade.com",
+        "www.quiverquant.com",
+        "stocktwits.com"
+      ],
+      "volume_spike": 2.23,
+      "price_change_1d": -1.67,
+      "price_change_5d": -8.14,
+      "current_volume": 3036770,
+      "avg_volume": 1359564,
+      "market_cap_b": 0,
+      "reasons": [
+        "2.2x volume"
+      ],
+      "sample_context": [
+        "200% | 28 | | Close Ad X | | 46 | [BlackRock Institutional Trust Company N.A. - BTC iShares Silver Trust](https://apewisdom.io/stocks/SLV/) | SLV | 13 | 117% |",
+        "RR/) | 4 | inf% | | [KO](https://www.quiverquant.com/stock/KO/) | 4 | inf% | | [BTC](https://www.quiverquant.com/stock/BTC/) | 4 | inf% | | [GANG](https://www.q"
+      ],
+      "meme_score": 20.43816733877259
+    },
+    {
+      "symbol": "SMR",
+      "name": "NuScale Power Corporation",
+      "mentions": 7,
+      "sources": [
+        "apewisdom.io",
+        "www.quiverquant.com",
+        "quiverquant.com"
+      ],
+      "volume_spike": 2.65,
+      "price_change_1d": -7.12,
+      "price_change_5d": -1.71,
+      "current_volume": 43882910,
+      "avg_volume": 16561043,
+      "market_cap_b": 5.92,
+      "reasons": [
+        "2.6x volume"
+      ],
+      "sample_context": [
+        "IO/) | NIO | 15 | 67% | 45 | | 40 | [NuScale Power](https://apewisdom.io/stocks/SMR/) | SMR | 15 | 1,400% | 28 | | 41 | [Chemours](https://apewisdom.io/stocks/C",
+        "| 1 | inf% | | [SNAP](https://www.quiverquant.com/stock/SNAP/) | 1 | inf% | | [SMR](https://www.quiverquant.com/stock/SMR/) | 1 | inf% | | [SMMT](https://www.q"
+      ],
+      "meme_score": 19.8682475519136
+    },
+    {
+      "symbol": "ACHR",
+      "name": "Archer Aviation Inc.",
+      "mentions": 8,
+      "sources": [
+        "stock-screener.org",
+        "apewisdom.io",
+        "www.quiverquant.com",
+        "feargreedmeter.com"
+      ],
+      "volume_spike": 1.93,
+      "price_change_1d": -5.31,
+      "price_change_5d": -11.98,
+      "current_volume": 77475278,
+      "avg_volume": 40065877,
+      "market_cap_b": 7.25,
+      "reasons": [
+        "1.9x volume"
+      ],
+      "sample_context": [
+        "/) | 26 | inf% | | [AI](https://www.quiverquant.com/stock/AI/) | 26 | inf% | | [ACHR](https://www.quiverquant.com/stock/ACHR/) | 25 | inf% | | [AMZN](https://ww",
+        "marketcap.com/logos/161315.png)\\ \\ Archer Aviation](https://apewisdom.io/stocks/ACHR/) | ACHR | 43 | 39% | | 123 | | ![favorite icon](https://apewisdom.io/fav.s"
+      ],
+      "meme_score": 16.290626129317417
+    },
+    {
+      "symbol": "LUNR",
+      "name": "Intuitive Machines, Inc.",
+      "mentions": 7,
+      "sources": [
+        "apewisdom.io",
+        "www.quiverquant.com",
+        "stocktwits.com"
+      ],
+      "volume_spike": 1.47,
+      "price_change_1d": 4.82,
+      "price_change_5d": 1.22,
+      "current_volume": 11475187,
+      "avg_volume": 7780605,
+      "market_cap_b": 1.46,
+      "reasons": [
+        "1.5x volume"
+      ],
+      "sample_context": [
+        "SOUN | 5 | 400% | 52 | | 91 | [Intuitive Machines](https://apewisdom.io/stocks/LUNR/) | LUNR | 5 | 400% | 29 | | 92 | [Bullish](https://apewisdom.io/stocks/BLS",
+        "| 76 | inf% | | [UNH](https://www.quiverquant.com/stock/UNH/) | 68 | inf% | | [LUNR](https://www.quiverquant.com/stock/LUNR/) | 51 | inf% | | [RIVN](https://ww"
+      ],
+      "meme_score": 10.82134788339382
+    },
+    {
+      "symbol": "BULL",
+      "name": "Webull Corporation",
+      "mentions": 7,
+      "sources": [
+        "apewisdom.io",
+        "www.quiverquant.com",
+        "feargreedmeter.com",
+        "www.marketwatch.com"
+      ],
+      "volume_spike": 1.45,
+      "price_change_1d": -6.3,
+      "price_change_5d": -6.22,
+      "current_volume": 28370316,
+      "avg_volume": 19621231,
+      "market_cap_b": 5.44,
+      "reasons": [
+        "1.4x volume"
+      ],
+      "sample_context": [
+        "Snap](https://apewisdom.io/stocks/SNAP/) | SNAP | 33 | 267% | 1,323 | | 19 | [Webull](https://apewisdom.io/stocks/BULL/) | BULL | 33 | 83% | 109 | | 20 | [Dakot",
+        "/) | 1 | inf% | | [BYE](https://www.quiverquant.com/stock/BYE/) | 1 | inf% | | [BULL](https://www.quiverquant.com/stock/BULL/) | 1 | inf% | | [BTFD](https://www"
+      ],
+      "meme_score": 10.758717858879555
+    },
+    {
+      "symbol": "PLUG",
+      "name": "Plug Power Inc.",
+      "mentions": 6,
+      "sources": [
+        "stock-screener.org",
+        "feargreedmeter.com",
+        "altindex.com",
+        "apewisdom.io",
+        "www.marketwatch.com",
+        "investorshub.advfn.com"
+      ],
+      "volume_spike": 1.63,
+      "price_change_1d": -2.3,
+      "price_change_5d": -12.82,
+      "current_volume": 158659220,
+      "avg_volume": 97631666,
+      "market_cap_b": 3.96,
+      "reasons": [
+        "1.6x volume",
+        "-12.8% (5d)"
+      ],
+      "sample_context": [
+        "| 125% | | 38 | | ![favorite icon](https://apewisdom.io/fav.svg?v=3) | 82 | [![Plug Power logo](https://8marketcap.com/logos/1452.png)\\ \\ Plug Power](https://a",
+        "\\ The RealReal\\ \\ 22\\ \\ 10\\ \\ +1](https://feargreedmeter.com/stock/REAL) [#78. PLUG\\ \\ Plug Power\\ \\ 32\\ \\ 10\\ \\ -6](https://feargreedmeter.com/stock/PLUG) [#7"
+      ],
+      "meme_score": 9.974625678362342
+    },
+    {
+      "symbol": "SOUN",
+      "name": "SoundHound AI, Inc.",
+      "mentions": 8,
+      "sources": [
+        "apewisdom.io",
+        "www.quiverquant.com",
+        "www.timothysykes.com",
+        "www.fool.com"
+      ],
+      "volume_spike": 0.76,
+      "price_change_1d": -8.38,
+      "price_change_5d": -0.63,
+      "current_volume": 48152160,
+      "avg_volume": 63640305,
+      "market_cap_b": 7.75,
+      "reasons": [
+        "-8.4% (1d)"
+      ],
+      "sample_context": [
+        "[ProPetro](https://apewisdom.io/stocks/PUMP/) | PUMP | 5 | 400% | 26 | | 90 | [SoundHound AI](https://apewisdom.io/stocks/SOUN/) | SOUN | 5 | 400% | 52 | | 91",
+        "| inf% | | [\u201cI](https://www.quiverquant.com/stock/%E2%80%9CI/) | 4 | inf% | | [SOUN](https://www.quiverquant.com/stock/SOUN/) | 4 | inf% | | [MARA](https://www"
+      ],
+      "meme_score": 6.560375172739005
+    }
+  ]
+}

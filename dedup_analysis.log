@@ -1,0 +1,37 @@
+================================================================================
+P0 DEDUPLICATION ANALYSIS
+================================================================================
+
+[1/6] Loading Final Master.xlsx...
+Loaded 4933 assets with 51 columns
+
+[2/6] Cleaning quantitative data...
+  Missing data summary:
+    Monthly 5 Year beta to SPX: 50 missing (1.0%)
+    Weekly 3 Year Beta to SPX: 49 missing (1.0%)
+    Daily 1 Year Beta to SPX: 49 missing (1.0%)
+    Russell 2000 Index: 50 missing (1.0%)
+    Nasdaq-100 Index: 50 missing (1.0%)
+
+[3/6] Building 30-dimensional beta vectors...
+  Beta matrix shape: (4933, 36)
+  Standardizing betas...
+
+[4/6] Calculating beta vector similarities...
+  Computing 4933 x 4933 distance matrix...
+  Beta similarity range: 0.000 to 1.000
+
+[5/6] Computing proxy scoring signals...
+  Fusing signals: beta(0.40) + tier2(0.20) + tags(0.15) + sharpe(0.15) + desc(0.10)
+
+[6/6] Clustering into proxy groups...
+  Running hierarchical clustering on 4933 assets...
+Traceback (most recent call last):
+  File "/Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/p0_deduplication_analysis.py", line 161, in <module>
+    proxy_dist_condensed = squareform(proxy_distance)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.12/site-packages/scipy/spatial/distance.py", line 2468, in squareform
+    is_valid_dm(X, throw=True, name='X')
+  File "/opt/anaconda3/lib/python3.12/site-packages/scipy/spatial/distance.py", line 2573, in is_valid_dm
+    raise ValueError(f"Distance matrix '{name}' must be symmetric.")
+ValueError: Distance matrix 'X' must be symmetric.
