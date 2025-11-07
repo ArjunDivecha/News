@@ -1,4 +1,51 @@
-"""Merge all 4 classified datasets into one master file"""
+"""
+=============================================================================
+MERGE CLASSIFIED FILES - Unified Dataset Integration from Multiple Sources
+=============================================================================
+
+INPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/ETF Master List Classified.xlsx
+  Description: Classified ETF database with 1,619 entries and taxonomy assignments
+  Required Format: Excel file with original ETF data plus category_tier1, category_tier2, category_tags columns
+  Key Columns: Ticker, Name, CIE_DES, category_tier1, category_tier2, category_tags
+
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Filtered Bloomberg Indices Classified.xlsx
+  Description: Classified Bloomberg indices with 438 entries and taxonomy assignments
+  Required Format: Excel file with index data plus classification columns
+  Key Columns: Ticker, Index Name, LONG_COMP_NAME, category_tier1, category_tier2, category_tags
+
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/GSCB_FLAGSHIP_coverage_Classified.xlsx
+  Description: Classified Goldman Sachs baskets with 2,667 entries and taxonomy assignments
+  Required Format: Excel file with basket data plus classification columns
+  Key Columns: Index Name, description, category_tier1, category_tier2, category_tags, Bloomberg
+
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Thematic ETFs Classified.xlsx
+  Description: Classified thematic ETFs with 231 entries and specialized taxonomy assignments
+  Required Format: Excel file with thematic ETF data plus classification columns
+  Key Columns: Ticker, Name, CIE_DES, category_tier1, category_tier2, category_tags
+
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Master Asset List Classified.xlsx
+  Description: Unified master dataset combining all 4 classified sources into single comprehensive file
+  Format: Excel file with standardized columns and source tracking
+  Contents: ~4,933 assets with unified structure: Bloomberg_Ticker, Name, Long_Description, 
+            category_tier1, category_tier2, category_tags, source
+
+VERSION HISTORY:
+v1.0.0 (2025-10-16): Initial release with basic file merging
+v1.1.0 (2025-10-17): Added deduplication and source tracking
+v1.2.0 (2025-11-06): Enhanced documentation and column standardization
+
+DATA PROCESSING:
+- Column standardization across all sources
+- Exact duplicate detection and removal
+- Source attribution for each asset
+- Missing data validation and reporting
+- Unified naming conventions
+
+PURPOSE:
+Merge all 4 classified datasets into one master file for downstream analysis
+"""
 import pandas as pd
 import os
 

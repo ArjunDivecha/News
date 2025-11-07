@@ -1,17 +1,28 @@
 """
 =============================================================================
-SCRIPT NAME: gs_basket_data.py
+GS BASKET DATA RETRIEVAL - Goldman Sachs Marquee API Integration
 =============================================================================
 
 INPUT FILES:
 - None (data is fetched directly from Goldman Sachs Marquee API)
-- Requires: Active GsSession with valid authentication
+- Requires: Active GsSession with valid authentication credentials
+- API Credentials: client_id and client_secret (embedded in source)
 
 OUTPUT FILES:
-- GSCB_FLAGSHIP_coverage_with_desc_ALL.xlsx: Enriched basket data with full descriptions from Marquee API
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/GSCB_FLAGSHIP_coverage_with_desc_ALL.xlsx
+  Description: Enriched Goldman Sachs basket data with full descriptions and metadata from Marquee API
+  Format: Excel file with comprehensive basket information and standardized column headings
+  Contents: Ticker symbols, asset IDs, names, descriptions, and placeholder columns for financial metrics
 
-VERSION: 1.0
-LAST UPDATED: 2025-10-10
+VERSION HISTORY:
+v1.0.0 (2025-10-10): Initial release with basic data retrieval
+v1.1.0 (2025-10-17): Enhanced error handling and batch processing
+v1.2.0 (2025-11-06): Comprehensive documentation and metadata enrichment
+
+DEPENDENCIES:
+- gs_quant (Goldman Sachs API library)
+- pandas
+
 AUTHOR: Generated from Jupyter Notebook
 
 DESCRIPTION:
@@ -20,19 +31,39 @@ and enriches it with detailed descriptions and metadata. It combines both
 export and enrichment steps into a single program that directly outputs the
 final enriched file.
 
-DEPENDENCIES:
-- gs_quant (Goldman Sachs API library)
-- pandas
+KEY FEATURES:
+1. API Integration: Connects to Goldman Sachs Marquee API for data retrieval
+2. Batch Processing: Processes data in batches of 200 to comply with API rate limits
+3. Asset Resolution: Automatically resolves ticker symbols to asset IDs
+4. Metadata Enrichment: Fetches detailed descriptions and metadata for each basket
+5. Error Handling: Comprehensive error handling and progress reporting
+6. Standardized Output: Creates consistent column structure for downstream processing
+
+DATA PROCESSING WORKFLOW:
+1. Connect to GSCB_FLAGSHIP dataset via Marquee API
+2. Retrieve coverage data with basic identifiers
+3. Build unique ticker list maintaining original order
+4. Create ticker-to-asset-ID mapping from coverage data
+5. Resolve missing asset IDs via API calls
+6. Fetch full asset metadata including descriptions
+7. Convert asset objects to structured DataFrame
+8. Merge metadata with resolved tickers
+9. Export enriched data to Excel file
 
 USAGE:
 python gs_basket_data.py
+
+REQUIREMENTS:
+- Valid Goldman Sachs API credentials (embedded in source)
+- Internet connection for API access
+- gs_quant library installation
 
 NOTES:
 - The GSCB_FLAGSHIP dataset contains Goldman's flagship basket products
 - Data is fetched in batches of 200 to comply with API rate limits
 - Output includes ticker symbols, asset IDs, names, and descriptions
 - Requires valid Goldman Sachs API credentials
-=============================================================================
+- Runtime varies based on API response times and dataset size
 """
 
 try:

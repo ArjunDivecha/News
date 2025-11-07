@@ -1,11 +1,35 @@
 """
-Bloomberg Indices Clustering and Filtering Program
-
-This program intelligently filters a large list of Bloomberg Indices to a smaller, more representative set 
-using clustering algorithms and correlation analysis.
+=============================================================================
+BLOOMBERG INDICES CLUSTERING AND FILTERING - Intelligent Asset Selection
+=============================================================================
 
 INPUT FILES:
-- Bloomberg Indices.xlsx: Excel file containing the complete list of Bloomberg indices with return data
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/Bloomberg Indices.xlsx
+  Description: Complete list of Bloomberg indices with return data and metadata
+  Required Format: Excel file with index identifiers and comprehensive performance metrics
+  Key Columns: Ticker, Index Name, REGION_OR_COUNTRY, SECURITY_TYP, 
+              CHG_PCT_1D, CURRENT_TRR_1WK, CHG_PCT_YTD, CHG_PCT_1M, CHG_PCT_3YR, CHG_PCT_5YR, CHG_PCT_1YR, CHG_PCT_3QTR
+
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/Filtered Bloomberg Indices.xlsx
+  Description: Final filtered list of indices (target: 500) with cluster labels and representative selections
+  Format: Excel file with original data plus cluster_name column for interpretability
+  Contents: Optimized subset of indices maintaining market diversity and reducing redundancy
+
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/Pre-Filtered Bloomberg Indices.xlsx
+  Description: Intermediate file when fixed income indices exceed the limit (100 max)
+  Format: Excel file with pre-filtered fixed income indices
+  Contents: Reduced fixed income set before main clustering algorithm
+
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/filtered_indices_correlation.png
+  Description: Correlation heatmap visualization of the filtered indices returns
+  Format: PNG image showing correlation matrix
+  Contents: Visual analysis of return patterns across selected indices
+
+VERSION HISTORY:
+v1.0.0 (2025-10-16): Initial release with basic clustering
+v1.1.0 (2025-10-17): Added fixed income capping and correlation analysis
+v1.2.0 (2025-11-06): Enhanced documentation and visualization features
 
 DEPENDENCIES:
 - pandas: For data manipulation and Excel file reading
@@ -15,18 +39,10 @@ DEPENDENCIES:
 - seaborn: For enhanced heatmap visualization
 - os: For file system operations
 
-OUTPUT FILES:
-- Filtered Bloomberg Indices.xlsx: Final filtered list of indices (target: 500) with cluster labels
-- Pre-Filtered Bloomberg Indices.xlsx: Intermediate file generated when fixed income indices exceed the limit
-- filtered_indices_correlation.png: Correlation heatmap visualization of the filtered indices returns
-
 OVERVIEW:
-The script reduces a comprehensive list of Bloomberg Indices (potentially thousands) to a targeted number 
-(default: 500) while maintaining diversity across regions, security types, and market behaviors. The 
+The script reduces a comprehensive list of Bloomberg Indices (potentially thousands) to a targeted number
+(default: 500) while maintaining diversity across regions, security types, and market behaviors. The
 algorithm prioritizes maintaining different market patterns and reducing redundancy in the fixed income category.
-
-USAGE:
-Run from command line: python Bloomberg_Indices_Cluster.py
 
 KEY FEATURES:
 1. Intelligent Filtering: Reduces large index lists to a manageable size while preserving market diversity
@@ -41,6 +57,9 @@ KEY FEATURES:
 PARAMETERS:
 - target_count: Desired number of indices in final list (default: 500)
 - max_fixed_income: Maximum number of fixed income indices (default: 100)
+
+USAGE:
+Run from command line: python Bloomberg_Indices_Cluster.py
 """
 
 import pandas as pd

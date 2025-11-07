@@ -1,20 +1,37 @@
 """
 =============================================================================
-ETF CLASSIFIER WITH HAIKU 4.5
+ETF CLASSIFIER WITH HAIKU 4.5 - Large-Scale ETF Taxonomy Classification
 =============================================================================
 
-PURPOSE:
-Classify 1619 ETFs using Haiku 4.5 LLM with your market taxonomy.
-Assigns Tier-1, Tier-2, and Tier-3 tags to each ETF for RAG retrieval.
+INPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/ETF Master List.xlsx
+  Description: Complete ETF database with 1,619 ETFs and comprehensive fund metadata
+  Required Format: Excel file with complete ETF information including descriptions and classifications
+  Key Columns: Ticker, Name, CIE_DES, FUND_ASSET_CLASS_FOCUS, FUND_GEO_FOCUS, FUND_OBJECTIVE_LONG, FUND_STRATEGY
 
-INPUT:
-- ETF Master List.xlsx (1619 rows)
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/ETF Master List Classified.xlsx
+  Description: ETF database with added taxonomy classifications (Tier-1, Tier-2, Tier-3 tags)
+  Format: Excel file preserving all original columns plus new classification columns
+  Contents: Original ETF data + category_tier1, category_tier2, category_tags columns
 
-OUTPUT:
-- ETF Master List Classified.xlsx with added columns:
-  - category_tier1
-  - category_tier2
-  - category_tags (comma-separated Tier-3 tags)
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/ETF Master List Classified PROGRESS.xlsx
+  Description: Intermediate checkpoint file saved every 50 ETFs during processing
+  Format: Excel file with partial classifications for recovery/resume capability
+  Contents: Same structure as final output but with in-progress classifications
+
+VERSION HISTORY:
+v1.0.0 (2025-10-16): Initial release with basic ETF classification
+v1.1.0 (2025-10-17): Added batch processing and progress saving
+v1.2.0 (2025-11-06): Enhanced documentation and error handling
+
+DEPENDENCIES:
+- pandas
+- anthropic (for Haiku API)
+- ANTHROPIC_API_KEY environment variable
+
+USAGE:
+python etf_classifier.py
 
 TAXONOMY:
 Tier-1 (7 categories):
@@ -39,15 +56,7 @@ Tier-3 Tags (all applicable):
   - Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative
   - Duration (bonds): Short (<2Y) | Medium (2-10Y) | Long (>10Y)
 
-DEPENDENCIES:
-- pandas
-- anthropic (for Haiku API)
-
-USAGE:
-python etf_classifier.py
-
 NOTES:
-- Requires ANTHROPIC_API_KEY environment variable
 - Processes ETFs in batches with rate limiting
 - Saves intermediate results every 50 ETFs
 - Uses JSON parsing for structured output

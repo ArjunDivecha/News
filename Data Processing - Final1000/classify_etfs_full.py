@@ -1,4 +1,51 @@
-"""Classify all 1619 ETFs - PRESERVE ALL ORIGINAL COLUMNS"""
+"""
+=============================================================================
+CLASSIFY ETFs FULL - Large-Scale ETF Taxonomy Classification
+=============================================================================
+
+INPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/ETF Master List.xlsx
+  Description: Complete ETF database with 1,619 entries and comprehensive fund metadata
+  Required Format: Excel file with ticker, name, description, and fund classification fields
+  Key Columns: Ticker, Name, CIE_DES, FUND_ASSET_CLASS_FOCUS, FUND_GEO_FOCUS, FUND_OBJECTIVE_LONG, FUND_STRATEGY
+
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/ETF Master List Classified.xlsx
+  Description: ETF database with added taxonomy classifications (Tier-1, Tier-2, Tier-3 tags)
+  Format: Excel file preserving all original columns plus new classification columns
+  Contents: Original ETF data + category_tier1, category_tier2, category_tags columns
+
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/ETF Master List Classified PROGRESS.xlsx
+  Description: Intermediate checkpoint file saved every 50 ETFs during processing
+  Format: Excel file with partial classifications for recovery/resume capability
+  Contents: Same structure as final output but with in-progress classifications
+
+VERSION HISTORY:
+v1.0.0 (2025-10-16): Initial release with basic ETF classification
+v1.1.0 (2025-10-17): Added batch processing and progress saving
+v1.2.0 (2025-11-06): Enhanced documentation and error handling
+
+TAXONOMY:
+TIER-1 CATEGORIES:
+1. Equities | 2. Fixed Income | 3. Commodities | 4. Currencies (FX) | 5. Multi-Asset / Thematic | 6. Volatility / Risk Premia | 7. Alternative / Synthetic
+
+TIER-2 EXAMPLES:
+Equities: Global Indices | Sector Indices | Country/Regional | Thematic/Factor | Real Estate / REITs
+Fixed Income: Sovereign Bonds | Corporate Credit | Credit Spreads | Yield Curves
+Commodities: Energy | Metals | Agriculture
+Currencies: Majors | EM FX
+Multi-Asset: Cross-Asset Indices | Inflation/Growth Themes
+Volatility: Vol Indices | Carry/Value Factors
+Alternative: Quant/Style Baskets | Custom/Proprietary
+
+TIER-3 TAGS:
+Asset Class: Equity | Credit | FX | Commodity | Multi-Asset
+Region: US | Europe | Asia | EM | Global | China | Japan | India | Canada | UAE | APAC | Australia
+Sector/Theme: Tech | Energy | Financials | Healthcare | Industrials | Consumer | Defensive | ESG | Dividend | Growth | Value | Momentum | Quality | Infrastructure | Real Estate | Utilities
+Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative | Options-Based | Dividend | Factor-Based | Low Volatility | Defensive | Domestic
+Special: Stimulus | Going Global | Long/Short
+Duration: Short (<2Y) | Medium (2-10Y) | Long (>10Y)
+"""
 import pandas as pd
 import json
 import os
@@ -64,7 +111,13 @@ print("="*80)
 print("CLASSIFYING 1619 ETFs - PRESERVING ALL ORIGINAL DATA")
 print("="*80)
 
-df = pd.read_excel("ETF Master List.xlsx")
+# Input file validation
+input_file = "ETF Master List.xlsx"
+if not os.path.exists(input_file):
+    print(f"Error: Input file {input_file} not found")
+    exit(1)
+
+df = pd.read_excel(input_file)
 print(f"\nOriginal columns: {len(df.columns)}")
 print(f"Original rows: {len(df)}\n")
 

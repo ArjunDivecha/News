@@ -1,17 +1,29 @@
 """
 =============================================================================
-SCRIPT NAME: gs_basket_data_with_headings.py
+GS BASKET DATA WITH HEADINGS - Enhanced Bloomberg Integration
 =============================================================================
 
 INPUT FILES:
 - None (data is fetched directly from Goldman Sachs Marquee API)
-- Requires: Active GsSession with valid authentication
+- Requires: Active GsSession with valid authentication credentials
+- API Credentials: client_id and client_secret (embedded in source)
 
 OUTPUT FILES:
-- GSCB_FLAGSHIP_coverage_with_desc_ALL.xlsx: Enriched basket data with full descriptions from Marquee API
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/GSCB_FLAGSHIP_coverage_with_desc_ALL.xlsx
+  Description: Enhanced Goldman Sachs basket data with specific column headings and BDP formulas for Bloomberg integration
+  Format: Excel file with custom column structure and embedded Bloomberg formulas
+  Contents: Ticker symbols, asset IDs, names, descriptions, and BDP formulas for real-time data retrieval
 
-VERSION: 1.0
-LAST UPDATED: 2025-10-10
+VERSION HISTORY:
+v1.0.0 (2025-10-10): Initial release with basic data retrieval
+v1.1.0 (2025-10-17): Added custom column headings and BDP formula integration
+v1.2.0 (2025-11-06): Enhanced documentation and Bloomberg optimization
+
+DEPENDENCIES:
+- gs_quant (Goldman Sachs API library)
+- pandas
+- openpyxl (for Excel file manipulation and formula insertion)
+
 AUTHOR: Generated from Jupyter Notebook
 
 DESCRIPTION:
@@ -20,18 +32,57 @@ and creates an output file with the specific column headings requested:
 Index Name, Ticker, Bloomberg, CHG_PCT_1D, CURRENT_TRR_1WK, CHG_PCT_YTD, 
 CHG_PCT_1YR, CHG_PCT_3YR, LONG_COMP_NAME, REGION_OR_COUNTRY, SECURITY_TYPI
 
-DEPENDENCIES:
-- gs_quant (Goldman Sachs API library)
-- pandas
+The enhanced version includes BDP (Bloomberg Data Point) formulas for real-time
+data integration with Bloomberg terminals.
+
+KEY FEATURES:
+1. API Integration: Connects to Goldman Sachs Marquee API for data retrieval
+2. Custom Column Headings: Implements specific column structure for Bloomberg compatibility
+3. BDP Formula Integration: Adds Bloomberg formulas for real-time data retrieval
+4. Batch Processing: Processes data in batches of 200 to comply with API rate limits
+5. Asset Resolution: Automatically resolves ticker symbols to asset IDs
+6. Metadata Enrichment: Fetches detailed descriptions and metadata for each basket
+7. Bloomberg Integration: Populates Bloomberg column and adds BDP formulas to columns H-L
+
+DATA PROCESSING WORKFLOW:
+1. Connect to GSCB_FLAGSHIP dataset via Marquee API
+2. Retrieve coverage data with basic identifiers
+3. Build unique ticker list maintaining original order
+4. Create ticker-to-asset-ID mapping from coverage data
+5. Resolve missing asset IDs via API calls
+6. Fetch full asset metadata including descriptions
+7. Convert asset objects to structured DataFrame with requested headings
+8. Merge metadata with resolved tickers
+9. Populate Bloomberg column (ticker + " Index")
+10. Export enriched data to Excel file
+11. Load workbook and add BDP formulas to columns H-L
+12. Save workbook with embedded Bloomberg formulas
+
+BLOOMBERG INTEGRATION:
+- Column G: Bloomberg (ticker + " Index")
+- Columns H-L: BDP formulas for real-time data
+  - H: CHG_PCT_1D (=BDP($G2,H$1))
+  - I: CURRENT_TRR_1WK (=BDP($G2,I$1))
+  - J: CHG_PCT_YTD (=BDP($G2,J$1))
+  - K: CHG_PCT_1YR (=BDP($G2,K$1))
+  - L: CHG_PCT_3YR (=BDP($G2,L$1))
 
 USAGE:
 python gs_basket_data_with_headings.py
+
+REQUIREMENTS:
+- Valid Goldman Sachs API credentials (embedded in source)
+- Internet connection for API access
+- gs_quant library installation
+- openpyxl for Excel file manipulation
+- Bloomberg terminal access for BDP formula functionality
 
 NOTES:
 - The GSCB_FLAGSHIP dataset contains Goldman's flagship basket products
 - Data is fetched in batches of 200 to comply with API rate limits
 - Output includes the requested column headings with available data
-=============================================================================
+- BDP formulas enable real-time data retrieval in Bloomberg environment
+- Runtime varies based on API response times and dataset size
 """
 
 try:

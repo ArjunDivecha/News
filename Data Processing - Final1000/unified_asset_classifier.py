@@ -1,7 +1,34 @@
 """
 =============================================================================
-UNIFIED ASSET CLASSIFIER - ETFs, Bloomberg Indices, Goldman Baskets
+UNIFIED ASSET CLASSIFIER - Cross-Source Taxonomy Classification with Haiku 4.5
 =============================================================================
+
+INPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/ETF Master List.xlsx
+  Description: Complete ETF database with 1,619 ETFs and comprehensive metadata
+  Required Format: Excel file with ticker, name, description, and fund classification fields
+  Key Columns: Ticker, Name, CIE_DES, FUND_ASSET_CLASS_FOCUS, FUND_GEO_FOCUS, FUND_OBJECTIVE_LONG, FUND_STRATEGY
+
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Filtered Bloomberg Indices.xlsx
+  Description: Filtered Bloomberg indices with 438 entries and regional/security data
+  Required Format: Excel file with index identifiers and classification metadata
+  Key Columns: Ticker, Index Name, LONG_COMP_NAME, SECURITY_TYP, REGION_OR_COUNTRY
+
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/GSCB_FLAGSHIP_coverage_with_desc_ALL.xlsx
+  Description: Goldman Sachs flagship baskets with 2,667 entries and descriptive data
+  Required Format: Excel file with basket names, descriptions, and regional information
+  Key Columns: Index Name, description, REGION_OR_COUNTRY, Bloomberg
+
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Unified Classifier Test Results.xlsx
+  Description: Test classification results with mixed samples from all three sources
+  Format: Excel file with taxonomy assignments and source tracking
+  Contents: Tier-1, Tier-2, and Tier-3 classifications for 50 test assets across all sources
+
+VERSION HISTORY:
+v1.0.0 (2025-10-16): Initial release with unified taxonomy system
+v1.1.0 (2025-10-17): Enhanced error handling and JSON parsing
+v1.2.0 (2025-11-06): Comprehensive documentation and metadata integration
 
 PURPOSE:
 Classify assets from 3 sources using unified Haiku 4.5 LLM taxonomy.
@@ -38,8 +65,7 @@ Region: US | Europe | Asia | EM | Global | China | Japan | India | Canada | UAE 
 Sector/Theme: Tech | Energy | Financials | Healthcare | Industrials | Consumer | Defensive | ESG | Dividend | Growth | Value | Momentum | Quality | Infrastructure | Real Estate | Utilities
 Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative | Options-Based | Dividend | Factor-Based | Low Volatility | Defensive | Domestic
 Special Themes: Stimulus | Going Global | Long/Short
-
-=============================================================================
+Duration (bonds only): Short (<2Y) | Medium (2-10Y) | Long (>10Y)
 """
 
 import pandas as pd

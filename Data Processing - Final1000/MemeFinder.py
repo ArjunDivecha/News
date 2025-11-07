@@ -1,59 +1,45 @@
 """
-MEME STOCK DISCOVERY TOOL - SEARCH-BASED ANALYSIS
-===============================================
-
-Use Exa search API to identify trending meme stocks through multi-source web scraping
-and analysis of stock market discussions across WallStreetBets, StockTwits, and financial aggregators.
-
-VERSION: 1.0.0
-LAST UPDATED: October 17, 2025
-AUTHOR: AI Assistant (Amp)
-PLATFORM: macOS (M4 Max, 128GB RAM)
-
-DESCRIPTION:
------------
-This program searches the web for trending stock discussions using the Exa search API,
-extracts stock ticker symbols from the results, and analyzes volume/price data using Yahoo Finance
-to identify potential meme stocks showing unusual activity.
-
-The tool uses multiple search strategies targeting different financial discussion platforms
-and applies filtering criteria to identify stocks with significant mention frequency and market activity.
+=============================================================================
+MEME STOCK DISCOVERY TOOL - Search-Based Analysis with Volume & Price Metrics
+=============================================================================
 
 INPUT FILES:
------------
-None required - program pulls data dynamically from web APIs
+- None required (data is fetched dynamically from web APIs)
+- Requires: Valid Exa API key and internet connectivity
+- Requires: Yahoo Finance data access for market metrics
+
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/search_based_meme_stocks.json
+  Description: JSON file containing identified meme stocks with comprehensive metrics and analysis
+  Format: JSON structure with timestamp, search queries, and detailed stock information
+  Contents: 
+    - timestamp: ISO format timestamp of analysis
+    - search_queries: List of search terms used across platforms
+    - total_found: Number of meme stocks identified
+    - meme_stocks: Array of stock objects with:
+      * symbol: Stock ticker (e.g., "GME")
+      * name: Company name
+      * mentions: Number of times mentioned across sources
+      * volume_spike: Current volume relative to 60-day average
+      * price_change_1d: 1-day price change percentage
+      * price_change_5d: 5-day price change percentage
+      * current_volume: Current trading volume
+      * avg_volume: 60-day average volume
+      * market_cap_b: Market capitalization in billions
+      * reasons: List of criteria met for meme classification
+      * sample_context: Text snippets showing usage context
+      * meme_score: Composite score (mentions × volume_spike × price_volatility)
+
+VERSION HISTORY:
+v1.0.0 (2025-10-17): Initial release with multi-source search and volume/price analysis
+v1.1.0 (2025-11-06): Enhanced documentation and comprehensive error handling
 
 DEPENDENCIES:
 - exa_py: Exa search API client
 - yfinance: Yahoo Finance data access
 - Python standard libraries: json, re, datetime, collections
 
-OUTPUT FILES:
--------------
-search_based_meme_stocks.json (main output)
-    Location: /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/Reddit/search_based_meme_stocks.json
-    Format: JSON
-    Contents:
-    - timestamp: ISO format timestamp of analysis
-    - search_queries: List of search terms used
-    - total_found: Number of meme stocks identified
-    - meme_stocks: Array of stock objects with:
-        * symbol: Stock ticker (e.g., "GME")
-        * name: Company name
-        * mentions: Number of times mentioned across sources
-        * sources: List of domains where mentioned
-        * volume_spike: Current volume relative to 60-day average
-        * price_change_1d: 1-day price change percentage
-        * price_change_5d: 5-day price change percentage
-        * current_volume: Current trading volume
-        * avg_volume: 60-day average volume
-        * market_cap_b: Market capitalization in billions
-        * reasons: List of criteria met for meme classification
-        * sample_context: Text snippets showing usage context
-        * meme_score: Composite score (mentions × volume_spike × price_volatility)
-
 SEARCH STRATEGIES:
------------------
 1. WallStreetBets specific searches (apewisdom.io, quiverquant.com, swaggystocks.com)
 2. General meme stock trending searches (unfiltered domains)
 3. StockTwits trending analysis (stocktwits.com)
@@ -61,7 +47,6 @@ SEARCH STRATEGIES:
 5. Penny stock discussion tracking
 
 MEME STOCK CRITERIA:
--------------------
 Stocks are classified as "meme stocks" if they meet ANY of:
 - Volume spike > 1.3x recent average
 - 1-day price change > ±8%
@@ -69,34 +54,25 @@ Stocks are classified as "meme stocks" if they meet ANY of:
 PLUS minimum 2 mentions across search results
 
 FILTERING:
----------
 Excludes common words mistaken for tickers: SPY, QQQ, NVDA, AAPL, etc.
 Excludes generic terms: THE, AND, FOR, BUY, SELL, etc.
 Requires minimum 3-character symbols and 2+ mentions
 
 DATA QUALITY:
--------------
 - Validates market data availability (minimum 10 trading days)
 - Handles API failures gracefully with error logging
 - Filters out invalid or delisted symbols
 - Provides context snippets for verification
 
-VERSION HISTORY:
----------------
-v1.0.0 (2025-10-17): Initial release with multi-source search and volume/price analysis
-
 USAGE:
------
-python search_based_meme_finder.py
+python MemeFinder.py
 
 REQUIRES:
---------
 - Valid Exa API key (currently redacted in source)
 - Internet connection for API calls
 - Yahoo Finance data access
 
 NOTES:
------
 - Program makes ~30-40 API calls (Exa search + Yahoo Finance per ticker)
 - Runtime: ~2-5 minutes depending on API response times
 - Results are time-sensitive and should be used for informational purposes only

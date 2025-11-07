@@ -1,5 +1,26 @@
 """
-P0 DEDUPLICATION ANALYSIS
+=============================================================================
+P0 DEDUPLICATION ANALYSIS - Beta Vector Clustering & Proxy Identification
+=============================================================================
+
+INPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Final Master.xlsx
+  Description: Master dataset containing 4,933 assets with beta vectors, performance metrics, and classifications
+  Required Format: Excel file with 30+ beta columns, performance data, and category classifications
+  Key Columns: Daily 1 Year Beta to SPX, Russell 2000 Index, MSCI EAFE Index, 1 Year Sharpe, category_tier2, category_tags, Long_Description
+
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Dedup Report - Top 30 Groups.xlsx
+  Description: Comprehensive deduplication report with KEEP/REMOVE recommendations for top 30 proxy groups
+  Format: Excel file with action recommendations, performance metrics, and group analysis
+  Contents: Proxy group assignments, selection scores, recommended actions, and quality rankings
+
+VERSION HISTORY:
+v1.0.0 (2025-10-16): Initial release with 30-dimensional beta vector clustering
+v1.1.0 (2025-10-17): Added composite proxy scoring with multiple signals
+v1.2.0 (2025-11-06): Enhanced documentation and error handling
+
+PURPOSE:
 - Beta vector clustering (30-dimensional)
 - Composite proxy scoring
 - Hierarchical clustering to identify proxy groups

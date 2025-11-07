@@ -1,4 +1,50 @@
-"""Classify all 2667 Goldman Baskets - PRESERVE ALL ORIGINAL COLUMNS"""
+"""
+=============================================================================
+CLASSIFY GOLDMAN FULL - Large-Scale Goldman Basket Taxonomy Classification
+=============================================================================
+
+INPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/GSCB_FLAGSHIP_coverage_with_desc_ALL.xlsx
+  Description: Goldman Sachs flagship baskets database with 2,667 entries and descriptive data
+  Required Format: Excel file with basket names, descriptions, and regional classifications
+  Key Columns: Index Name, description, REGION_OR_COUNTRY, Bloomberg
+
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/GSCB_FLAGSHIP_coverage_Classified.xlsx
+  Description: Goldman baskets with added taxonomy classifications (Tier-1, Tier-2, Tier-3 tags)
+  Format: Excel file preserving all original columns plus new classification columns
+  Contents: Original basket data + category_tier1, category_tier2, category_tags columns
+
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/GSCB_FLAGSHIP_coverage_Classified PROGRESS.xlsx
+  Description: Intermediate checkpoint file saved every 100 baskets during processing
+  Format: Excel file with partial classifications for recovery/resume capability
+  Contents: Same structure as final output but with in-progress classifications
+
+VERSION HISTORY:
+v1.0.0 (2025-10-16): Initial release with basic Goldman basket classification
+v1.1.0 (2025-10-17): Added batch processing and progress saving
+v1.2.0 (2025-11-06): Enhanced documentation and error handling
+
+TAXONOMY:
+TIER-1: Equities | Fixed Income | Commodities | Currencies (FX) | Multi-Asset / Thematic | Volatility / Risk Premia | Alternative / Synthetic
+
+TIER-2 EXAMPLES:
+Equities: Global Indices | Sector Indices | Country/Regional | Thematic/Factor | Real Estate / REITs
+Fixed Income: Sovereign Bonds | Corporate Credit | Credit Spreads | Yield Curves
+Commodities: Energy | Metals | Agriculture
+Currencies: Majors | EM FX
+Multi-Asset: Cross-Asset Indices | Inflation/Growth Themes
+Volatility: Vol Indices | Carry/Value Factors
+Alternative: Quant/Style Baskets | Custom/Proprietary
+
+TIER-3 TAGS:
+Asset Class: Equity | Credit | FX | Commodity | Multi-Asset
+Region: US | Europe | Asia | EM | Global | China | Japan | India | Canada | UAE | APAC | Australia
+Sector/Theme: Tech | Energy | Financials | Healthcare | Industrials | Consumer | Defensive | ESG | Dividend | Growth | Value | Momentum | Quality | Infrastructure | Real Estate | Utilities
+Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative | Options-Based | Dividend | Factor-Based | Low Volatility | Defensive | Domestic
+Special: Stimulus | Going Global | Long/Short
+Duration: Short (<2Y) | Medium (2-10Y) | Long (>10Y)
+"""
 import pandas as pd
 import json
 import os
@@ -59,7 +105,13 @@ print("="*80)
 print("CLASSIFYING 2667 GOLDMAN BASKETS - PRESERVING ALL ORIGINAL DATA")
 print("="*80)
 
-df = pd.read_excel("Data Collection/GSCB_FLAGSHIP_coverage_with_desc_ALL.xlsx")
+# Input file validation
+input_file = "Data Collection/GSCB_FLAGSHIP_coverage_with_desc_ALL.xlsx"
+if not os.path.exists(input_file):
+    print(f"Error: Input file {input_file} not found")
+    exit(1)
+
+df = pd.read_excel(input_file)
 print(f"\nOriginal columns: {len(df.columns)}")
 print(f"Original rows: {len(df)}\n")
 

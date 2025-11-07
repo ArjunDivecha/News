@@ -1,13 +1,39 @@
 """
-Filtering/ETF Cluster.py — ETF Cluster Filtering
-------------------------------------------------
+=============================================================================
+ETF CLUSTER FILTERING - Intelligent ETF Selection with Categorical Grouping
+=============================================================================
 
-Purpose
+INPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/ETF Master List.xlsx
+  Description: Complete ETF master list with comprehensive fund data and performance metrics
+  Required Format: Excel file with ETF identifiers, classifications, and numerical performance data
+  Key Columns: Ticker, Name, Agg Traded Val (M USD), 
+              FUND_ASSET_CLASS_FOCUS, FUND_GEO_FOCUS, FUND_OBJECTIVE_LONG, FUND_STRATEGY,
+              CHG_PCT_1D, CURRENT_TRR_1WK, CHG_PCT_YTD, CHG_PCT_1YR
+
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Data Collection/Filtered ETF List.xlsx
+  Description: Optimized ETF subset (target: 500) with cluster labels and representative selections
+  Format: Excel file with original data plus cluster_name column for interpretability
+  Contents: Selected ETFs maintaining diversity across asset classes, regions, and strategies
+
+VERSION HISTORY:
+v1.0.0 (2025-10-16): Initial release with basic ETF clustering
+v1.1.0 (2025-10-17): Added liquidity-based selection and cluster naming
+v1.2.0 (2025-11-06): Enhanced documentation and categorical optimization
+
+DEPENDENCIES:
+- pandas: For data manipulation and Excel file reading
+- numpy: For numerical computations and array operations
+- scikit-learn: For StandardScaler and distance calculations
+- os: For file system operations
+
+PURPOSE:
 - Reduce a large ETF master list to a representative subset (default 500) by
   grouping on categorical attributes and, when necessary, clustering on simple
   numerical similarity.
 
-How It Works
+HOW IT WORKS:
 - Stage 1: Build a composite `group_key` from
   `FUND_ASSET_CLASS_FOCUS|FUND_GEO_FOCUS|FUND_OBJECTIVE_LONG|FUND_STRATEGY` and
   assign a human‑readable `cluster_name` per row.
@@ -15,34 +41,31 @@ How It Works
   lightweight sub‑clustering within each group using scaled numerical features
   (`CHG_PCT_1D`, `CURRENT_TRR_1WK`, `CHG_PCT_YTD`, `CHG_PCT_1YR`) and a
   Euclidean distance threshold, selecting the most traded ETF from each
-  sub‑cluster.
+  sub-cluster.
 - Ties and repeated `cluster_name`s are disambiguated by appending a counter
   suffix (e.g., "#2").
 
-File
-- `Filtering/ETF Cluster.py`
+KEY FEATURES:
+1. Categorical Grouping: Creates meaningful groups based on fund attributes
+2. Liquidity-Based Selection: Prioritizes ETFs with highest trading volume within groups
+3. Performance Pattern Classification: Adds price movement indicators to cluster names
+4. Human-Readable Clusters: Generates descriptive cluster names for interpretability
+5. Numerical Sub-Clustering: Applies similarity-based clustering when groups are too large
+6. Progress Tracking: Provides detailed statistics and sample outputs
 
-Inputs
-- Input file (default): `ETF Master List.xlsx` (current working directory)
-- Excel file must include at least these columns:
-  - `Ticker`, `Name`, `Agg Traded Val (M USD)`
-  - `FUND_ASSET_CLASS_FOCUS`, `FUND_GEO_FOCUS`, `FUND_OBJECTIVE_LONG`, `FUND_STRATEGY`
-  - `CHG_PCT_1D`, `CURRENT_TRR_1WK`, `CHG_PCT_YTD`, `CHG_PCT_1YR`
-
-Outputs
-- Prints summary stats to stdout.
-- Writes `Filtered ETF List.xlsx` with the selected rows and a `cluster_name`
-  column for interpretability.
-
-Usage
+USAGE:
 - Run the file directly. Input defaults to `ETF Master List.xlsx` in the
   current working directory; output is written to `Filtered ETF List.xlsx`.
   Adjust `file_path` or `target_count` in `main()` as needed.
 
-Notes
-- The numerical similarity threshold (`similarity_threshold = 1.0`) is a simple
-  heuristic and may be tuned for your dataset.
-- Missing values in key fields are filled with "Unknown" or 0 for numerics.
+PARAMETERS:
+- target_count: Target number of ETFs to return (default 500)
+- similarity_threshold: Distance threshold for numerical sub-clustering (default 1.0)
+
+NOTES:
+- The numerical similarity threshold is a simple heuristic and may be tuned for your dataset
+- Missing values in key fields are filled with "Unknown" or 0 for numerics
+- Cluster names include performance indicators (Bull/Bear patterns) for better interpretability
 """
 
 import pandas as pd

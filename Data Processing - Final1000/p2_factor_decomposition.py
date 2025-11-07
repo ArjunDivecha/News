@@ -1,5 +1,29 @@
 """
-P2 FACTOR DECOMPOSITION & ENRICHED PROFILES
+=============================================================================
+P2 FACTOR DECOMPOSITION & ENRICHED PROFILES - Risk Analytics & Feature Engineering
+=============================================================================
+
+INPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Final Master.xlsx
+  Description: Master dataset containing 4,933 assets with beta vectors and performance metrics
+  Required Format: Excel file with beta exposures, performance data, and classifications
+  Key Columns: Daily 1 Year Beta to SPX, Russell 2000 Index, MSCI EAFE Index, MSCI Emerging Markets Index, 
+              1 Year Sharpe, 3 year sharpe, 12 Month Return, 36 Month Return, 12 month volatility, 
+              Correlation with SPX, category_tier2
+
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/P2_Enriched_Asset_Profiles.xlsx
+  Description: Comprehensive asset profiles with factor exposures, risk metrics, and quality indicators
+  Format: Excel file with 19 columns of analytical data for ML-ready feature matrix
+  Contents: Factor tilts (market, size, geographic, EM), quality metrics (Sharpe consistency, risk-adjusted returns),
+            performance data, and percentile rankings within categories
+
+VERSION HISTORY:
+v1.0.0 (2025-10-16): Initial release with basic factor decomposition
+v1.1.0 (2025-10-17): Added quality metrics and percentile rankings
+v1.2.0 (2025-11-06): Enhanced documentation and comprehensive feature engineering
+
+PURPOSE:
 - Extract factor exposures from beta vectors
 - Create enriched asset profiles for RAG
 - Generate feature matrix for ML

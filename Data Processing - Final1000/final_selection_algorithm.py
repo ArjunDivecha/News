@@ -1,5 +1,42 @@
 """
-FINAL SELECTION ALGORITHM
+=============================================================================
+FINAL SELECTION ALGORITHM - Strategic Portfolio Optimization & Asset Selection
+=============================================================================
+
+INPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Final Master.xlsx
+  Description: Complete master dataset with 4,933 classified assets and performance metrics
+  Required Format: Excel file with comprehensive asset data including classifications and numerical metrics
+  Key Columns: Bloomberg_Ticker, Name, category_tier1, category_tier2, Daily 1 Year Beta to SPX, 
+              1 Year Sharpe, 12 Month Return, 12 month volatility, Correlation with SPX
+
+OUTPUT FILES:
+- /Users/macbook2024/Library/CloudStorage/Dropbox/AAA Backup/A Working/News/Final 1000 Asset Master List.xlsx
+  Description: Optimized portfolio of ~1,000 assets with strategic diversification across categories
+  Format: Excel file with selected assets, scores, and comprehensive metadata
+  Contents: Core asset information, performance metrics, selection scores, and strategic allocation details
+
+VERSION HISTORY:
+v1.0.0 (2025-10-16): Initial release with basic selection algorithm
+v1.1.0 (2025-10-17): Added strategic allocation targets and quality scoring
+v1.2.0 (2025-11-06): Enhanced documentation and optimization metrics
+
+ALLOCATION TARGETS:
+- Equities: 520 assets (52%)
+- Fixed Income: 170 assets (17%)
+- Commodities: 110 assets (11%)
+- Currencies (FX): 70 assets (7%)
+- Multi-Asset / Thematic: 80 assets (8%)
+- Volatility / Risk Premia: 50 assets (5%)
+- Alternative / Synthetic: 20 assets (2%)
+
+SELECTION METHODOLOGY:
+- Quality Score (40%): Normalized Sharpe ratio performance
+- Uniqueness Score (30%): Inverse of category popularity to avoid concentration
+- Data Quality (20%): Completeness of required metrics
+- Diversification Bonus (10%): Lower correlation to S&P 500
+
+PURPOSE:
 - Reduce 4933 assets to ~1000
 - Maximize diversity + quality + coverage
 - Apply strategic allocation targets
@@ -82,6 +119,29 @@ final_df = pd.concat(selected, ignore_index=True)
 print(f"\nTotal selected: {len(final_df)} assets")
 
 print("\n[3/3] Generating final master list...")
+
+# Format Bloomberg_Ticker based on source type
+def format_bloomberg_ticker(row):
+    ticker = row['Bloomberg_Ticker']
+    source = row['source']
+    
+    if pd.isna(ticker) or ticker == '':
+        return ticker
+    
+    # Append suffixes based on source
+    if source == 'ETF':
+        return f"{ticker} Equity"
+    elif source == 'Bloomberg':
+        return f"{ticker} Index"
+    else:
+        # For Goldman Sachs and Thematic ETFs, keep original or add appropriate suffix
+        if source == 'Thematic':
+            return f"{ticker} Equity"
+        else:  # Goldman Sachs
+            return ticker  # Keep original for Goldman baskets
+
+# Apply formatting to Bloomberg_Ticker
+final_df['Bloomberg_Ticker'] = final_df.apply(format_bloomberg_ticker, axis=1)
 
 # Build final output
 final_output = pd.DataFrame({
