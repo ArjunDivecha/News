@@ -1,6 +1,6 @@
 # AGENTS.md - Financial Analytics Pipeline
 
-**Last Updated**: 2026-01-30  
+**Last Updated**: 2026-01-30 (Step 4 Report Generation added)  
 **Project Root**: `/Users/arjundivecha/Dropbox/AAA Backup/A Working/News`
 
 ---
@@ -92,6 +92,25 @@ News/
 │   ├── data/processed/                  # Training data JSONs
 │   ├── README.md                        # Fine-tuning guide
 │   └── INFERENCE.md                     # Inference documentation
+│
+├── Step 4 Report Generation/            # LLM-powered market reports
+│   ├── database/                        # SQLite for historical data
+│   │   ├── schema.sql                   # Database schema
+│   │   ├── market_data.db               # 970 assets + daily prices
+│   │   └── init_db.py                   # Initialization script
+│   ├── prompts/                         # LLM prompt templates
+│   │   ├── daily_wrap.md                # Daily report (1000-1500 words)
+│   │   └── flash_report.md              # Flash report (200-300 words)
+│   ├── scripts/                         # Pipeline scripts
+│   │   ├── 01_sync_static_data.py       # Sync Final 1000 → SQLite
+│   │   ├── 02_refresh_bloomberg.py      # Pull daily Bloomberg data
+│   │   ├── 03_generate_daily.py         # Multi-model daily report
+│   │   └── 04_flash_report.py           # 15-min flash reports
+│   ├── outputs/                         # Generated PDF reports
+│   │   ├── daily/                       # Daily wrap PDFs
+│   │   └── flash/                       # Flash report PDFs
+│   ├── PLAN.md                          # Implementation plan
+│   └── README.md                        # Usage guide
 │
 └── .claude/
     └── settings.local.json              # Claude Code permissions
