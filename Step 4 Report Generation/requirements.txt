@@ -1,0 +1,21 @@
+# Step 4 Report Generation - Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core data processing
+pandas>=2.0.0
+numpy>=1.24.0
+openpyxl>=3.1.0
+
+# LLM APIs
+openai>=1.0.0
+anthropic>=0.20.0
+google-generativeai>=0.3.0
+
+# PDF generation
+reportlab>=4.0.0
+
+# Environment
+python-dotenv>=1.0.0
+
+# Note: sqlite3 is built into Python
+# Note: blpapi (Bloomberg) is Windows-only, install separately

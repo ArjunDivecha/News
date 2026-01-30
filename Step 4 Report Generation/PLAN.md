@@ -63,9 +63,9 @@ Build a personal report generation system that:
 | **1** | Folder structure + Database schema | ✅ Complete | 6/6 tests passed |
 | **2** | Sync static data (Final 1000 → SQLite) | ✅ Complete | 970 assets synced |
 | **3** | Prompt templates (daily + flash) | ✅ Complete | Files created |
-| **4** | Mock data generator | 🔲 Pending | - |
-| **5** | Report generator (LLM integration) | 🔲 Pending | - |
-| **6** | PDF converter | 🔲 Pending | - |
+| **4** | Mock data generator | ✅ Complete | 5/5 tests passed |
+| **5** | Report generator (LLM integration) | ✅ Complete | 5/5 tests passed |
+| **6** | PDF converter | ✅ Complete | PDF generated |
 | **7** | Bloomberg fetcher (Parallels) | 🔲 Pending | - |
 | **8** | End-to-end with real data | 🔲 Pending | - |
 | **9** | Flash reports + real-time | 🔲 Pending | - |
