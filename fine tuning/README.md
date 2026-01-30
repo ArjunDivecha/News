@@ -1,128 +1,185 @@
-# Fine-Tuning Project: Asset Classification Pipeline
+# Fine-Tuning: Asset Classification Model
 
-This directory contains everything needed to fine-tune and deploy a local asset classification model, replacing Anthropic API calls with a fast, private MLX-based classifier running on M4 Max.
+Fine-tuned Llama 3.1 8B model for financial asset taxonomy classification, replacing expensive Anthropic API calls with fast, private inference.
 
-## 🎯 Goal
+## Overview
 
-Replace Anthropic Haiku ($50-100/run, 60 minutes) with fine-tuned Llama 3.1 8B ($0/run, 2-5 minutes).
+| Metric | Haiku (Before) | Fine-Tuned (After) | Improvement |
+|--------|----------------|-------------------|-------------|
+| Cost | ~$50-100/run | $0 | 100% savings |
+| Speed | ~60 min | ~22 min | 3x faster |
+| Latency | ~2,500ms/asset | ~1,400ms/asset | 1.8x faster |
+| Privacy | External API | Private | Full control |
 
-## 📁 Directory Structure
+## Model Details
+
+- **Base Model**: Llama 3.1 8B
+- **Training Platform**: Tinker (thinkingmachines.ai)
+- **Training Data**: 4,436 examples from classified asset datasets
+- **Fine-Tuned Model**: `arjun-fund-classifier-v1-r7j1`
+
+## Directory Structure
 
 ```
 fine tuning/
-├── IMPLEMENTATION_PLAN.md   # Complete implementation guide
+├── README.md               # This file
+├── INFERENCE.md            # Detailed inference guide
+├── IMPLEMENTATION_PLAN.md  # Original implementation plan
+├── requirements.txt        # Python dependencies
+├── .env                    # API keys (gitignored)
+│
 ├── data/
-│   ├── raw/                 # Symlinks to source Excel files
-│   ├── processed/           # JSONL training data
-│   └── validation/          # Comparison results
+│   └── processed/          # Training data JSONs
+│       ├── sample_examples.json
+│       └── statistics.json
+│
 ├── scripts/
-│   ├── 01_prepare_data.py   # Data preparation
-│   ├── 02_train_tinker.py   # Tinker fine-tuning
-│   ├── 03_download_weights.py
-│   ├── 04_setup_mlx.py
-│   ├── 05_validate.py
-│   └── 06_migrate_scripts.py
-├── models/
-│   ├── tinker_export/       # Downloaded from Tinker
-│   └── mlx_ready/           # Converted for MLX
-├── inference/
-│   ├── mlx_classifier.py    # MLX inference engine
-│   └── unified_classifier.py # Drop-in replacement
-└── validation/
-    └── compare_models.py    # Head-to-head comparison
+│   ├── 01_prepare_data.py       # Data preparation
+│   ├── 02_train_tinker.py       # Tinker training (basic)
+│   ├── 02_train_tinker_wandb.py # Training with W&B logging
+│   ├── 03_train_with_validation.py
+│   ├── 04_evaluate_model.py     # Model evaluation
+│   ├── 05_train_proper.py       # Production training
+│   ├── compare_models.py        # Haiku vs Fine-tuned comparison
+│   ├── predict_funds.py         # Batch prediction
+│   ├── predict_single.py        # Single asset prediction
+│   ├── classify_final_1000.py   # Classify Final 1000 list
+│   ├── quick_eval.py            # Quick evaluation
+│   └── test_model.py            # Model testing
+│
+└── outputs/                # Classification outputs
+    └── final_1000/         # Final 1000 classification results
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
-### Phase 1: Data Preparation
+### 1. Setup Environment
 
 ```bash
 cd "fine tuning"
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. Configure API Key
+
+```bash
+# Copy from .env or set directly
+export TINKER_API_KEY="your-tinker-api-key"
+```
+
+### 3. Run Classification
+
+```bash
+# Classify Final 1000 Asset Master List
+python scripts/classify_final_1000.py
+
+# Compare with Haiku classifications
+python scripts/compare_models.py
+
+# Single asset prediction
+python scripts/predict_single.py "AAPL"
+```
+
+## Training (If Needed)
+
+### Prepare Data
+
+```bash
 python scripts/01_prepare_data.py
+# Output: data/processed/train.jsonl (~3,800 examples)
 ```
 
-Expected output:
-- `data/processed/train.jsonl` (~3,800 examples)
-- `data/processed/val.jsonl` (~450 examples)
-- `data/processed/test.jsonl` (~230 examples)
-
-### Phase 2: Fine-Tuning on Tinker
+### Train on Tinker
 
 ```bash
-export TINKER_API_KEY="your-api-key"
-python scripts/02_train_tinker.py
+export TINKER_API_KEY="your-key"
+python scripts/05_train_proper.py
+# Duration: ~30-60 minutes
+# Cost: ~$10-20
 ```
 
-Duration: ~30-60 minutes  
-Cost: ~$10-20
-
-### Phase 3: Setup Local Inference
+### Evaluate
 
 ```bash
-python scripts/04_setup_mlx.py
-source mlx_env/bin/activate
+python scripts/04_evaluate_model.py
 ```
 
-### Phase 4: Validate
+## Inference Scripts
 
+### classify_final_1000.py
+Classifies the Final 1000 Asset Master List and compares with existing Haiku classifications.
+
+**Input**: `Step 2 Data Processing - Final1000/Final 1000 Asset Master List.xlsx`  
+**Outputs**:
+- `outputs/final_1000/Final_1000_FineTuned_Classified.xlsx`
+- `outputs/final_1000/classification_comparison_report.xlsx`
+
+**Usage**:
 ```bash
-python scripts/05_validate.py --samples 200
+python scripts/classify_final_1000.py           # Full run
+python scripts/classify_final_1000.py --limit 50  # Test with 50
+python scripts/classify_final_1000.py --demo    # Simulation mode
 ```
 
-### Phase 5: Migrate Production Scripts
+### compare_models.py
+Head-to-head comparison between Haiku and fine-tuned model classifications.
 
+### predict_funds.py
+Batch prediction for fund lists.
+
+### predict_single.py
+Quick single-asset classification.
+
+## Model Performance
+
+Based on validation set (450 examples):
+
+| Metric | Score |
+|--------|-------|
+| Tier-1 Accuracy | ~80% |
+| Tier-2 Accuracy | ~65% |
+| Tier-3 Accuracy | ~50% |
+
+Agreement with Haiku on test set: ~80% Tier-1, ~70% Tier-2
+
+## Requirements
+
+```txt
+pandas>=2.0.0
+numpy>=1.24.0
+openpyxl>=3.1.0
+tqdm>=4.65.0
+tinker>=0.1.0
+transformers>=4.30.0
+anthropic>=0.20.0
+```
+
+## API Configuration
+
+The `.env` file should contain:
 ```bash
-python scripts/06_migrate_scripts.py --apply
+TINKER_API_KEY=your_tinker_api_key
+WEIGHTS_AND_BASES_API_KEY=your_wandb_key  # Optional
 ```
 
-## 📊 Expected Performance
+## Troubleshooting
 
-| Metric | Before (Anthropic) | After (MLX) | Improvement |
-|--------|-------------------|-------------|-------------|
-| Cost | ~$50-100/run | $0 | 100% savings |
-| Speed | ~60 min | ~2-5 min | 12-30x faster |
-| Latency | ~2,500ms | ~35ms | 70x faster |
-| Privacy | External API | Local | Full control |
+**Tinker connection fails**  
+- Verify API key: `echo $TINKER_API_KEY`
+- Check network connectivity
+- Ensure venv is activated
 
-## 🛠️ Requirements
+**Python 3.14 Pydantic warning**  
+- This is a known compatibility warning, doesn't affect functionality
 
-- Mac M4 Max with 128GB RAM
-- Python 3.11+
-- Tinker API access
-- ~50GB free disk space (for models)
-
-## 📖 Full Documentation
-
-See `IMPLEMENTATION_PLAN.md` for complete details.
-
-## 🆘 Troubleshooting
-
-**Issue:** Tinker training fails  
-**Fix:** Check API key, verify JSONL format
-
-**Issue:** MLX model loads slowly  
-**Fix:** First load downloads ~16GB, subsequent loads are fast
-
-**Issue:** Lower accuracy than expected  
-**Fix:** See Phase 5 options in IMPLEMENTATION_PLAN.md
-
-## 📅 Timeline
-
-- **Days 1-2:** Data preparation
-- **Days 3-5:** Fine-tuning on Tinker
-- **Days 6-8:** MLX setup & optimization
-- **Days 9-11:** Validation & comparison
-- **Days 12-14:** Production migration
-
-Total: 1-2 weeks
-
-## 💰 Cost Savings
-
-- **Setup cost:** ~$20 (Tinker training)
-- **Per-run savings:** ~$50-100
-- **Annual savings (weekly runs):** ~$5,000
+**Model path not found**  
+- Use: `arjun-fund-classifier-v1-r7j1`
+- Or check available models in Tinker dashboard
 
 ---
 
-**Status:** Ready to start Phase 1  
-**Next step:** Create and run `scripts/01_prepare_data.py`
+**Last Updated**: 2026-01-30  
+**Model Version**: arjun-fund-classifier-v1-r7j1  
+**Training Platform**: Tinker (thinkingmachines.ai)

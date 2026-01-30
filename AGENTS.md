@@ -1,6 +1,6 @@
 # AGENTS.md - Financial Analytics Pipeline
 
-**Last Updated**: 2026-01-29  
+**Last Updated**: 2026-01-30  
 **Project Root**: `/Users/arjundivecha/Dropbox/AAA Backup/A Working/News`
 
 ---
@@ -35,10 +35,17 @@ pip install gs-quant  # Goldman Sachs API
 - Optimized for high-memory systems (128GB RAM recommended)
 
 ### External APIs
-- **Anthropic API** (Haiku 4.5) - Asset taxonomy classification
+- **Anthropic API** (Haiku 4.5) - Asset taxonomy classification (original method)
+- **Tinker API** - Fine-tuned Llama 3.1 8B inference (new method, $0/run)
 - **Goldman Sachs Marquee API** - Basket data retrieval
 - **Exa API** - Web search for meme stock discovery
 - **Yahoo Finance** - Market data validation
+
+### Classification Methods
+1. **Haiku Classification** (Original): ~$50-100/run, 30-60 min
+2. **Fine-Tuned Llama** (New): $0/run, ~22 min for 970 assets
+   - Model: `arjun-fund-classifier-v1-r7j1` via Tinker
+   - ~80% Tier-1 agreement with Haiku
 
 ---
 
@@ -75,6 +82,17 @@ News/
 │   ├── p2_factor_decomposition.py       # Factor exposures
 │   └── MemeFinder.py                    # Meme stock discovery tool
 │
+├── fine tuning/                         # ML model training
+│   ├── scripts/                         # Training & inference scripts
+│   │   ├── 01_prepare_data.py           # Data preparation
+│   │   ├── 05_train_proper.py           # Production training
+│   │   ├── classify_final_1000.py       # Classify Final 1000 list
+│   │   ├── compare_models.py            # Haiku vs Fine-tuned comparison
+│   │   └── predict_funds.py             # Batch prediction
+│   ├── data/processed/                  # Training data JSONs
+│   ├── README.md                        # Fine-tuning guide
+│   └── INFERENCE.md                     # Inference documentation
+│
 └── .claude/
     └── settings.local.json              # Claude Code permissions
 ```
@@ -108,7 +126,12 @@ python p2_factor_decomposition.py        # Output: P2_Enriched_Asset_Profiles.xl
 
 # === FINAL SELECTION ===
 cd "../Step 2 Data Processing - Final1000"
-python final_selection_algorithm.py      # Output: Final 1000 Asset Master List.xlsx
+python final_selection_algorithm_v2.py   # Output: Final 1000 Asset Master List.xlsx (enhanced thematic diversity)
+
+# === OPTIONAL: FINE-TUNED CLASSIFICATION ===
+cd "../fine tuning"
+source venv/bin/activate && source .env
+python scripts/classify_final_1000.py    # Reclassify with fine-tuned Llama model
 ```
 
 ---

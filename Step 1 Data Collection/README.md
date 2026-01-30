@@ -106,23 +106,17 @@ The data collection process consists of three main components:
 ## 📁 File Structure
 
 ```
-Data Collection/
+Step 1 Data Collection/
 ├── README.md                              # This documentation
 ├── Bloomberg_Indices_Cluster.py           # Bloomberg indices processing script
 ├── Bloomberg_Indices_Cluster_documentation.md  # Detailed Bloomberg documentation
 ├── ETF Cluster.py                         # ETF clustering and filtering script
 ├── gs_basket_data.py                      # Goldman Sachs data retrieval script
 ├── gs_basket_data_with_headings.py        # Enhanced GS data script with headings
-├── Bloomberg Indices.xlsx                 # Raw Bloomberg indices data (input)
+├── Betas from Bloomberg.xlsx              # Bloomberg beta data (input)
 ├── ETF Master List.xlsx                   # Raw ETF master list (input)
-├── Filtered Bloomberg Indices.xlsx        # Processed Bloomberg indices (output)
-├── Pre-Filtered Bloomberg Indices.xlsx    # Intermediate Bloomberg data
-├── Filtered ETF List.xlsx                 # Processed ETF list (output)
 ├── GSCB_FLAGSHIP_coverage_with_desc_ALL.xlsx    # Enriched GS data (output)
-├── GSCB_FLAGSHIP_coverage_Classified.xlsx       # Classified GS data
-├── GSCB_FLAGSHIP_coverage_Classified PROGRESS.xlsx  # Work-in-progress GS data
-├── Betas from Bloomberg.xlsx              # Bloomberg beta data
-└── filtered_indices_correlation.png       # Correlation visualization
+└── filtered_indices_correlation.png       # Correlation visualization (output)
 ```
 
 ## 🚀 Usage Instructions
@@ -248,7 +242,7 @@ For technical issues or questions about the data collection pipeline:
 
 ---
 
-**Last Updated**: November 6, 2025  
+**Last Updated**: 2026-01-30  
 **System Requirements**: M4 Max Mac with 128GB RAM (optimized for high-memory, parallel processing)  
 **Data Format**: Excel (.xlsx) for all input/output files  
 **Documentation Level**: Comprehensive (10th-grade readable)

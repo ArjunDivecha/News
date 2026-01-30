@@ -129,12 +129,18 @@ python p2_factor_decomposition.py
 
 #### 3.4 Strategic Portfolio Selection
 ```bash
-# Step 12: Final asset selection algorithm
-python final_selection_algorithm.py
+# Step 12: Final asset selection algorithm (use v2 for better Goldman/thematic coverage)
+python final_selection_algorithm_v2.py
 ```
 **INPUT:** `Master Asset List Classified.xlsx`
 **OUTPUT:** `Final 1000 Asset Master List.xlsx`
 **PURPOSE:** Reduces 4,933 assets to ~1,000 using strategic allocation targets and quality scoring
+
+**V2 Improvements:**
+- Proxy Sharpe calculation for assets missing performance data (Goldman, Bloomberg indices)
+- Source quotas: 15% Goldman minimum, 5% Bloomberg minimum per category
+- Thematic rarity scoring for diversity
+- Improved Goldman representation: 13% → 23%
 
 ---
 
@@ -289,31 +295,38 @@ python final_selection_algorithm.py
 
 ```
 News/
-├── README.md                           # This file
-├── Core Pipeline/
-│   ├── p0_deduplication_analysis.py    # Proxy identification
-│   ├── p1_category_analysis.py         # Performance analytics
-│   ├── p2_factor_decomposition.py      # Factor analysis
-│   └── final_selection_algorithm.py    # Portfolio optimization
-├── Classification/
+├── README.md                           # Project overview
+├── AGENTS.md                           # AI agent instructions
+│
+├── Step 1 Data Collection/             # Raw data acquisition
+│   ├── Bloomberg_Indices_Cluster.py    # Bloomberg filtering
+│   ├── ETF Cluster.py                  # ETF filtering
+│   ├── gs_basket_data.py               # Goldman API data
+│   └── gs_basket_data_with_headings.py # Enhanced GS data
+│
+├── Step 2 Data Processing - Final1000/ # Classification & selection
 │   ├── unified_asset_classifier.py     # Unified taxonomy system
 │   ├── etf_classifier.py               # ETF classification
 │   ├── classify_bloomberg_full.py      # Bloomberg classification
+│   ├── classify_etfs_full.py           # ETF classification runner
 │   ├── classify_goldman_full.py        # Goldman classification
 │   ├── classify_thematic_etfs_full.py  # Thematic ETF classification
-│   └── merge_classified_files.py       # Dataset integration
-├── Data Collection/
-│   ├── Bloomberg_Indices_Cluster.py     # Bloomberg filtering
-│   ├── ETF Cluster.py                  # ETF filtering
-│   ├── gs_basket_data.py               # Goldman API data
-│   └── gs_basket_data_with_headings.py # Bloomberg integration
-├── Tools/
-│   └── MemeFinder.py                   # Meme stock discovery
-└── Outputs/
-    ├── Final 1000 Asset Master List.xlsx
-    ├── P2_Enriched_Asset_Profiles.xlsx
-    ├── Master Asset List Classified.xlsx
-    └── [Various analytical reports]
+│   ├── merge_classified_files.py       # Dataset integration
+│   ├── final_selection_algorithm.py    # Original selection (v1)
+│   ├── final_selection_algorithm_v2.py # Enhanced selection with proxy Sharpe
+│   └── [Classified output files]
+│
+├── Step 3 Data Analysis/               # Analytics & insights
+│   ├── p0_deduplication_analysis.py    # Proxy identification
+│   ├── p1_category_analysis.py         # Performance analytics
+│   ├── p2_factor_decomposition.py      # Factor analysis
+│   ├── MemeFinder.py                   # Meme stock discovery
+│   └── [Analysis output files]
+│
+└── fine tuning/                        # ML model training
+    ├── scripts/                        # Training & inference
+    ├── data/                           # Training data
+    └── outputs/                        # Classification results
 ```
 
 ---
@@ -343,6 +356,6 @@ For questions or issues with the pipeline:
 
 ---
 
-**Last Updated:** November 6, 2025  
-**Version:** 1.0.0  
+**Last Updated:** 2026-01-30  
+**Version:** 2.0.0  
 **Maintainer:** Financial Analytics Team
