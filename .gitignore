@@ -1,0 +1,51 @@
+# Environment variables - NEVER commit this file
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Excel temp files
+~$*.xlsx
+~$*.xls
+
+# Log files
+*.log
+
+# ML/Training artifacts
+wandb/
+outputs/
+checkpoints/
+models/*.bin
+models/*.safetensors
+
+# Large data files (track manually if needed)
+# *.xlsx
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Certificates and secrets
+ServerCertificate
+ServerCertificate-journal
+*.pem
+*.key

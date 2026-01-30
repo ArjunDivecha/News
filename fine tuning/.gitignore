@@ -1,0 +1,45 @@
+# Environment
+.env
+mlx_env/
+venv/
+__pycache__/
+*.pyc
+
+# Large files
+*.gguf
+*.bin
+*.safetensors
+models/*/adapter_model.safetensors
+models/*/pytorch_model.bin
+
+# Data (keep structure, ignore large files)
+data/raw/*.xlsx
+data/processed/*.jsonl
+data/validation/*.xlsx
+
+# Checkpoints
+*.ckpt
+checkpoints/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Temporary
+tmp/
+temp/
+*.tmp

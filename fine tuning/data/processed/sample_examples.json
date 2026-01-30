@@ -1,0 +1,155 @@
+{
+  "train": [
+    {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert financial asset classification specialist. Classify the given asset into a structured taxonomy.\n\nTIER-1 CATEGORIES (pick exactly one):\n- Equities: Stock indices, equity ETFs, equity-focused baskets, equity indices\n- Fixed Income: Bonds, credit, yield-focused instruments, fixed income ETFs\n- Commodities: Energy, metals, agriculture, commodity indices\n- Currencies (FX): Currency pairs and FX instruments\n- Multi-Asset / Thematic: Cross-asset, thematic baskets, macro themes, multi-asset indices\n- Volatility / Risk Premia: VIX, volatility indices, carry strategies, risk premia\n- Alternative / Synthetic: Quantitative baskets, factor portfolios, proprietary constructs, custom indices\n\nTIER-2 CATEGORIES (examples by Tier-1):\n- Equities: Global Indices | Sector Indices | Country/Regional | Thematic/Factor | Real Estate / REITs\n- Fixed Income: Sovereign Bonds | Corporate Credit | Credit Spreads | Yield Curves | Broad Fixed Income\n- Commodities: Energy | Metals | Agriculture | Broad Commodities\n- Currencies: Majors (EUR/USD, GBP/USD, USD/JPY) | EM FX | Broad Currency\n- Multi-Asset: Cross-Asset Indices | Inflation/Growth Themes | Thematic Baskets\n- Volatility: Vol Indices | Carry/Value Factors | Risk Premia Strategies\n- Alternative: Quant/Style Baskets | Custom/Proprietary | Factor-Based\n\nTIER-3 TAGS (select all that apply from):\n- Asset Class: Equity | Credit | FX | Commodity | Multi-Asset | Volatility | Alternative\n- Region: US | Europe | Asia | EM | Global | China | Japan | India | Canada | UAE | APAC | Australia | Developed\n- Sector/Theme: Tech | Energy | Financials | Healthcare | Industrials | Consumer | Defensive | ESG | Dividend | Growth | Value | Momentum | Quality | Infrastructure | Real Estate | Utilities | Materials\n- Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative | Options-Based | Dividend | Factor-Based | Low Volatility | Defensive | Domestic | Leveraged | Inverse\n- Duration (bonds only): Short (<2Y) | Medium (2-10Y) | Long (>10Y) | Unspecified\n- Special: Inverse | Long-Short | Covered-Call | Leveraged | Custom | Proprietary\n\nRespond with ONLY valid JSON in this exact format:\n{\"ticker\": \"TICKER\", \"tier1\": \"Category\", \"tier2\": \"Sub-category\", \"tier3_tags\": [\"tag1\", \"tag2\", \"tag3\"]}"
+        },
+        {
+          "role": "user",
+          "content": "Classify this asset:\nTicker: TLT US\nName: iShares 20+ Year Treasury Bond ETF\nDescription: iShares 20+ Year Treasury Bond ETF is an exchange-traded fund incorporated in the USA. The ETF seeks to track the investment results of an index composed of U.S. Treasury bonds with remaining maturities greater than twenty years.\nExisting Asset Class: Fixed Income\nGeographic Focus: U.S.\nObjective: Government\nStrategy: Government"
+        },
+        {
+          "role": "assistant",
+          "content": "{\"ticker\": \"TLT US\", \"tier1\": \"Fixed Income\", \"tier2\": \"Sovereign Bonds\", \"tier3_tags\": [\"Credit\", \"US\", \"Long (>10Y)\", \"Passive\"]}"
+        }
+      ],
+      "metadata": {
+        "source": "etf",
+        "original_tier1": "Fixed Income",
+        "original_tier2": "Sovereign Bonds"
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert financial asset classification specialist. Classify the given asset into a structured taxonomy.\n\nTIER-1 CATEGORIES (pick exactly one):\n- Equities: Stock indices, equity ETFs, equity-focused baskets, equity indices\n- Fixed Income: Bonds, credit, yield-focused instruments, fixed income ETFs\n- Commodities: Energy, metals, agriculture, commodity indices\n- Currencies (FX): Currency pairs and FX instruments\n- Multi-Asset / Thematic: Cross-asset, thematic baskets, macro themes, multi-asset indices\n- Volatility / Risk Premia: VIX, volatility indices, carry strategies, risk premia\n- Alternative / Synthetic: Quantitative baskets, factor portfolios, proprietary constructs, custom indices\n\nTIER-2 CATEGORIES (examples by Tier-1):\n- Equities: Global Indices | Sector Indices | Country/Regional | Thematic/Factor | Real Estate / REITs\n- Fixed Income: Sovereign Bonds | Corporate Credit | Credit Spreads | Yield Curves | Broad Fixed Income\n- Commodities: Energy | Metals | Agriculture | Broad Commodities\n- Currencies: Majors (EUR/USD, GBP/USD, USD/JPY) | EM FX | Broad Currency\n- Multi-Asset: Cross-Asset Indices | Inflation/Growth Themes | Thematic Baskets\n- Volatility: Vol Indices | Carry/Value Factors | Risk Premia Strategies\n- Alternative: Quant/Style Baskets | Custom/Proprietary | Factor-Based\n\nTIER-3 TAGS (select all that apply from):\n- Asset Class: Equity | Credit | FX | Commodity | Multi-Asset | Volatility | Alternative\n- Region: US | Europe | Asia | EM | Global | China | Japan | India | Canada | UAE | APAC | Australia | Developed\n- Sector/Theme: Tech | Energy | Financials | Healthcare | Industrials | Consumer | Defensive | ESG | Dividend | Growth | Value | Momentum | Quality | Infrastructure | Real Estate | Utilities | Materials\n- Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative | Options-Based | Dividend | Factor-Based | Low Volatility | Defensive | Domestic | Leveraged | Inverse\n- Duration (bonds only): Short (<2Y) | Medium (2-10Y) | Long (>10Y) | Unspecified\n- Special: Inverse | Long-Short | Covered-Call | Leveraged | Custom | Proprietary\n\nRespond with ONLY valid JSON in this exact format:\n{\"ticker\": \"TICKER\", \"tier1\": \"Category\", \"tier2\": \"Sub-category\", \"tier3_tags\": [\"tag1\", \"tag2\", \"tag3\"]}"
+        },
+        {
+          "role": "user",
+          "content": "Classify this asset:\nTicker: MBS US\nName: Angel Oak Mortgage-Backed Securities ETF\nDescription: Angel Oak Mortgage-Backed Securities ETF is an ETF incorporated in the USA. The investment objective of Angel Oak Mortgage-Backed Securities ETF is to seek total return. The Fund invests at leaset 80% of its net assets, plus the amount of any borrowings, in mortgage-backed securities.\nExisting Asset Class: Fixed Income\nGeographic Focus: U.S.\nObjective: Mortgage-Backed\nStrategy: Mortgage-Backed"
+        },
+        {
+          "role": "assistant",
+          "content": "{\"ticker\": \"MBS US\", \"tier1\": \"Fixed Income\", \"tier2\": \"Mortgage-Backed Securities\", \"tier3_tags\": [\"Credit\", \"US\", \"Passive\", \"Medium (2-10Y)\"]}"
+        }
+      ],
+      "metadata": {
+        "source": "etf",
+        "original_tier1": "Fixed Income",
+        "original_tier2": "Mortgage-Backed Securities"
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert financial asset classification specialist. Classify the given asset into a structured taxonomy.\n\nTIER-1 CATEGORIES (pick exactly one):\n- Equities: Stock indices, equity ETFs, equity-focused baskets, equity indices\n- Fixed Income: Bonds, credit, yield-focused instruments, fixed income ETFs\n- Commodities: Energy, metals, agriculture, commodity indices\n- Currencies (FX): Currency pairs and FX instruments\n- Multi-Asset / Thematic: Cross-asset, thematic baskets, macro themes, multi-asset indices\n- Volatility / Risk Premia: VIX, volatility indices, carry strategies, risk premia\n- Alternative / Synthetic: Quantitative baskets, factor portfolios, proprietary constructs, custom indices\n\nTIER-2 CATEGORIES (examples by Tier-1):\n- Equities: Global Indices | Sector Indices | Country/Regional | Thematic/Factor | Real Estate / REITs\n- Fixed Income: Sovereign Bonds | Corporate Credit | Credit Spreads | Yield Curves | Broad Fixed Income\n- Commodities: Energy | Metals | Agriculture | Broad Commodities\n- Currencies: Majors (EUR/USD, GBP/USD, USD/JPY) | EM FX | Broad Currency\n- Multi-Asset: Cross-Asset Indices | Inflation/Growth Themes | Thematic Baskets\n- Volatility: Vol Indices | Carry/Value Factors | Risk Premia Strategies\n- Alternative: Quant/Style Baskets | Custom/Proprietary | Factor-Based\n\nTIER-3 TAGS (select all that apply from):\n- Asset Class: Equity | Credit | FX | Commodity | Multi-Asset | Volatility | Alternative\n- Region: US | Europe | Asia | EM | Global | China | Japan | India | Canada | UAE | APAC | Australia | Developed\n- Sector/Theme: Tech | Energy | Financials | Healthcare | Industrials | Consumer | Defensive | ESG | Dividend | Growth | Value | Momentum | Quality | Infrastructure | Real Estate | Utilities | Materials\n- Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative | Options-Based | Dividend | Factor-Based | Low Volatility | Defensive | Domestic | Leveraged | Inverse\n- Duration (bonds only): Short (<2Y) | Medium (2-10Y) | Long (>10Y) | Unspecified\n- Special: Inverse | Long-Short | Covered-Call | Leveraged | Custom | Proprietary\n\nRespond with ONLY valid JSON in this exact format:\n{\"ticker\": \"TICKER\", \"tier1\": \"Category\", \"tier2\": \"Sub-category\", \"tier3_tags\": [\"tag1\", \"tag2\", \"tag3\"]}"
+        },
+        {
+          "role": "user",
+          "content": "Classify this asset:\nTicker: CMDT US\nName: Pimco Commodity Strategy Active Exchange-Traded Fund\nDescription: PIMCO Commodity Strategy Active ETF is an actively managed fund incorporated in the USA.The Fund seeks total return which exceeds that of the Bloomberg Commodity Index Total Return, consistent with prudent investment management.\nExisting Asset Class: Commodity\nGeographic Focus: Global\nObjective: Broad Based\nStrategy: Broad Based"
+        },
+        {
+          "role": "assistant",
+          "content": "{\"ticker\": \"CMDT US\", \"tier1\": \"Commodities\", \"tier2\": \"Broad Commodities Basket\", \"tier3_tags\": [\"Commodity\", \"Global\", \"Active\", \"Broad Based\"]}"
+        }
+      ],
+      "metadata": {
+        "source": "etf",
+        "original_tier1": "Commodities",
+        "original_tier2": "Broad Commodities Basket"
+      }
+    }
+  ],
+  "val": [
+    {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert financial asset classification specialist. Classify the given asset into a structured taxonomy.\n\nTIER-1 CATEGORIES (pick exactly one):\n- Equities: Stock indices, equity ETFs, equity-focused baskets, equity indices\n- Fixed Income: Bonds, credit, yield-focused instruments, fixed income ETFs\n- Commodities: Energy, metals, agriculture, commodity indices\n- Currencies (FX): Currency pairs and FX instruments\n- Multi-Asset / Thematic: Cross-asset, thematic baskets, macro themes, multi-asset indices\n- Volatility / Risk Premia: VIX, volatility indices, carry strategies, risk premia\n- Alternative / Synthetic: Quantitative baskets, factor portfolios, proprietary constructs, custom indices\n\nTIER-2 CATEGORIES (examples by Tier-1):\n- Equities: Global Indices | Sector Indices | Country/Regional | Thematic/Factor | Real Estate / REITs\n- Fixed Income: Sovereign Bonds | Corporate Credit | Credit Spreads | Yield Curves | Broad Fixed Income\n- Commodities: Energy | Metals | Agriculture | Broad Commodities\n- Currencies: Majors (EUR/USD, GBP/USD, USD/JPY) | EM FX | Broad Currency\n- Multi-Asset: Cross-Asset Indices | Inflation/Growth Themes | Thematic Baskets\n- Volatility: Vol Indices | Carry/Value Factors | Risk Premia Strategies\n- Alternative: Quant/Style Baskets | Custom/Proprietary | Factor-Based\n\nTIER-3 TAGS (select all that apply from):\n- Asset Class: Equity | Credit | FX | Commodity | Multi-Asset | Volatility | Alternative\n- Region: US | Europe | Asia | EM | Global | China | Japan | India | Canada | UAE | APAC | Australia | Developed\n- Sector/Theme: Tech | Energy | Financials | Healthcare | Industrials | Consumer | Defensive | ESG | Dividend | Growth | Value | Momentum | Quality | Infrastructure | Real Estate | Utilities | Materials\n- Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative | Options-Based | Dividend | Factor-Based | Low Volatility | Defensive | Domestic | Leveraged | Inverse\n- Duration (bonds only): Short (<2Y) | Medium (2-10Y) | Long (>10Y) | Unspecified\n- Special: Inverse | Long-Short | Covered-Call | Leveraged | Custom | Proprietary\n\nRespond with ONLY valid JSON in this exact format:\n{\"ticker\": \"TICKER\", \"tier1\": \"Category\", \"tier2\": \"Sub-category\", \"tier3_tags\": [\"tag1\", \"tag2\", \"tag3\"]}"
+        },
+        {
+          "role": "user",
+          "content": "Classify this asset:\nTicker: EWW US\nName: iShares MSCI Mexico ETF\nDescription: iShares MSCI Mexico ETF is an exchange-traded fund incorporated in the USA. The ETF's objective seeks to provide investment results that correspond to the performance of the MSCI Mexico IMI 25/50 Index.\nExisting Asset Class: Equity\nGeographic Focus: Mexico\nObjective: Mexico\nStrategy: Blend"
+        },
+        {
+          "role": "assistant",
+          "content": "{\"ticker\": \"EWW US\", \"tier1\": \"Equities\", \"tier2\": \"Country/Regional\", \"tier3_tags\": [\"Equity\", \"EM\", \"Passive\", \"Blend\"]}"
+        }
+      ],
+      "metadata": {
+        "source": "etf",
+        "original_tier1": "Equities",
+        "original_tier2": "Country/Regional"
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert financial asset classification specialist. Classify the given asset into a structured taxonomy.\n\nTIER-1 CATEGORIES (pick exactly one):\n- Equities: Stock indices, equity ETFs, equity-focused baskets, equity indices\n- Fixed Income: Bonds, credit, yield-focused instruments, fixed income ETFs\n- Commodities: Energy, metals, agriculture, commodity indices\n- Currencies (FX): Currency pairs and FX instruments\n- Multi-Asset / Thematic: Cross-asset, thematic baskets, macro themes, multi-asset indices\n- Volatility / Risk Premia: VIX, volatility indices, carry strategies, risk premia\n- Alternative / Synthetic: Quantitative baskets, factor portfolios, proprietary constructs, custom indices\n\nTIER-2 CATEGORIES (examples by Tier-1):\n- Equities: Global Indices | Sector Indices | Country/Regional | Thematic/Factor | Real Estate / REITs\n- Fixed Income: Sovereign Bonds | Corporate Credit | Credit Spreads | Yield Curves | Broad Fixed Income\n- Commodities: Energy | Metals | Agriculture | Broad Commodities\n- Currencies: Majors (EUR/USD, GBP/USD, USD/JPY) | EM FX | Broad Currency\n- Multi-Asset: Cross-Asset Indices | Inflation/Growth Themes | Thematic Baskets\n- Volatility: Vol Indices | Carry/Value Factors | Risk Premia Strategies\n- Alternative: Quant/Style Baskets | Custom/Proprietary | Factor-Based\n\nTIER-3 TAGS (select all that apply from):\n- Asset Class: Equity | Credit | FX | Commodity | Multi-Asset | Volatility | Alternative\n- Region: US | Europe | Asia | EM | Global | China | Japan | India | Canada | UAE | APAC | Australia | Developed\n- Sector/Theme: Tech | Energy | Financials | Healthcare | Industrials | Consumer | Defensive | ESG | Dividend | Growth | Value | Momentum | Quality | Infrastructure | Real Estate | Utilities | Materials\n- Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative | Options-Based | Dividend | Factor-Based | Low Volatility | Defensive | Domestic | Leveraged | Inverse\n- Duration (bonds only): Short (<2Y) | Medium (2-10Y) | Long (>10Y) | Unspecified\n- Special: Inverse | Long-Short | Covered-Call | Leveraged | Custom | Proprietary\n\nRespond with ONLY valid JSON in this exact format:\n{\"ticker\": \"TICKER\", \"tier1\": \"Category\", \"tier2\": \"Sub-category\", \"tier3_tags\": [\"tag1\", \"tag2\", \"tag3\"]}"
+        },
+        {
+          "role": "user",
+          "content": "Classify this asset:\nTicker: GUNR US\nName: FlexShares Morningstar Global Upstream Natural Resources Index Fund\nDescription: FlexShares Morningstar Global Upstream Natural Resources Index Fund is an exchange-traded fund incorporated in the USA. The Fund seeks to track the performance of the Morningstar Global Upstream Natural Resources Index.\nExisting Asset Class: Equity\nGeographic Focus: Global\nObjective: Thematic\nStrategy: Blend"
+        },
+        {
+          "role": "assistant",
+          "content": "{\"ticker\": \"GUNR US\", \"tier1\": \"Commodities\", \"tier2\": \"Energy\", \"tier3_tags\": [\"Equity\", \"Global\", \"Energy\", \"Thematic\", \"Passive\"]}"
+        }
+      ],
+      "metadata": {
+        "source": "etf",
+        "original_tier1": "Commodities",
+        "original_tier2": "Energy"
+      }
+    }
+  ],
+  "test": [
+    {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert financial asset classification specialist. Classify the given asset into a structured taxonomy.\n\nTIER-1 CATEGORIES (pick exactly one):\n- Equities: Stock indices, equity ETFs, equity-focused baskets, equity indices\n- Fixed Income: Bonds, credit, yield-focused instruments, fixed income ETFs\n- Commodities: Energy, metals, agriculture, commodity indices\n- Currencies (FX): Currency pairs and FX instruments\n- Multi-Asset / Thematic: Cross-asset, thematic baskets, macro themes, multi-asset indices\n- Volatility / Risk Premia: VIX, volatility indices, carry strategies, risk premia\n- Alternative / Synthetic: Quantitative baskets, factor portfolios, proprietary constructs, custom indices\n\nTIER-2 CATEGORIES (examples by Tier-1):\n- Equities: Global Indices | Sector Indices | Country/Regional | Thematic/Factor | Real Estate / REITs\n- Fixed Income: Sovereign Bonds | Corporate Credit | Credit Spreads | Yield Curves | Broad Fixed Income\n- Commodities: Energy | Metals | Agriculture | Broad Commodities\n- Currencies: Majors (EUR/USD, GBP/USD, USD/JPY) | EM FX | Broad Currency\n- Multi-Asset: Cross-Asset Indices | Inflation/Growth Themes | Thematic Baskets\n- Volatility: Vol Indices | Carry/Value Factors | Risk Premia Strategies\n- Alternative: Quant/Style Baskets | Custom/Proprietary | Factor-Based\n\nTIER-3 TAGS (select all that apply from):\n- Asset Class: Equity | Credit | FX | Commodity | Multi-Asset | Volatility | Alternative\n- Region: US | Europe | Asia | EM | Global | China | Japan | India | Canada | UAE | APAC | Australia | Developed\n- Sector/Theme: Tech | Energy | Financials | Healthcare | Industrials | Consumer | Defensive | ESG | Dividend | Growth | Value | Momentum | Quality | Infrastructure | Real Estate | Utilities | Materials\n- Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative | Options-Based | Dividend | Factor-Based | Low Volatility | Defensive | Domestic | Leveraged | Inverse\n- Duration (bonds only): Short (<2Y) | Medium (2-10Y) | Long (>10Y) | Unspecified\n- Special: Inverse | Long-Short | Covered-Call | Leveraged | Custom | Proprietary\n\nRespond with ONLY valid JSON in this exact format:\n{\"ticker\": \"TICKER\", \"tier1\": \"Category\", \"tier2\": \"Sub-category\", \"tier3_tags\": [\"tag1\", \"tag2\", \"tag3\"]}"
+        },
+        {
+          "role": "user",
+          "content": "Classify this asset:\nTicker: GSCMSGOH Index\nName: GS SGO FP Hedge Basket"
+        },
+        {
+          "role": "assistant",
+          "content": "{\"ticker\": \"GSCMSGOH Index\", \"tier1\": \"Alternative / Synthetic\", \"tier2\": \"Quant/Style Baskets\", \"tier3_tags\": [\"Multi-Asset\", \"Global\", \"Quantitative\", \"Long/Short\"]}"
+        }
+      ],
+      "metadata": {
+        "source": "goldman",
+        "original_tier1": "Alternative / Synthetic",
+        "original_tier2": "Quant/Style Baskets"
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert financial asset classification specialist. Classify the given asset into a structured taxonomy.\n\nTIER-1 CATEGORIES (pick exactly one):\n- Equities: Stock indices, equity ETFs, equity-focused baskets, equity indices\n- Fixed Income: Bonds, credit, yield-focused instruments, fixed income ETFs\n- Commodities: Energy, metals, agriculture, commodity indices\n- Currencies (FX): Currency pairs and FX instruments\n- Multi-Asset / Thematic: Cross-asset, thematic baskets, macro themes, multi-asset indices\n- Volatility / Risk Premia: VIX, volatility indices, carry strategies, risk premia\n- Alternative / Synthetic: Quantitative baskets, factor portfolios, proprietary constructs, custom indices\n\nTIER-2 CATEGORIES (examples by Tier-1):\n- Equities: Global Indices | Sector Indices | Country/Regional | Thematic/Factor | Real Estate / REITs\n- Fixed Income: Sovereign Bonds | Corporate Credit | Credit Spreads | Yield Curves | Broad Fixed Income\n- Commodities: Energy | Metals | Agriculture | Broad Commodities\n- Currencies: Majors (EUR/USD, GBP/USD, USD/JPY) | EM FX | Broad Currency\n- Multi-Asset: Cross-Asset Indices | Inflation/Growth Themes | Thematic Baskets\n- Volatility: Vol Indices | Carry/Value Factors | Risk Premia Strategies\n- Alternative: Quant/Style Baskets | Custom/Proprietary | Factor-Based\n\nTIER-3 TAGS (select all that apply from):\n- Asset Class: Equity | Credit | FX | Commodity | Multi-Asset | Volatility | Alternative\n- Region: US | Europe | Asia | EM | Global | China | Japan | India | Canada | UAE | APAC | Australia | Developed\n- Sector/Theme: Tech | Energy | Financials | Healthcare | Industrials | Consumer | Defensive | ESG | Dividend | Growth | Value | Momentum | Quality | Infrastructure | Real Estate | Utilities | Materials\n- Strategy: Active | Passive | Equal-Weight | Thematic | Quantitative | Options-Based | Dividend | Factor-Based | Low Volatility | Defensive | Domestic | Leveraged | Inverse\n- Duration (bonds only): Short (<2Y) | Medium (2-10Y) | Long (>10Y) | Unspecified\n- Special: Inverse | Long-Short | Covered-Call | Leveraged | Custom | Proprietary\n\nRespond with ONLY valid JSON in this exact format:\n{\"ticker\": \"TICKER\", \"tier1\": \"Category\", \"tier2\": \"Sub-category\", \"tier3_tags\": [\"tag1\", \"tag2\", \"tag3\"]}"
+        },
+        {
+          "role": "user",
+          "content": "Classify this asset:\nTicker: BGSFXV\nName: Bloomberg GSAM FX G10 Value Index\nDescription: Bloomberg GSAM FX G10 Value Index\nSecurity Type: Fixed Income Index\nRegion: Multi-national"
+        },
+        {
+          "role": "assistant",
+          "content": "{\"ticker\": \"BGSFXV\", \"tier1\": \"Currencies (FX)\", \"tier2\": \"Majors\", \"tier3_tags\": [\"FX\", \"Global\", \"Value\", \"Factor-Based\"]}"
+        }
+      ],
+      "metadata": {
+        "source": "bloomberg",
+        "original_tier1": "Currencies (FX)",
+        "original_tier2": "Majors"
+      }
+    }
+  ]
+}

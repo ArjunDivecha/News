@@ -1,0 +1,103 @@
+{
+  "total_examples": 4952,
+  "splits": {
+    "train": 4208,
+    "val": 493,
+    "test": 251
+  },
+  "split_ratios": {
+    "train": 0.8497576736672051,
+    "val": 0.0995557350565428,
+    "test": 0.05068659127625202
+  },
+  "tier1_distribution": {
+    "train": {
+      "Fixed Income": 408,
+      "Commodities": 102,
+      "Equities": 3132,
+      "Alternative / Synthetic": 293,
+      "Multi-Asset / Thematic": 139,
+      "Volatility / Risk Premia": 117,
+      "Currencies (FX)": 17
+    },
+    "val": {
+      "Equities": 368,
+      "Commodities": 12,
+      "Fixed Income": 48,
+      "Alternative / Synthetic": 34,
+      "Multi-Asset / Thematic": 16,
+      "Volatility / Risk Premia": 13,
+      "Currencies (FX)": 2
+    },
+    "test": {
+      "Alternative / Synthetic": 18,
+      "Currencies (FX)": 1,
+      "Volatility / Risk Premia": 8,
+      "Equities": 185,
+      "Multi-Asset / Thematic": 9,
+      "Fixed Income": 24,
+      "Commodities": 6
+    }
+  },
+  "source_breakdown": [
+    {
+      "source": "etf",
+      "total_rows": 1619,
+      "valid_classifications": 1619,
+      "training_examples": 1619,
+      "tier1_distribution": {
+        "Equities": 1105,
+        "Fixed Income": 370,
+        "Commodities": 58,
+        "Alternative / Synthetic": 40,
+        "Multi-Asset / Thematic": 32,
+        "Volatility / Risk Premia": 9,
+        "Currencies (FX)": 5
+      }
+    },
+    {
+      "source": "bloomberg",
+      "total_rows": 438,
+      "valid_classifications": 437,
+      "training_examples": 437,
+      "tier1_distribution": {
+        "Equities": 313,
+        "Fixed Income": 83,
+        "Commodities": 17,
+        "Multi-Asset / Thematic": 11,
+        "Volatility / Risk Premia": 6,
+        "Currencies (FX)": 4,
+        "Alternative / Synthetic": 3
+      }
+    },
+    {
+      "source": "goldman",
+      "total_rows": 2667,
+      "valid_classifications": 2665,
+      "training_examples": 2665,
+      "tier1_distribution": {
+        "Equities": 2055,
+        "Alternative / Synthetic": 299,
+        "Volatility / Risk Premia": 122,
+        "Multi-Asset / Thematic": 109,
+        "Commodities": 43,
+        "Fixed Income": 26,
+        "Currencies (FX)": 11
+      }
+    },
+    {
+      "source": "thematic",
+      "total_rows": 231,
+      "valid_classifications": 231,
+      "training_examples": 231,
+      "tier1_distribution": {
+        "Equities": 212,
+        "Multi-Asset / Thematic": 12,
+        "Alternative / Synthetic": 3,
+        "Commodities": 2,
+        "Volatility / Risk Premia": 1,
+        "Fixed Income": 1
+      }
+    }
+  ]
+}

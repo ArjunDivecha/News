@@ -1,0 +1,256 @@
+{
+  "timestamp": "2026-01-29T16:53:15.453876",
+  "search_queries": [
+    "wallstreetbets trending stocks today",
+    "WSB YOLO plays this week",
+    "meme stocks trending today",
+    "penny stocks reddit today",
+    "trending stocks stocktwits",
+    "short squeeze stocks today"
+  ],
+  "total_found": 10,
+  "meme_stocks": [
+    {
+      "symbol": "ZSL",
+      "name": "ProShares UltraShort Silver",
+      "mentions": 3,
+      "sources": [
+        "apewisdom.io",
+        "feargreedmeter.com"
+      ],
+      "volume_spike": 10.52,
+      "price_change_1d": 0.64,
+      "price_change_5d": -29.78,
+      "current_volume": 728855830,
+      "avg_volume": 69252184,
+      "market_cap_b": 0,
+      "reasons": [
+        "10.5x volume",
+        "-29.8% (5d)"
+      ],
+      "sample_context": [
+        "oShares UltraShort Silver logo]  ProShares Trust - ProShares UltraShort Silver |ZSL|33|74%||170| ![favorite icon] |36|[ ![Intel logo]  Intel |INTC|32|-48%||66|",
+        "oShares UltraShort Silver logo]  ProShares Trust - ProShares UltraShort Silver |ZSL|33|74%||170| ![favorite icon] |36|[ ![Intel logo]  Intel |INTC|32|-48%||66|"
+      ],
+      "meme_score": 31.775093923798664
+    },
+    {
+      "symbol": "GLD",
+      "name": "SPDR Gold Shares",
+      "mentions": 6,
+      "sources": [
+        "apewisdom.io",
+        "feargreedmeter.com",
+        "stocktwits.com"
+      ],
+      "volume_spike": 3.66,
+      "price_change_1d": 0.27,
+      "price_change_5d": 8.28,
+      "current_volume": 47325008,
+      "avg_volume": 12917084,
+      "market_cap_b": 129.08,
+      "reasons": [
+        "3.7x volume"
+      ],
+      "sample_context": [
+        "92| ![favorite icon] |6|[ ![SSgA SPDR Gold Shares logo]  SSgA SPDR Gold Shares |GLD|415|147%||2,047| ![favorite icon] |7|[ ![Micron Technology logo]  Micron Tec",
+        "92| ![favorite icon] |6|[ ![SSgA SPDR Gold Shares logo]  SSgA SPDR Gold Shares |GLD|415|147%||2,047| ![favorite icon] |7|[ ![Micron Technology logo]  Micron Tec"
+      ],
+      "meme_score": 22.042080240514835
+    },
+    {
+      "symbol": "SLV",
+      "name": "iShares Silver Trust",
+      "mentions": 4,
+      "sources": [
+        "apewisdom.io",
+        "feargreedmeter.com"
+      ],
+      "volume_spike": 2.99,
+      "price_change_1d": -0.03,
+      "price_change_5d": 13.63,
+      "current_volume": 214566940,
+      "avg_volume": 71720250,
+      "market_cap_b": 36.05,
+      "reasons": [
+        "3.0x volume",
+        "+13.6% (5d)"
+      ],
+      "sample_context": [
+        ",422| ![favorite icon] |4|[ ![iShares Silver Trust logo]  iShares Silver Trust |SLV|461|12%||1,882| ![favorite icon] |5|[ ![SPDR S&amp;P 500 ETF Trust logo]  SP",
+        ",422| ![favorite icon] |4|[ ![iShares Silver Trust logo]  iShares Silver Trust |SLV|461|12%||1,882| ![favorite icon] |5|[ ![SPDR S&amp;P 500 ETF Trust logo]  SP"
+      ],
+      "meme_score": 11.97028127551354
+    },
+    {
+      "symbol": "GME",
+      "name": "GameStop Corp.",
+      "mentions": 6,
+      "sources": [
+        "www.quiverquant.com",
+        "www.nerdwallet.com",
+        "www.tipranks.com",
+        "yolostocks.live",
+        "www.benzinga.com"
+      ],
+      "volume_spike": 1.65,
+      "price_change_1d": -3.51,
+      "price_change_5d": -0.78,
+      "current_volume": 10870057,
+      "avg_volume": 6601189,
+      "market_cap_b": 10.22,
+      "reasons": [
+        "1.6x volume"
+      ],
+      "sample_context": [
+        "Rivian Automotive, Inc. Class A Common Stock ] |[94] |[96] |[93] | [4] |[![]  **GME**GameStop Corp. Class A ] |[94] |[94] |[94] | [5] |[![]  **AMC**AMC ENTERTAI",
+        "Rivian Automotive, Inc. Class A Common Stock ] |[94] |[96] |[93] | [4] |[![]  **GME**GameStop Corp. Class A ] |[94] |[94] |[94] | [5] |[![]  **AMC**AMC ENTERTAI"
+      ],
+      "meme_score": 10.226979439394421
+    },
+    {
+      "symbol": "AMC",
+      "name": "AMC Entertainment Holdings, Inc.",
+      "mentions": 6,
+      "sources": [
+        "www.ig.com",
+        "bloomberg.com",
+        "www.tipranks.com",
+        "pennystocks.com",
+        "en.wikipedia.org",
+        "www.benzinga.com"
+      ],
+      "volume_spike": 1.43,
+      "price_change_1d": -4.2,
+      "price_change_5d": -12.18,
+      "current_volume": 38482704,
+      "avg_volume": 26995150,
+      "market_cap_b": 0.7,
+      "reasons": [
+        "1.4x volume",
+        "-12.2% (5d)"
+      ],
+      "sample_context": [
+        "2021, the extreme volatility associated with key stocks including GameStop and AMC subsided significantly. As with all volatility events, some traders made for",
+        "Millions on a US Energy Company Takeover July 23, 2024 July 23, 2024 Meme Stock AMC Wants Creditors to Take a Haircut July 22, 2024 July 22, 2024 AMC Uses Theat"
+      ],
+      "meme_score": 8.912125431309212
+    },
+    {
+      "symbol": "AGQ",
+      "name": "ProShares Ultra Silver",
+      "mentions": 3,
+      "sources": [
+        "apewisdom.io",
+        "feargreedmeter.com"
+      ],
+      "volume_spike": 2.69,
+      "price_change_1d": -0.25,
+      "price_change_5d": 24.89,
+      "current_volume": 14444734,
+      "avg_volume": 5369949,
+      "market_cap_b": 0,
+      "reasons": [
+        "2.7x volume",
+        "+24.9% (5d)"
+      ],
+      "sample_context": [
+        "Trust - ProShares Ultra Silver logo]  ProShares Trust - ProShares Ultra Silver |AGQ|11|38%||35| ![favorite icon] |66|[ ![Nebius Group logo]  Nebius Group |NBIS|",
+        "Trust - ProShares Ultra Silver logo]  ProShares Trust - ProShares Ultra Silver |AGQ|11|38%||35| ![favorite icon] |66|[ ![Nebius Group logo]  Nebius Group |NBIS|"
+      ],
+      "meme_score": 8.090313957773342
+    },
+    {
+      "symbol": "SBUX",
+      "name": "Starbucks Corporation",
+      "mentions": 4,
+      "sources": [
+        "stocktwits.com",
+        "www.tipranks.com",
+        "www.quiverquant.com"
+      ],
+      "volume_spike": 1.96,
+      "price_change_1d": -1.35,
+      "price_change_5d": -3.83,
+      "current_volume": 19329856,
+      "avg_volume": 9877056,
+      "market_cap_b": 106.96,
+      "reasons": [
+        "2.0x volume"
+      ],
+      "sample_context": [
+        "**SPWR**SunPower Corporation Common Stock ] |[68] |[49] |[87] | [50] |[![]  **SBUX**Starbucks Corp ] |[68] |[92] |[43] |",
+        "**SPWR**SunPower Corporation Common Stock ] |[68] |[49] |[87] | [50] |[![]  **SBUX**Starbucks Corp ] |[68] |[92] |[43] |"
+      ],
+      "meme_score": 7.933482804337371
+    },
+    {
+      "symbol": "SOUN",
+      "name": "SoundHound AI, Inc.",
+      "mentions": 3,
+      "sources": [
+        "www.quiverquant.com",
+        "www.timothysykes.com"
+      ],
+      "volume_spike": 0.82,
+      "price_change_1d": -6.3,
+      "price_change_5d": -12.1,
+      "current_volume": 22427549,
+      "avg_volume": 27241987,
+      "market_cap_b": 3.81,
+      "reasons": [
+        "-12.1% (5d)"
+      ],
+      "sample_context": [
+        "ank|Ticker|Meme Score|WallStreetBets Score|Fails-to-Deliver Score| [1] |[![]  **SOUN**SoundHound AI, Inc. Class A Common Stock ] |[97] |[95] |[99] | [3] |[![]",
+        "ank|Ticker|Meme Score|WallStreetBets Score|Fails-to-Deliver Score| [1] |[![]  **SOUN**SoundHound AI, Inc. Class A Common Stock ] |[97] |[95] |[99] | [3] |[![]"
+      ],
+      "meme_score": 2.6252925757867533
+    },
+    {
+      "symbol": "SOXL",
+      "name": "Direxion Daily Semiconductor Bull 3X Shares",
+      "mentions": 3,
+      "sources": [
+        "apewisdom.io"
+      ],
+      "volume_spike": 0.8,
+      "price_change_1d": 0.54,
+      "price_change_5d": 14.4,
+      "current_volume": 70700305,
+      "avg_volume": 88641270,
+      "market_cap_b": 0,
+      "reasons": [
+        "+14.4% (5d)"
+      ],
+      "sample_context": [
+        "logo]  Direxion Shares ETF Trust - Direxion Daily Semiconductor Bull 3X Share |SOXL|6|200%||7| ![favorite icon] |96|[ ![VanEck Vectors ETF Trust - VanEck Vecto",
+        "logo]  Direxion Shares ETF Trust - Direxion Daily Semiconductor Bull 3X Share |SOXL|6|200%||7| ![favorite icon] |96|[ ![VanEck Vectors ETF Trust - VanEck Vecto"
+      ],
+      "meme_score": 2.4057739460984204
+    },
+    {
+      "symbol": "BYND",
+      "name": "Beyond Meat, Inc.",
+      "mentions": 3,
+      "sources": [
+        "www.tipranks.com",
+        "www.quiverquant.com"
+      ],
+      "volume_spike": 0.5,
+      "price_change_1d": -6.49,
+      "price_change_5d": -15.18,
+      "current_volume": 40454799,
+      "avg_volume": 80370649,
+      "market_cap_b": 0.35,
+      "reasons": [
+        "-15.2% (5d)"
+      ],
+      "sample_context": [
+        "**PEGY**Pineapple Energy Inc. Common Stock ] |[74] |[49] |[100] | [38] |[![]  **BYND**Beyond Meat, Inc. Common Stock ] |[74] |[49] |[99] | [39] |[![]  **WKHS**W",
+        "**PEGY**Pineapple Energy Inc. Common Stock ] |[74] |[49] |[100] | [38] |[![]  **BYND**Beyond Meat, Inc. Common Stock ] |[74] |[49] |[99] | [39] |[![]  **WKHS**W"
+      ],
+      "meme_score": 1.6081215704706744
+    }
+  ]
+}
