@@ -1,6 +1,6 @@
 # AGENTS.md - Financial Analytics Pipeline
 
-**Last Updated**: 2026-01-30 (Step 4 Report Generation added)  
+**Last Updated**: 2026-01-31 (Critical YTD data lesson added)  
 **Project Root**: `/Users/arjundivecha/Dropbox/AAA Backup/A Working/News`
 
 ---
@@ -312,6 +312,70 @@ Classification scripts save progress every 50 items:
 - Classification includes automatic rate limiting
 - Exponential backoff implemented for retries
 - Runtime: 30-60 minutes for full classification
+
+---
+
+## CRITICAL: Step 4 Report Generation Lessons Learned
+
+### YTD Data in LLM Reports
+
+**Problem (2026-01-31):** Reports were missing YTD columns in tables despite the user requesting YTD context. The LLM was not including YTD because:
+1. The **data passed to the LLM** didn't include YTD - the `get_tier1_stats()` and `get_tier2_stats()` functions only queried `category_stats` table which has no YTD
+2. Even if prompted, LLMs cannot invent data they weren't given
+
+**Solution:** Modified `get_tier1_stats()` and `get_tier2_stats()` in `03_generate_daily_report.py` to:
+1. Query `daily_prices` table joined with `assets` to get `AVG(return_ytd)` grouped by tier1/tier2
+2. Include YTD column in the markdown tables passed to the LLM
+3. The prompt template (`daily_wrap_structured.md`) explicitly specifies YTD as a required table column
+
+**Key Principle:** 
+> **If you want the LLM to include specific data in its output, you MUST pass that data in the input. LLMs cannot hallucinate real market data.**
+
+### Two-Stage Workflow (PC + Mac)
+
+**Problem:** Bloomberg API (`blpapi`) only works on Windows with Bloomberg Terminal.
+
+**Solution:**
+1. **PC Side (Windows/Parallels):** Run `bloomberg_daily.py` and `bloomberg_backfill.py` to fetch data into `market_data.db`
+2. **Mac Side:** Run `run_pipeline.py` which calls correlation computation and report generation
+
+**Critical Files:**
+- `bloomberg_backfill.py` - Fetches historical data (90 days). Only fetches `CHG_PCT_1D`, NOT `CHG_PCT_YTD`
+- `bloomberg_daily.py` - Fetches daily data. Fetches BOTH `CHG_PCT_1D` and `CHG_PCT_YTD`
+
+**Implication:** Historical YTD data must be calculated or will only be available from daily runs going forward.
+
+### Git Recovery Protocol
+
+**Problem:** Destructive `git reset --hard` operations lost files and database state.
+
+**Solution - Never Do:**
+- `git reset --hard` to commits before current work
+- Deleting files without checking their dependencies
+
+**Solution - Always Do:**
+1. Use `git checkout <commit-hash> -- <file-path>` to selectively restore specific files
+2. Verify database schema/data after any git operation
+3. Check for missing tables: `asset_correlations`, etc.
+
+### Database Schema Critical Tables
+
+The `market_data.db` requires these tables:
+```sql
+-- Core tables
+assets              -- Static asset data from Final 1000
+daily_prices        -- Daily returns (return_1d, return_ytd)
+factor_returns      -- 18 factor returns per day
+category_stats      -- Tier1/Tier2 aggregated stats per day
+
+-- Derived tables  
+asset_correlations  -- 60-day rolling correlations (computed by 04_compute_correlations.py)
+```
+
+If `asset_correlations` is missing, run:
+```bash
+python scripts/04_compute_correlations.py --backfill
+```
 
 ---
 

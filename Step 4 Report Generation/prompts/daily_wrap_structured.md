@@ -193,28 +193,46 @@ REQUIRED SECTIONS (in order)
    - 3 bullets of most unusual observations
 
 3. ASSET CLASS DASHBOARD
-   - Table: Asset Class | 1-Day | 5-Day | Hist Rank | Z-Score | Regime
-   - Narrative: Risk-on/risk-off/mixed with evidence
+   - Title: "ASSET CLASS PERFORMANCE MATRIX"
+   - Table columns EXACTLY: Asset Class | 1-Day | YTD | Std Dev | Z-Score | Regime Signal
+   - Include ALL 7 asset classes, sorted by 1-Day return (best to worst)
+   - Z-Score column format: "⚪ -0.2" or "🔴 -2.6" (emoji + number)
+   - Regime Signal: Brief interpretation (e.g., "Defensive anchor", "LIQUIDATION", "YTD laggard")
+   - Narrative: 3-4 sentences on risk-on/risk-off/mixed, use YTD to contextualize large moves
 
 4. INVESTMENT STRATEGY PERFORMANCE
-   - Table: Top 5 and Bottom 5 by 1-Day return
-   - Narrative: Which strategies outperforming/underperforming
+   - Title: "STRATEGY PERFORMANCE EXTREMES"
+   - Table columns EXACTLY: Strategy | 1-Day | YTD | Streak | Signal
+   - Show Top 5 AND Bottom 5 strategies (10 total, with "..." separator row)
+   - Streak format: "+3" for 3-day winning streak, "-4" for 4-day losing streak
+   - Signal: Brief interpretation (e.g., "Outperformer", "Extended streak", "🔴 EXTREME")
+   - Narrative: 3-4 sentences on strategy dispersion, use YTD to explain if today is profit-taking or continuation
 
 5. REGIONAL ANALYSIS
-   - Table: Region | 1-Day | 5-Day | vs Global Avg | Streak
-   - Narrative: Regional leadership/laggards
+   - Title: "REGIONAL PERFORMANCE HIERARCHY"
+   - Table columns EXACTLY: Region | 1-Day | vs Global Avg | Std Dev | Interpretation
+   - Sorted by 1-Day return (best to worst)
+   - Interpretation: Brief context (e.g., "Defensive leader", "Commodity beta", "Tech drag")
+   - Narrative: 3-4 sentences on DM vs EM, regional leadership/laggards
 
 6. STYLE FACTOR DYNAMICS
-   - Table: Spread | Today | Direction | Z-Score
-   - Narrative: Factor regime shifts
+   - Title: "STYLE FACTOR SPREADS"
+   - Table columns EXACTLY: Factor Spread | Today | Direction | Z-Score
+   - Show key spreads: Low Vol vs Momentum, Value vs Growth, Large vs Small, etc.
+   - Direction: "Defensive", "Value", "Quality", etc.
+   - Narrative: 3-4 sentences on factor rotation, regime shifts
 
 7. SECTOR DASHBOARD
-   - Table: Sector | 1-Day | 5-Day | Z-Score
-   - Narrative: Sector rotation
+   - Title: "GLOBAL SECTOR PERFORMANCE"
+   - Table columns EXACTLY: Sector | 1-Day | Std Dev | Z-Score
+   - Sorted by 1-Day return (best to worst)
+   - Narrative: 3-4 sentences on sector dispersion, unusual moves
 
-8. THEME SPOTLIGHT
-   - Table: Theme | 1-Day | Historical Context | Why Unusual
-   - Narrative: Highlight 3-5 themes with unusual behavior
+8. THEME SPOTLIGHT (Goldman Thematic Baskets)
+   - Title: "THEMATIC PERFORMANCE BY CATEGORY"
+   - Table columns EXACTLY: Theme | Avg Return | Best | Worst | Unusual Pattern
+   - Group by theme category (Defensive, Hedge Baskets, Commodity, etc.)
+   - Narrative: 3-4 sentences on which themes worked/failed, unusual patterns
 
 9. MOMENTUM & TECHNICAL CONTEXT
     - Narrative: RSI, 5-day momentum, volatility regime analysis

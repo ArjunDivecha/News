@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-MODEL COMPARISON TOOL (Opus Only)
+MODEL COMPARISON TOOL
 =============================================================================
 
 PURPOSE:
-Generate reports using Claude Opus 4.5. Legacy comparison functionality
-kept for historical reference.
+Run the same report generation with 3 different LLM models and save outputs
+for side-by-side comparison.
 
 USAGE:
-    python scripts/05_compare_models.py                    # Today's date (Opus)
+    python scripts/05_compare_models.py                    # Today's date
     python scripts/05_compare_models.py --date 2026-01-30 # Specific date
     python scripts/05_compare_models.py --structured    # Use structured JSON output
-    python scripts/05_compare_models.py --models anthropic  # Opus only (default)
+    python scripts/05_compare_models.py --models anthropic openai google  # Custom models
 
 OUTPUT:
     outputs/comparison/{date}/
@@ -267,9 +267,9 @@ def main():
     parser.add_argument("--date", type=str, default=None,
                        help="Date (YYYY-MM-DD). Defaults to last trading day.")
     parser.add_argument("--models", type=str, nargs='+',
-                       default=['anthropic'],  # Opus only
-                       choices=['anthropic'],  # Opus only
-                       help="Model to use (Claude Opus 4.5 only)")
+                       default=['anthropic', 'openai', 'google'],
+                       choices=['anthropic', 'openai', 'google'],
+                       help="Models to compare")
     parser.add_argument("--structured", action="store_true",
                        help="Use structured JSON output mode")
     args = parser.parse_args()

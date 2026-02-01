@@ -21,10 +21,11 @@ Generate daily market wrap report using multiple LLMs in parallel.
 Pulls data from SQLite, injects into prompt template, generates reports.
 
 USAGE:
-    python scripts/03_generate_daily_report.py                    # Today's date (uses Claude Opus 4.5)
+    python scripts/03_generate_daily_report.py                    # Today's date
     python scripts/03_generate_daily_report.py --date 2026-01-30
+    python scripts/03_generate_daily_report.py --provider anthropic # Single provider
     python scripts/03_generate_daily_report.py --test              # Test mode (no LLM)
-    python scripts/03_generate_daily_report.py --pdf-engine prince # PrinceXML PDF (default)
+    python scripts/03_generate_daily_report.py --pdf-engine kimi   # Premium PDF styling
 =============================================================================
 """
 
@@ -75,9 +76,8 @@ def load_prompt_template() -> tuple:
 def get_tier1_stats(date: str) -> str:
     """Get Tier-1 category statistics for the date, including YTD context."""
     conn = get_db()
-    
-    # Get category stats
     cursor = conn.cursor()
+    
     cursor.execute("""
         SELECT category_value, avg_return, median_return, std_return,
                min_return, max_return, count, percentile_60d, streak_days, streak_direction
@@ -90,20 +90,19 @@ def get_tier1_stats(date: str) -> str:
     
     # Get YTD averages for each tier1
     ytd_data = pd.read_sql_query("""
-        SELECT 
-            a.tier1,
+        SELECT a.tier1,
             AVG(dp.return_ytd) as avg_ytd,
-            COUNT(*) as count
+            COUNT(*) as cnt
         FROM daily_prices dp
         JOIN assets a ON dp.ticker = a.ticker
         WHERE dp.date = ? AND dp.return_ytd IS NOT NULL AND a.tier1 IS NOT NULL
         GROUP BY a.tier1
     """, conn, params=[date])
     
+    conn.close()
+    
     # Create YTD lookup
     ytd_lookup = {row['tier1']: row['avg_ytd'] for _, row in ytd_data.iterrows()}
-    
-    conn.close()
     
     if not rows:
         return "No Tier-1 data available"
@@ -140,20 +139,19 @@ def get_tier2_stats(date: str, limit: int = 20) -> str:
     
     # Get YTD averages for tier2 categories
     ytd_data = pd.read_sql_query("""
-        SELECT 
-            a.tier2,
+        SELECT a.tier2,
             AVG(dp.return_ytd) as avg_ytd,
-            COUNT(*) as count
+            COUNT(*) as cnt
         FROM daily_prices dp
         JOIN assets a ON dp.ticker = a.ticker
         WHERE dp.date = ? AND dp.return_ytd IS NOT NULL AND a.tier2 IS NOT NULL
         GROUP BY a.tier2
     """, conn, params=[date])
     
+    conn.close()
+    
     # Create YTD lookup
     ytd_lookup = {row['tier2']: row['avg_ytd'] for _, row in ytd_data.iterrows()}
-    
-    conn.close()
     
     if not rows:
         return "No Tier-2 data available"
@@ -209,9 +207,10 @@ def get_factor_returns(date: str) -> str:
     lines.append("|--------|--------------|")
     
     for row in rows:
-        factor_name = row[0]
-        return_val = row[1] if row[1] is not None else 0.0
-        lines.append(f"| {factor_name} | {return_val:+.2f}% |")
+        if row[1] is not None:
+            lines.append(f"| {row[0]} | {row[1]:+.2f}% |")
+        else:
+            lines.append(f"| {row[0]} | N/A |")
     
     return "\n".join(lines)
 
@@ -777,21 +776,17 @@ def get_rsi_analysis(date: str) -> str:
     """Analyze RSI-14 momentum indicators to identify overbought/oversold conditions."""
     conn = get_db()
     
-    try:
-        df = pd.read_sql_query("""
-            SELECT dp.ticker, a.tier1, a.tier2, dp.rsi_14, dp.return_1d
-            FROM daily_prices dp
-            JOIN assets a ON dp.ticker = a.ticker
-            WHERE dp.date = ? AND dp.rsi_14 IS NOT NULL
-        """, conn, params=[date])
-        
-        conn.close()
-        
-        if df.empty or df['rsi_14'].isna().all():
-            return "No RSI data available"
-    except Exception as e:
-        conn.close()
-        return f"RSI analysis not available: {str(e)}"
+    df = pd.read_sql_query("""
+        SELECT dp.ticker, a.tier1, a.tier2, dp.rsi_14, dp.return_1d
+        FROM daily_prices dp
+        JOIN assets a ON dp.ticker = a.ticker
+        WHERE dp.date = ? AND dp.rsi_14 IS NOT NULL
+    """, conn, params=[date])
+    
+    conn.close()
+    
+    if df.empty or df['rsi_14'].isna().all():
+        return "No RSI data available"
     
     lines = ["**RSI-14 MOMENTUM ANALYSIS:**\n"]
     
@@ -843,21 +838,17 @@ def get_5d_momentum_analysis(date: str) -> str:
     """Analyze 5-day momentum patterns vs 1-day moves."""
     conn = get_db()
     
-    try:
-        df = pd.read_sql_query("""
-            SELECT dp.ticker, a.tier1, a.tier2, dp.return_1d, dp.return_5d
-            FROM daily_prices dp
-            JOIN assets a ON dp.ticker = a.ticker
-            WHERE dp.date = ? AND dp.return_5d IS NOT NULL
-        """, conn, params=[date])
-        
-        conn.close()
-        
-        if df.empty or df['return_5d'].isna().all():
-            return "No 5-day momentum data available"
-    except Exception as e:
-        conn.close()
-        return f"5-day momentum analysis not available: {str(e)}"
+    df = pd.read_sql_query("""
+        SELECT dp.ticker, a.tier1, a.tier2, dp.return_1d, dp.return_5d
+        FROM daily_prices dp
+        JOIN assets a ON dp.ticker = a.ticker
+        WHERE dp.date = ? AND dp.return_5d IS NOT NULL
+    """, conn, params=[date])
+    
+    conn.close()
+    
+    if df.empty or df['return_5d'].isna().all():
+        return "No 5-day momentum data available"
     
     lines = ["**5-DAY MOMENTUM ANALYSIS:**\n"]
     
@@ -904,21 +895,17 @@ def get_volatility_regime(date: str) -> str:
     """Analyze volatility regime by comparing 30D vs 240D volatility."""
     conn = get_db()
     
-    try:
-        df = pd.read_sql_query("""
-            SELECT dp.ticker, a.tier1, dp.volatility_30d, dp.volatility_240d
-            FROM daily_prices dp
-            JOIN assets a ON dp.ticker = a.ticker
-            WHERE dp.date = ? AND dp.volatility_30d IS NOT NULL AND dp.volatility_240d IS NOT NULL
-        """, conn, params=[date])
-        
-        conn.close()
-        
-        if df.empty:
-            return "No volatility regime data available"
-    except Exception as e:
-        conn.close()
-        return f"Volatility regime analysis not available: {str(e)}"
+    df = pd.read_sql_query("""
+        SELECT dp.ticker, a.tier1, dp.volatility_30d, dp.volatility_240d
+        FROM daily_prices dp
+        JOIN assets a ON dp.ticker = a.ticker
+        WHERE dp.date = ? AND dp.volatility_30d IS NOT NULL AND dp.volatility_240d IS NOT NULL
+    """, conn, params=[date])
+    
+    conn.close()
+    
+    if df.empty:
+        return "No volatility regime data available"
     
     # Calculate vol ratio (30D / 240D)
     df['vol_ratio'] = df['volatility_30d'] / df['volatility_240d'].replace(0, float('nan'))
@@ -1101,7 +1088,7 @@ def get_ytd_context(date: str) -> str:
     conn.close()
     
     if tier1_ytd.empty:
-        return "YTD context analysis not available"
+        return "YTD context analysis not available (no YTD data)"
     
     lines = ["**YTD CONTEXT ANALYSIS:**\n"]
     lines.append("For each category, compare today's move vs YTD performance to identify reversals vs continuations.\n")
@@ -1330,12 +1317,12 @@ def prepare_data_summary(date: str) -> Dict[str, str]:
         'extremes': historical['extremes'],
         'similar_days': historical['similar_days'],
         'regime_indicators': historical['regime_indicators'],
-        # YTD Context (new)
-        'ytd_context': get_ytd_context(date),
         # Correlation analysis (new)
         'correlation_regime_changes': correlations['regime_changes'],
         'factor_attribution': correlations['factor_attribution'],
         'correlation_summary': correlations['correlation_summary'],
+        # YTD context
+        'ytd_context': get_ytd_context(date),
     }
 
 
@@ -1370,7 +1357,7 @@ def generate_daily_report(date: str, providers: List[str] = None,
         Dict with generation results
     """
     if providers is None:
-        providers = ['anthropic']  # Default to Claude Opus 4.5 only
+        providers = ['anthropic']  # Default to Anthropic only for cost
     
     if verbose:
         print(f"\n{'='*70}")
@@ -1688,9 +1675,9 @@ def main():
     parser.add_argument("--date", type=str, default=None,
                        help="Date to generate report for (YYYY-MM-DD). Defaults to last trading day.")
     parser.add_argument("--provider", type=str, nargs='+',
-                       choices=['anthropic'],  # Opus 4.5 only
+                       choices=['openai', 'anthropic', 'google'],
                        default=['anthropic'],
-                       help="LLM provider (Claude Opus 4.5 only)")
+                       help="LLM provider(s) to use")
     parser.add_argument("--test", action="store_true",
                        help="Test mode (skip LLM calls)")
     parser.add_argument("--pdf-engine", type=str,
