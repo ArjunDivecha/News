@@ -49,3 +49,4 @@ ServerCertificate
 ServerCertificate-journal
 *.pem
 *.key
+.claude/settings.local.json
