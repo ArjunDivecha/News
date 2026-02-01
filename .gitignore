@@ -50,3 +50,16 @@ ServerCertificate-journal
 *.pem
 *.key
 .claude/settings.local.json
+
+# Database files (regenerable from Bloomberg)
+*.db
+
+# Generated outputs (regenerable)
+Step 4 Report Generation/outputs/
+
+# IDE config
+.roo/
+
+# Test files
+test_*.py
+*_test.py
