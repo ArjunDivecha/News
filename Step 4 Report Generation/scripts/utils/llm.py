@@ -5,8 +5,8 @@ LLM API UTILITIES
 =============================================================================
 
 PURPOSE:
-Wrapper functions for multiple LLM providers (OpenAI, Anthropic, Google).
-Supports parallel generation and unified response handling.
+Wrapper functions for LLM providers. Primary focus: Claude Opus 4.5.
+Other providers (OpenAI, Google) are kept for legacy/comparison purposes.
 
 USAGE:
     from utils.llm import generate_report, generate_parallel
@@ -40,17 +40,18 @@ _anthropic_client = None
 _google_model = None
 
 # Model configurations
+# Primary: Claude Opus 4.5 for daily reports
 MODELS = {
     'openai': {
-        'daily': 'gpt-5.2',  # GPT-5.2 (latest model)
+        'daily': 'gpt-5.2',  # Legacy/comparison only
         'flash': 'gpt-4o-mini',
     },
     'anthropic': {
-        'daily': 'claude-opus-4-5-20251101',  # Claude Opus 4.5 (flagship model)
+        'daily': 'claude-opus-4-5-20251101',  # PRIMARY: Claude Opus 4.5
         'flash': 'claude-haiku-4-5-20251001',
     },
     'google': {
-        'daily': 'gemini-3-pro-preview',  # Gemini 3 Pro (preview)
+        'daily': 'gemini-3-pro-preview',  # Legacy/comparison only
         'flash': 'gemini-2.0-flash',
     },
 }
@@ -221,7 +222,7 @@ def generate_google(system_prompt: str, user_prompt: str,
 
 
 def generate_report(system_prompt: str, user_prompt: str, 
-                   provider: str = 'anthropic',
+                   provider: str = 'anthropic',  # Opus 4.5
                    report_type: str = 'daily',
                    max_tokens: int = 4000) -> Dict:
     """
@@ -230,7 +231,7 @@ def generate_report(system_prompt: str, user_prompt: str,
     Args:
         system_prompt: System instructions
         user_prompt: User prompt with data
-        provider: 'openai', 'anthropic', or 'google'
+        provider: 'anthropic' (Opus 4.5) - other providers kept for legacy
         report_type: 'daily' or 'flash' (determines model selection)
         max_tokens: Maximum tokens to generate
         
@@ -252,11 +253,12 @@ def generate_report(system_prompt: str, user_prompt: str,
 
 
 def generate_parallel(system_prompt: str, user_prompt: str,
-                      providers: List[str] = ['openai', 'anthropic', 'google'],
+                      providers: List[str] = ['anthropic'],  # Opus only by default
                       report_type: str = 'daily',
                       max_tokens: int = 4000) -> Dict[str, Dict]:
     """
     Generate reports from multiple providers in parallel.
+    Default: Opus 4.5 only. Other providers kept for legacy/comparison.
     
     Args:
         system_prompt: System instructions

@@ -21,11 +21,10 @@ Generate daily market wrap report using multiple LLMs in parallel.
 Pulls data from SQLite, injects into prompt template, generates reports.
 
 USAGE:
-    python scripts/03_generate_daily_report.py                    # Today's date
+    python scripts/03_generate_daily_report.py                    # Today's date (uses Claude Opus 4.5)
     python scripts/03_generate_daily_report.py --date 2026-01-30
-    python scripts/03_generate_daily_report.py --provider anthropic # Single provider
     python scripts/03_generate_daily_report.py --test              # Test mode (no LLM)
-    python scripts/03_generate_daily_report.py --pdf-engine kimi   # Premium PDF styling
+    python scripts/03_generate_daily_report.py --pdf-engine prince # PrinceXML PDF (default)
 =============================================================================
 """
 
@@ -1371,7 +1370,7 @@ def generate_daily_report(date: str, providers: List[str] = None,
         Dict with generation results
     """
     if providers is None:
-        providers = ['anthropic']  # Default to Anthropic only for cost
+        providers = ['anthropic']  # Default to Claude Opus 4.5 only
     
     if verbose:
         print(f"\n{'='*70}")
@@ -1689,9 +1688,9 @@ def main():
     parser.add_argument("--date", type=str, default=None,
                        help="Date to generate report for (YYYY-MM-DD). Defaults to last trading day.")
     parser.add_argument("--provider", type=str, nargs='+',
-                       choices=['openai', 'anthropic', 'google'],
+                       choices=['anthropic'],  # Opus 4.5 only
                        default=['anthropic'],
-                       help="LLM provider(s) to use")
+                       help="LLM provider (Claude Opus 4.5 only)")
     parser.add_argument("--test", action="store_true",
                        help="Test mode (skip LLM calls)")
     parser.add_argument("--pdf-engine", type=str,
