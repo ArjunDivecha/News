@@ -42,15 +42,15 @@ _google_model = None
 # Model configurations
 MODELS = {
     'openai': {
-        'daily': 'gpt-4o',
+        'daily': 'gpt-5.2',  # GPT-5.2 (latest model)
         'flash': 'gpt-4o-mini',
     },
     'anthropic': {
-        'daily': 'claude-sonnet-4-5-20250929',
+        'daily': 'claude-opus-4-5-20251101',  # Claude Opus 4.5 (flagship model)
         'flash': 'claude-haiku-4-5-20251001',
     },
     'google': {
-        'daily': 'gemini-2.5-pro-preview-05-06',
+        'daily': 'gemini-3-pro-preview',  # Gemini 3 Pro (preview)
         'flash': 'gemini-2.0-flash',
     },
 }
@@ -108,15 +108,22 @@ def generate_openai(system_prompt: str, user_prompt: str,
     
     start = time.time()
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
+        # GPT-5.2 requires max_completion_tokens instead of max_tokens
+        params = {
+            'model': model,
+            'messages': [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            max_tokens=max_tokens,
-            temperature=0.7,
-        )
+            'temperature': 0.7,
+        }
+        
+        if model.startswith('gpt-5'):
+            params['max_completion_tokens'] = max_tokens
+        else:
+            params['max_tokens'] = max_tokens
+        
+        response = client.chat.completions.create(**params)
         
         elapsed_ms = int((time.time() - start) * 1000)
         

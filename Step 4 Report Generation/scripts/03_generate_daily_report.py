@@ -74,10 +74,11 @@ def load_prompt_template() -> tuple:
 
 
 def get_tier1_stats(date: str) -> str:
-    """Get Tier-1 category statistics for the date."""
+    """Get Tier-1 category statistics for the date, including YTD context."""
     conn = get_db()
-    cursor = conn.cursor()
     
+    # Get category stats
+    cursor = conn.cursor()
     cursor.execute("""
         SELECT category_value, avg_return, median_return, std_return,
                min_return, max_return, count, percentile_60d, streak_days, streak_direction
@@ -87,18 +88,37 @@ def get_tier1_stats(date: str) -> str:
     """, (date,))
     
     rows = cursor.fetchall()
+    
+    # Get YTD averages for each tier1
+    ytd_data = pd.read_sql_query("""
+        SELECT 
+            a.tier1,
+            AVG(dp.return_ytd) as avg_ytd,
+            COUNT(*) as count
+        FROM daily_prices dp
+        JOIN assets a ON dp.ticker = a.ticker
+        WHERE dp.date = ? AND dp.return_ytd IS NOT NULL AND a.tier1 IS NOT NULL
+        GROUP BY a.tier1
+    """, conn, params=[date])
+    
+    # Create YTD lookup
+    ytd_lookup = {row['tier1']: row['avg_ytd'] for _, row in ytd_data.iterrows()}
+    
     conn.close()
     
     if not rows:
         return "No Tier-1 data available"
     
-    lines = ["| Category | Avg Return | Median | Std | Min | Max | Count | 60d Pctl | Streak |"]
-    lines.append("|----------|------------|--------|-----|-----|-----|-------|----------|--------|")
+    lines = ["| Category | 1-Day | YTD | Median | Std | Min | Max | Count | 60d Pctl | Streak |"]
+    lines.append("|----------|-------|-----|--------|-----|-----|-----|-------|----------|--------|")
     
     for row in rows:
+        tier1_name = row[0]
+        ytd_val = ytd_lookup.get(tier1_name)
+        ytd_str = f"{ytd_val:+.2f}%" if ytd_val is not None else "N/A"
         streak_str = f"{row[8]:+d}" if row[8] else "0"
         lines.append(
-            f"| {row[0]} | {row[1]:+.2f}% | {row[2]:+.2f}% | {row[3]:.2f}% | "
+            f"| {tier1_name} | {row[1]:+.2f}% | {ytd_str} | {row[2]:+.2f}% | {row[3]:.2f}% | "
             f"{row[4]:+.2f}% | {row[5]:+.2f}% | {row[6]} | {row[7]}% | {streak_str} |"
         )
     
@@ -106,7 +126,7 @@ def get_tier1_stats(date: str) -> str:
 
 
 def get_tier2_stats(date: str, limit: int = 20) -> str:
-    """Get Tier-2 category statistics (top and bottom performers)."""
+    """Get Tier-2 category statistics (top and bottom performers) with YTD context."""
     conn = get_db()
     cursor = conn.cursor()
     
@@ -118,6 +138,22 @@ def get_tier2_stats(date: str, limit: int = 20) -> str:
     """, (date,))
     
     rows = cursor.fetchall()
+    
+    # Get YTD averages for tier2 categories
+    ytd_data = pd.read_sql_query("""
+        SELECT 
+            a.tier2,
+            AVG(dp.return_ytd) as avg_ytd,
+            COUNT(*) as count
+        FROM daily_prices dp
+        JOIN assets a ON dp.ticker = a.ticker
+        WHERE dp.date = ? AND dp.return_ytd IS NOT NULL AND a.tier2 IS NOT NULL
+        GROUP BY a.tier2
+    """, conn, params=[date])
+    
+    # Create YTD lookup
+    ytd_lookup = {row['tier2']: row['avg_ytd'] for _, row in ytd_data.iterrows()}
+    
     conn.close()
     
     if not rows:
@@ -128,20 +164,26 @@ def get_tier2_stats(date: str, limit: int = 20) -> str:
     bottom_10 = rows[-10:][::-1]
     
     lines = ["**TOP 10 BY RETURN:**"]
-    lines.append("| Strategy | Avg Return | Count | 60d Pctl | Streak |")
-    lines.append("|----------|------------|-------|----------|--------|")
+    lines.append("| Strategy | 1-Day | YTD | Count | 60d Pctl | Streak |")
+    lines.append("|----------|-------|-----|-------|----------|--------|")
     
     for row in top_10:
+        tier2_name = row[0]
+        ytd_val = ytd_lookup.get(tier2_name)
+        ytd_str = f"{ytd_val:+.2f}%" if ytd_val is not None else "N/A"
         streak_str = f"{row[4]:+d}" if row[4] else "0"
-        lines.append(f"| {row[0]} | {row[1]:+.2f}% | {row[2]} | {row[3]}% | {streak_str} |")
+        lines.append(f"| {tier2_name} | {row[1]:+.2f}% | {ytd_str} | {row[2]} | {row[3]}% | {streak_str} |")
     
     lines.append("\n**BOTTOM 10 BY RETURN:**")
-    lines.append("| Strategy | Avg Return | Count | 60d Pctl | Streak |")
-    lines.append("|----------|------------|-------|----------|--------|")
+    lines.append("| Strategy | 1-Day | YTD | Count | 60d Pctl | Streak |")
+    lines.append("|----------|-------|-----|-------|----------|--------|")
     
     for row in bottom_10:
+        tier2_name = row[0]
+        ytd_val = ytd_lookup.get(tier2_name)
+        ytd_str = f"{ytd_val:+.2f}%" if ytd_val is not None else "N/A"
         streak_str = f"{row[4]:+d}" if row[4] else "0"
-        lines.append(f"| {row[0]} | {row[1]:+.2f}% | {row[2]} | {row[3]}% | {streak_str} |")
+        lines.append(f"| {tier2_name} | {row[1]:+.2f}% | {ytd_str} | {row[2]} | {row[3]}% | {streak_str} |")
     
     return "\n".join(lines)
 
@@ -168,7 +210,9 @@ def get_factor_returns(date: str) -> str:
     lines.append("|--------|--------------|")
     
     for row in rows:
-        lines.append(f"| {row[0]} | {row[1]:+.2f}% |")
+        factor_name = row[0]
+        return_val = row[1] if row[1] is not None else 0.0
+        lines.append(f"| {factor_name} | {return_val:+.2f}% |")
     
     return "\n".join(lines)
 
@@ -734,17 +778,21 @@ def get_rsi_analysis(date: str) -> str:
     """Analyze RSI-14 momentum indicators to identify overbought/oversold conditions."""
     conn = get_db()
     
-    df = pd.read_sql_query("""
-        SELECT dp.ticker, a.tier1, a.tier2, dp.rsi_14, dp.return_1d
-        FROM daily_prices dp
-        JOIN assets a ON dp.ticker = a.ticker
-        WHERE dp.date = ? AND dp.rsi_14 IS NOT NULL
-    """, conn, params=[date])
-    
-    conn.close()
-    
-    if df.empty or df['rsi_14'].isna().all():
-        return "No RSI data available"
+    try:
+        df = pd.read_sql_query("""
+            SELECT dp.ticker, a.tier1, a.tier2, dp.rsi_14, dp.return_1d
+            FROM daily_prices dp
+            JOIN assets a ON dp.ticker = a.ticker
+            WHERE dp.date = ? AND dp.rsi_14 IS NOT NULL
+        """, conn, params=[date])
+        
+        conn.close()
+        
+        if df.empty or df['rsi_14'].isna().all():
+            return "No RSI data available"
+    except Exception as e:
+        conn.close()
+        return f"RSI analysis not available: {str(e)}"
     
     lines = ["**RSI-14 MOMENTUM ANALYSIS:**\n"]
     
@@ -796,17 +844,21 @@ def get_5d_momentum_analysis(date: str) -> str:
     """Analyze 5-day momentum patterns vs 1-day moves."""
     conn = get_db()
     
-    df = pd.read_sql_query("""
-        SELECT dp.ticker, a.tier1, a.tier2, dp.return_1d, dp.return_5d
-        FROM daily_prices dp
-        JOIN assets a ON dp.ticker = a.ticker
-        WHERE dp.date = ? AND dp.return_5d IS NOT NULL
-    """, conn, params=[date])
-    
-    conn.close()
-    
-    if df.empty or df['return_5d'].isna().all():
-        return "No 5-day momentum data available"
+    try:
+        df = pd.read_sql_query("""
+            SELECT dp.ticker, a.tier1, a.tier2, dp.return_1d, dp.return_5d
+            FROM daily_prices dp
+            JOIN assets a ON dp.ticker = a.ticker
+            WHERE dp.date = ? AND dp.return_5d IS NOT NULL
+        """, conn, params=[date])
+        
+        conn.close()
+        
+        if df.empty or df['return_5d'].isna().all():
+            return "No 5-day momentum data available"
+    except Exception as e:
+        conn.close()
+        return f"5-day momentum analysis not available: {str(e)}"
     
     lines = ["**5-DAY MOMENTUM ANALYSIS:**\n"]
     
@@ -853,17 +905,21 @@ def get_volatility_regime(date: str) -> str:
     """Analyze volatility regime by comparing 30D vs 240D volatility."""
     conn = get_db()
     
-    df = pd.read_sql_query("""
-        SELECT dp.ticker, a.tier1, dp.volatility_30d, dp.volatility_240d
-        FROM daily_prices dp
-        JOIN assets a ON dp.ticker = a.ticker
-        WHERE dp.date = ? AND dp.volatility_30d IS NOT NULL AND dp.volatility_240d IS NOT NULL
-    """, conn, params=[date])
-    
-    conn.close()
-    
-    if df.empty:
-        return "No volatility regime data available"
+    try:
+        df = pd.read_sql_query("""
+            SELECT dp.ticker, a.tier1, dp.volatility_30d, dp.volatility_240d
+            FROM daily_prices dp
+            JOIN assets a ON dp.ticker = a.ticker
+            WHERE dp.date = ? AND dp.volatility_30d IS NOT NULL AND dp.volatility_240d IS NOT NULL
+        """, conn, params=[date])
+        
+        conn.close()
+        
+        if df.empty:
+            return "No volatility regime data available"
+    except Exception as e:
+        conn.close()
+        return f"Volatility regime analysis not available: {str(e)}"
     
     # Calculate vol ratio (30D / 240D)
     df['vol_ratio'] = df['volatility_30d'] / df['volatility_240d'].replace(0, float('nan'))
@@ -1019,6 +1075,99 @@ def get_historical_context(date: str) -> Dict[str, str]:
         'similar_days': similar_days_str,
         'regime_indicators': regime_str
     }
+
+
+def get_ytd_context(date: str) -> str:
+    """
+    Analyze YTD context - identify reversals vs continuations of YTD trends.
+    Helps provide perspective on whether today's moves are profit-taking, continuation, or reversal.
+    """
+    conn = get_db()
+    
+    # Get Tier-1 YTD vs 1-day comparison
+    tier1_ytd = pd.read_sql_query("""
+        SELECT 
+            a.tier1,
+            AVG(dp.return_1d) as avg_1d,
+            AVG(dp.return_ytd) as avg_ytd,
+            COUNT(*) as count
+        FROM daily_prices dp
+        JOIN assets a ON dp.ticker = a.ticker
+        WHERE dp.date = ? AND dp.return_ytd IS NOT NULL AND a.tier1 IS NOT NULL
+        GROUP BY a.tier1
+        HAVING COUNT(*) >= 5
+        ORDER BY ABS(avg_1d) DESC
+    """, conn, params=[date])
+    
+    conn.close()
+    
+    if tier1_ytd.empty:
+        return "YTD context analysis not available"
+    
+    lines = ["**YTD CONTEXT ANALYSIS:**\n"]
+    lines.append("For each category, compare today's move vs YTD performance to identify reversals vs continuations.\n")
+    
+    # Identify reversals (positive YTD but negative today, or vice versa)
+    reversals = []
+    continuations = []
+    
+    for _, row in tier1_ytd.iterrows():
+        tier1 = row['tier1']
+        day_return = row['avg_1d']
+        ytd_return = row['avg_ytd']
+        
+        # Reversal: YTD positive but today negative (profit-taking), or YTD negative but today positive (bounce)
+        if (ytd_return > 2 and day_return < -1) or (ytd_return < -2 and day_return > 1):
+            reversals.append((tier1, day_return, ytd_return))
+        # Continuation: Both same direction
+        elif (ytd_return > 2 and day_return > 0.5) or (ytd_return < -2 and day_return < -0.5):
+            continuations.append((tier1, day_return, ytd_return))
+    
+    if reversals:
+        lines.append("**REVERSALS (YTD trend interrupted):**")
+        for tier1, day_ret, ytd_ret in reversals[:5]:
+            if ytd_ret > 2 and day_ret < -1:
+                lines.append(f"- {tier1}: YTD +{ytd_ret:.2f}% but today {day_ret:+.2f}% → Profit-taking/reversal")
+            else:
+                lines.append(f"- {tier1}: YTD {ytd_ret:+.2f}% but today {day_ret:+.2f}% → Bounce/reversal")
+        lines.append("")
+    
+    if continuations:
+        lines.append("**CONTINUATIONS (YTD trend extended):**")
+        for tier1, day_ret, ytd_ret in continuations[:5]:
+            if ytd_ret > 2:
+                lines.append(f"- {tier1}: YTD +{ytd_ret:.2f}% and today +{day_ret:+.2f}% → Trend continuation")
+            else:
+                lines.append(f"- {tier1}: YTD {ytd_ret:+.2f}% and today {day_ret:+.2f}% → Decline continuation")
+        lines.append("")
+    
+    # Summary table
+    lines.append("**TIER-1: TODAY vs YTD:**")
+    lines.append("| Category | 1-Day | YTD | Interpretation |")
+    lines.append("|----------|-------|-----|---------------|")
+    
+    for _, row in tier1_ytd.iterrows():
+        tier1 = row['tier1']
+        day_ret = row['avg_1d']
+        ytd_ret = row['avg_ytd']
+        
+        # Determine interpretation
+        if abs(ytd_ret) < 1:
+            interp = "Neutral YTD"
+        elif ytd_ret > 5 and day_ret < -2:
+            interp = "Profit-taking"
+        elif ytd_ret < -5 and day_ret > 2:
+            interp = "Bounce/reversal"
+        elif ytd_ret > 2 and day_ret > 0.5:
+            interp = "Trend continuation"
+        elif ytd_ret < -2 and day_ret < -0.5:
+            interp = "Decline continuation"
+        else:
+            interp = "Mixed"
+        
+        lines.append(f"| {tier1} | {day_ret:+.2f}% | {ytd_ret:+.2f}% | {interp} |")
+    
+    return "\n".join(lines)
 
 
 def get_correlation_analysis(date: str) -> Dict[str, str]:
@@ -1182,6 +1331,8 @@ def prepare_data_summary(date: str) -> Dict[str, str]:
         'extremes': historical['extremes'],
         'similar_days': historical['similar_days'],
         'regime_indicators': historical['regime_indicators'],
+        # YTD Context (new)
+        'ytd_context': get_ytd_context(date),
         # Correlation analysis (new)
         'correlation_regime_changes': correlations['regime_changes'],
         'factor_attribution': correlations['factor_attribution'],

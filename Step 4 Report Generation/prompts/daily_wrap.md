@@ -43,16 +43,16 @@ REPORT SPECIFICATION  ―  "DAILY WRAP"
 ▼ DATA UNIVERSE
 ~970 diversified assets classified into a proprietary 3-tier taxonomy:
 
-TIER-1 (7 Asset Classes):
+ASSET CLASSES (7 major categories):
   Equities | Fixed Income | Commodities | Currencies (FX) | 
   Multi-Asset/Thematic | Volatility/Risk Premia | Alternative/Synthetic
 
-TIER-2 (20+ Strategies):
+INVESTMENT STRATEGIES (20+ strategy categories):
   Thematic/Factor | Global Indices | Sector Indices | Country/Regional |
   Sovereign Bonds | Corporate Credit | Cross-Asset Indices | Metals | 
   Energy | Vol Indices | Carry/Value Factors | Quant/Style Baskets | etc.
 
-TIER-3 (60+ Tags):
+ASSET ATTRIBUTES (60+ tags):
   Region: US | Europe | Asia | EM | Global | China | Japan | APAC
   Sector: Tech | Energy | Financials | Healthcare | Industrials | Consumer
   Style: Value | Growth | Momentum | Quality | Dividend | Low Volatility
@@ -64,6 +64,34 @@ Each asset has beta exposures to 18 market factors for attribution analysis.
 Explain what happened in the last trading day.
 Put it in context of the last week, month, YTD, and HISTORICAL PATTERNS.
 Focus on UNUSUAL PATTERNS—anything that deviates from normal behavior.
+
+============================================================
+INTELLIGENT TIMEFRAME SELECTION
+============================================================
+You have access to multiple timeframes: 1-day, 5-day, 1-week, 1-month, YTD, and 60-day historical patterns.
+
+**Use YTD context strategically, not mechanically:**
+- **Use YTD when it adds insight:** If metals crashed -10% today but are +15% YTD → This is profit-taking, not a breakdown. The YTD context changes the narrative.
+- **Use YTD when it contradicts the move:** If something rallied strongly today but is down YTD → This might be a reversal attempt worth noting.
+- **Don't use YTD when it's irrelevant:** If today's move is small (+0.5%) and YTD is also small (+2%), YTD adds little value—focus on shorter-term patterns instead.
+- **Use shorter timeframes for tactical moves:** For intraday reversals, momentum shifts, or technical breaks, 5-day or 1-week context is more relevant than YTD.
+- **Use longer timeframes for structural shifts:** When discussing regime changes, secular trends, or major reversals, YTD provides crucial context.
+
+**Decision framework:**
+1. Is today's move significant (>2% or >1.5 std dev)? → Check YTD for context
+2. Does YTD contradict or amplify today's move? → Use YTD to explain the narrative
+3. Is this a continuation or reversal? → YTD helps distinguish
+4. Is the move tactical (short-term) or structural (long-term)? → Choose appropriate timeframe
+
+**Examples of smart YTD usage:**
+- "Metals collapsed -17% today, but remain +11% YTD—this suggests profit-taking on strong YTD gains rather than a fundamental breakdown."
+- "Tech rallied +2% today, extending its +8% YTD gain—momentum continuation, not a reversal."
+- "Value factors surged +2.5% today, reversing a -5% YTD decline—potential regime shift."
+
+**Examples of when NOT to use YTD:**
+- Small moves (<1%) where YTD is also small—focus on intraday patterns instead
+- Technical breakouts where 5-day momentum is more relevant
+- Sector rotation where relative performance (vs market) matters more than absolute YTD
 
 Length: 1,500-2,000 words | Maximum 7 tables
 
@@ -93,32 +121,32 @@ Lead with the most UNUSUAL observations from today:
 - Any historical extremes (best/worst in N days)?
 - Any streaks continuing or breaking?
 
-### 2. TIER-1 ASSET CLASS DASHBOARD
+### 2. ASSET CLASS DASHBOARD
 
-| Category | 1-Day | 5-Day | Hist Rank* | Z-Score | Regime |
-|----------|-------|-------|------------|---------|--------|
+| Asset Class | 1-Day | 5-Day | Hist Rank* | Z-Score | Regime |
+|-------------|-------|-------|------------|---------|--------|
 
 *Hist Rank = percentile rank of today's move vs last 60 days
 *Z-Score formatted with emoji indicators (🔴🟠⚪🟡🟢)
 
 NARRATIVE (3-4 sentences):
 - Risk-on / risk-off / mixed—with evidence
-- Which Tier-1 moves are UNUSUAL vs their own history?
+- Which asset class moves are UNUSUAL vs their own history?
 - Any correlation breaks? (e.g., Equities and Fixed Income moving together)
 
-### 3. TIER-2 STRATEGY PERFORMANCE
+### 3. INVESTMENT STRATEGY PERFORMANCE
 
-| Strategy | 1-Day | vs Tier-1 Avg | 60d Percentile | Count |
-|----------|-------|---------------|----------------|-------|
+| Strategy | 1-Day | vs Asset Class Avg | 60d Percentile | Count |
+|----------|-------|-------------------|----------------|-------|
 
 Show Top 5 and Bottom 5 by 1-Day return.
 
 NARRATIVE:
-- Which strategies are outperforming/underperforming their parent Tier-1?
+- Which strategies are outperforming/underperforming their parent asset class?
 - Any UNUSUAL divergences within asset classes?
 - Historical context: "Thematic/Factor at 95th percentile vs last 60 days"
 
-### 4. REGIONAL ANALYSIS (Tier-3 Region Tags)
+### 4. REGIONAL ANALYSIS
 
 | Region | 1-Day | 5-Day | vs Global Avg | Streak |
 |--------|-------|-------|---------------|--------|
@@ -128,7 +156,7 @@ NARRATIVE:
 - Any UNUSUAL regional divergences? (e.g., Asia up while US down)
 - Streak tracking: "5th consecutive day of EM underperformance"
 
-### 5. STYLE FACTOR DYNAMICS (Tier-3 Style Tags)
+### 5. STYLE FACTOR DYNAMICS
 
 | Spread | Today | 5-Day | Z-Score |
 |--------|-------|-------|---------|
@@ -141,7 +169,7 @@ NARRATIVE:
 - Historical context: "Value vs Growth spread at widest since [date]"
 - Flag any |z-score| ≥ 1.5
 
-### 6. SECTOR DASHBOARD (Tier-3 Sector Tags)
+### 6. SECTOR DASHBOARD
 
 | Sector | 1-Day | 5-Day | Z-Score |
 |--------|-------|-------|---------|
@@ -151,7 +179,7 @@ NARRATIVE:
 - UNUSUAL moves: Flag any sector with |z-score| ≥ 2
 - Breadth within sectors: Concentrated or broad-based?
 
-### 7. THEME SPOTLIGHT (Tier-3 Strategy/Special Tags)
+### 7. THEME SPOTLIGHT
 
 Highlight 3-5 themes with UNUSUAL behavior:
 
@@ -164,23 +192,13 @@ Candidates to watch:
 - Quantitative/Factor-Based: Systematic strategy performance
 - Defensive/Low Vol: Risk-off rotation signals
 
-### 8. BETA ATTRIBUTION ANALYSIS
-
-| Tier-1 | Actual Return | Beta-Predicted | Residual (Alpha) |
-|--------|---------------|----------------|------------------|
-
-NARRATIVE:
-- Which categories moved MORE than their betas predicted? (Idiosyncratic)
-- Which moved LESS? (Factor-dominated)
-- Any UNUSUAL residuals suggesting hidden flows or dislocations?
-
-### 9. MOMENTUM & TECHNICAL CONTEXT
+### 8. MOMENTUM & TECHNICAL CONTEXT
 
 Incorporate RSI, 5-day momentum, and volatility regime data:
 
 **RSI MOMENTUM:**
 - How many assets are overbought (RSI > 70) vs oversold (RSI < 30)?
-- Which Tier-1 categories have the most extreme RSI readings?
+- Which asset classes have the most extreme RSI readings?
 - Any momentum traps or setups?
 
 **VOLATILITY REGIME:**
@@ -193,13 +211,13 @@ Incorporate RSI, 5-day momentum, and volatility regime data:
 Drawing from the historical database:
 
 STREAKS:
-- List any Tier-1 or Tier-2 categories on 3+ day winning/losing streaks
+- List any asset classes or investment strategies on 3+ day winning/losing streaks
 
 EXTREMES:
 - Any category at best/worst level in past 30/60/90 days?
 
 SIMILAR DAYS:
-- When did we last see a similar Tier-1 pattern?
+- When did we last see a similar asset class pattern?
 - What happened next? (informational, probability-based, not predictive)
 
 REGIME CONTEXT:
@@ -219,6 +237,12 @@ STYLE RULES
 • CALIBRATED UNCERTAINTY: Use probability language for forward-looking statements.
 • Brevity in tables, depth in narrative where unusual.
 
+**BETA CONTEXT - USE STRATEGICALLY:**
+- Reference betas when they explain factor-driven vs idiosyncratic moves
+- Use betas to identify beta breakdowns (moves that don't match factor exposures)
+- Weave beta insights into relevant sections—don't create a separate mechanical "Beta Attribution" section
+- Only mention betas when they add insight, not mechanically
+
 ============================================================
 OUTPUT FORMAT
 ============================================================
@@ -232,13 +256,13 @@ DATA SUMMARY (Injected by System)
 
 TODAY'S DATE: {date}
 
-TIER-1 PERFORMANCE:
+ASSET CLASS PERFORMANCE:
 {tier1_stats}
 
-TIER-2 PERFORMANCE (Top/Bottom 10):
+INVESTMENT STRATEGY PERFORMANCE (Top/Bottom 10):
 {tier2_stats}
 
-TIER-3 TAG PERFORMANCE:
+ASSET ATTRIBUTES & CHARACTERISTICS:
 
 REGIONAL OVERVIEW:
 {tier3_regional_stats}
@@ -265,7 +289,7 @@ STRATEGY TYPES:
 {tier3_strategy_stats}
 
 ============================================================
-FIXED INCOME & CREDIT ANALYSIS (New Tier-3 Categories)
+FIXED INCOME & CREDIT ANALYSIS
 ============================================================
 
 DURATION BREAKDOWN (Fixed Income by Maturity):
@@ -335,6 +359,12 @@ REGIME INDICATORS:
 {regime_indicators}
 
 ============================================================
+YTD CONTEXT (Year-to-Date Perspective)
+============================================================
+
+{ytd_context}
+
+============================================================
 CORRELATION ANALYSIS (Rolling 60-day Factor Correlations)
 ============================================================
 
@@ -344,7 +374,7 @@ CORRELATION REGIME CHANGES:
 FACTOR ATTRIBUTION (Top Movers Decomposition):
 {factor_attribution}
 
-CORRELATION SUMMARY BY TIER-1:
+CORRELATION SUMMARY BY ASSET CLASS:
 {correlation_summary}
 
 ============================================================
