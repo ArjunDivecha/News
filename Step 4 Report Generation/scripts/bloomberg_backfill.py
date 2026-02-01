@@ -91,6 +91,7 @@ DAILY_FIELDS = [
     "PX_HIGH",           # High price
     "PX_LOW",            # Low price
     "CHG_PCT_1D",        # 1-day return
+    "CHG_PCT_YTD",       # Year-to-date return
     "VOLUME",            # Volume
     "VOLATILITY_30D",    # 30-day volatility
     "VOLATILITY_60D",    # 60-day volatility
@@ -155,8 +156,8 @@ def save_daily_prices(conn: sqlite3.Connection, data: List[Dict]):
         cursor.execute("""
             INSERT OR REPLACE INTO daily_prices 
             (date, ticker, price, price_open, price_high, price_low,
-             return_1d, volume, volatility_30d, volatility_60d, rsi_14)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             return_1d, return_ytd, volume, volatility_30d, volatility_60d, rsi_14)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             row['date'],
             row['ticker'],
@@ -165,6 +166,7 @@ def save_daily_prices(conn: sqlite3.Connection, data: List[Dict]):
             row.get('price_high'),
             row.get('price_low'),
             row.get('return_1d'),
+            row.get('return_ytd'),
             row.get('volume'),
             row.get('volatility_30d'),
             row.get('volatility_60d'),
@@ -328,6 +330,7 @@ def process_historical_data(raw_data: Dict[str, Dict]) -> List[Dict]:
                 'price_high': fields.get('PX_HIGH'),
                 'price_low': fields.get('PX_LOW'),
                 'return_1d': fields.get('CHG_PCT_1D'),
+                'return_ytd': fields.get('CHG_PCT_YTD'),
                 'volume': fields.get('VOLUME'),
                 'volatility_30d': fields.get('VOLATILITY_30D'),
                 'volatility_60d': fields.get('VOLATILITY_60D'),
