@@ -80,14 +80,19 @@ CREATE TABLE IF NOT EXISTS daily_prices (
     -- Returns (percentages)
     return_1d REAL,
     return_1w REAL,
+    return_5d REAL,                -- 5-day return (new)
     return_1m REAL,
     return_ytd REAL,
     return_1y REAL,
+    
+    -- Technical indicators
+    rsi_14 REAL,                   -- 14-day RSI (new)
     
     -- Volume and volatility
     volume INTEGER,
     volatility_30d REAL,
     volatility_60d REAL,
+    volatility_240d REAL,          -- 240-day volatility (new)
     
     -- Derived metrics (calculated during refresh)
     z_score_1d REAL,               -- 1-day return / 60-day vol
@@ -155,6 +160,37 @@ CREATE TABLE IF NOT EXISTS factor_returns (
     PRIMARY KEY (date, factor_name)
 );
 
+-- Rolling 60-day correlations (for factor analysis and regime detection)
+CREATE TABLE IF NOT EXISTS asset_correlations (
+    date TEXT NOT NULL,
+    ticker TEXT NOT NULL,
+    
+    -- Rolling 60-day correlations to each factor
+    corr_spx REAL,
+    corr_russell2000 REAL,
+    corr_nasdaq100 REAL,
+    corr_value REAL,
+    corr_growth REAL,
+    corr_eafe REAL,
+    corr_em REAL,
+    corr_hy_credit REAL,
+    corr_treasuries REAL,
+    corr_tips REAL,
+    corr_commodities REAL,
+    corr_agriculture REAL,
+    corr_crypto REAL,
+    corr_reit_us REAL,
+    corr_reit_global REAL,
+    
+    -- Derived metrics
+    r_squared_best REAL,           -- R-squared of best single factor
+    best_factor TEXT,              -- Name of best correlated factor
+    regime_change INTEGER DEFAULT 0, -- 1 if correlation regime changed (>0.3 shift in 5 days)
+    
+    PRIMARY KEY (date, ticker),
+    FOREIGN KEY (ticker) REFERENCES assets(ticker)
+);
+
 -- Generated reports archive
 CREATE TABLE IF NOT EXISTS reports (
     report_id TEXT PRIMARY KEY,
@@ -200,6 +236,11 @@ CREATE INDEX IF NOT EXISTS idx_reports_type ON reports(report_type);
 CREATE INDEX IF NOT EXISTS idx_assets_tier1 ON assets(tier1);
 CREATE INDEX IF NOT EXISTS idx_assets_tier2 ON assets(tier2);
 CREATE INDEX IF NOT EXISTS idx_assets_source ON assets(source);
+
+CREATE INDEX IF NOT EXISTS idx_correlations_date ON asset_correlations(date);
+CREATE INDEX IF NOT EXISTS idx_correlations_ticker ON asset_correlations(ticker);
+CREATE INDEX IF NOT EXISTS idx_correlations_best_factor ON asset_correlations(best_factor);
+CREATE INDEX IF NOT EXISTS idx_correlations_regime_change ON asset_correlations(regime_change);
 
 -- =============================================================================
 -- VIEWS for common queries
