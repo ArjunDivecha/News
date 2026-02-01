@@ -210,10 +210,10 @@ REQUIRED SECTIONS (in order)
 
 5. REGIONAL ANALYSIS
    - Title: "REGIONAL PERFORMANCE HIERARCHY"
-   - Table columns EXACTLY: Region | 1-Day | vs Global Avg | Std Dev | Interpretation
+   - Table columns EXACTLY: Region | 1-Day | YTD | vs Global Avg | Interpretation
    - Sorted by 1-Day return (best to worst)
    - Interpretation: Brief context (e.g., "Defensive leader", "Commodity beta", "Tech drag")
-   - Narrative: 3-4 sentences on DM vs EM, regional leadership/laggards
+   - Narrative: 3-4 sentences on DM vs EM, regional leadership/laggards, use YTD to contextualize moves
 
 6. STYLE FACTOR DYNAMICS
    - Title: "STYLE FACTOR SPREADS"

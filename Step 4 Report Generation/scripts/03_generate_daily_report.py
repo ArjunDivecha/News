@@ -59,7 +59,7 @@ def load_prompt_template() -> tuple:
     if not prompt_path.exists():
         raise FileNotFoundError(f"Prompt template not found: {prompt_path}")
     
-    content = prompt_path.read_text()
+    content = prompt_path.read_text(encoding='utf-8')
     
     # Split on "USER" marker
     if "USER" in content:
@@ -221,7 +221,7 @@ def get_tier3_stats(date: str) -> Dict[str, str]:
     
     # Get daily returns with tier3 tags
     df = pd.read_sql_query("""
-        SELECT dp.ticker, dp.return_1d, a.tier3_tags, a.tier1, a.tier2
+        SELECT dp.ticker, dp.return_1d, dp.return_ytd, a.tier3_tags, a.tier1, a.tier2
         FROM daily_prices dp
         JOIN assets a ON dp.ticker = a.ticker
         WHERE dp.date = ? AND dp.return_1d IS NOT NULL
@@ -280,15 +280,23 @@ def get_tier3_stats(date: str) -> Dict[str, str]:
         if filtered.empty:
             return f"No {category_name} tags with data"
         
-        stats = filtered.groupby('tags_list')['return_1d'].agg(['mean', 'median', 'std', 'count'])
+        # Compute 1-day stats
+        stats_1d = filtered.groupby('tags_list')['return_1d'].agg(['mean', 'median', 'std', 'count'])
+        
+        # Compute YTD stats (only where YTD is not null)
+        stats_ytd = filtered[filtered['return_ytd'].notna()].groupby('tags_list')['return_ytd'].agg(['mean'])
+        
+        # Merge
+        stats = stats_1d.join(stats_ytd, rsuffix='_ytd', how='left')
         stats = stats.sort_values('mean', ascending=False)
         
-        lines = [f"| {category_name} | Avg | Median | Std | Count |"]
-        lines.append("|----------|------|--------|-----|-------|")
+        lines = [f"| {category_name} | 1-Day | YTD | Median | Std | Count |"]
+        lines.append("|----------|-------|-----|--------|-----|-------|")
         
         for tag, row in stats.iterrows():
             if row['count'] >= min_count:
-                lines.append(f"| {tag} | {row['mean']:+.2f}% | {row['median']:+.2f}% | {row['std']:.2f}% | {int(row['count'])} |")
+                ytd_str = f"{row['mean_ytd']:+.2f}%" if pd.notna(row.get('mean_ytd')) else "N/A"
+                lines.append(f"| {tag} | {row['mean']:+.2f}% | {ytd_str} | {row['median']:+.2f}% | {row['std']:.2f}% | {int(row['count'])} |")
         
         return "\n".join(lines)
     
