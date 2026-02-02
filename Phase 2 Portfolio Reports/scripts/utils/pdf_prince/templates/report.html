@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daily Market Wrap - {{ report_date }}</title>
+    <style>
+        {{ css_content }}
+    </style>
+</head>
+<body>
+    <article>
+        <!-- Cover Page -->
+        <div class="cover-page">
+            <h1>DAILY MARKET WRAP</h1>
+            <h2>{{ report_date }}</h2>
+            <div class="cover-meta">
+                <p>Investment Committee Brief</p>
+                <p class="confidential">CONFIDENTIAL</p>
+            </div>
+        </div>
+
+        <!-- Executive Synthesis -->
+        <section class="executive-synthesis">
+            <h3>EXECUTIVE SYNTHESIS</h3>
+            
+            <div class="callout-box">
+                <p class="single-most-important">
+                    <strong>THE SINGLE MOST IMPORTANT THING:</strong><br>
+                    {{ executive_synthesis.single_most_important }}
+                </p>
+            </div>
+
+            <div class="key-takeaways">
+                <h4>KEY TAKEAWAYS:</h4>
+                <ol>
+                    {% for takeaway in executive_synthesis.key_takeaways %}
+                    <li>{{ takeaway }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+
+            <div class="what-to-watch">
+                <h4>WHAT TO WATCH:</h4>
+                <ul>
+                    {% for item in executive_synthesis.what_to_watch %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+
+        <!-- Flash Headlines -->
+        <section class="flash-headlines">
+            <h3>FLASH HEADLINES</h3>
+            <ul>
+                {% for headline in flash_headlines %}
+                <li>{{ headline }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <!-- Main Sections -->
+        {% for section in sections %}
+        <section class="content-section">
+            <h3>{{ section.title }}</h3>
+            
+            {% if section.narrative %}
+            <div class="narrative">
+                {{ section.narrative | replace('\n', '<br>') }}
+            </div>
+            {% endif %}
+
+            {% for table in section.tables %}
+            <div class="table-container">
+                {% if table.title %}
+                <h4 class="table-title">{{ table.title }}</h4>
+                {% endif %}
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            {% for header in table.headers %}
+                            <th style="width: {{ table.column_widths[loop.index0] if table.column_widths else 'auto' }}; text-align: {{ table.column_alignments[loop.index0] if table.column_alignments else 'left' }};">
+                                {{ header }}
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in table.rows %}
+                        <tr>
+                            {% for cell in row %}
+                            <td style="text-align: {{ table.column_alignments[loop.index0] if table.column_alignments else 'left' }};">
+                                {{ cell }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+
+            {# Add charts after specific sections #}
+            {% if section.title == 'Asset Class Dashboard' and charts.asset_class %}
+            <div class="chart-container">
+                <img src="{{ charts.asset_class }}" alt="Asset Class Performance Chart" class="chart-image" />
+            </div>
+            {% endif %}
+
+            {% if section.title == 'Sector Dashboard' and charts.sector %}
+            <div class="chart-container">
+                <img src="{{ charts.sector }}" alt="Sector Performance Chart" class="chart-image" />
+            </div>
+            {% endif %}
+
+            {% if 'Momentum' in section.title and charts.rsi %}
+            <div class="chart-container">
+                <img src="{{ charts.rsi }}" alt="RSI Distribution Chart" class="chart-image" />
+            </div>
+            {% endif %}
+        </section>
+        {% endfor %}
+
+        <!-- Footer Disclaimer -->
+        <div class="footer-disclaimer">
+            <p>This report is for informational purposes only and does not constitute investment advice.</p>
+            <p>All data is derived from proprietary sources and classifications.</p>
+        </div>
+    </article>
+</body>
+</html>
