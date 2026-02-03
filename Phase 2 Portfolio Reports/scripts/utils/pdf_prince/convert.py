@@ -389,8 +389,8 @@ def prepare_template_data(data: Dict[str, Any]) -> Dict[str, Any]:
         exec_summary = f"Portfolio returned {_fmt_pct(summary.get('portfolio_return_1d', 0))} today."
     executive_synthesis = {
         'single_most_important': _strip_html(exec_summary),
-        'key_takeaways': data.get('key_takeaways', []),
-        'what_to_watch': data.get('what_to_watch', []),
+        'key_takeaways': [_strip_html(item) for item in data.get('key_takeaways', [])],
+        'what_to_watch': [_strip_html(item) for item in data.get('what_to_watch', [])],
     }
 
     # Flash headlines derived from portfolio data
