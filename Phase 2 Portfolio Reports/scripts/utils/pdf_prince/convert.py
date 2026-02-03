@@ -52,147 +52,290 @@ def load_css() -> str:
     return css_path.read_text()
 
 
+def _fmt_currency(value: Any, decimals: int = 0) -> str:
+    try:
+        val = float(value)
+    except (TypeError, ValueError):
+        return "—"
+    if decimals > 0:
+        return f"${val:,.{decimals}f}"
+    return f"${val:,.0f}"
+
+
+def _fmt_pct(value: Any, decimals: int = 2, signed: bool = True) -> str:
+    try:
+        val = float(value)
+    except (TypeError, ValueError):
+        return "—"
+    if signed:
+        return f"{val:+.{decimals}f}%"
+    return f"{val:.{decimals}f}%"
+
+
+def _fmt_bp(value: Any) -> str:
+    try:
+        val = float(value)
+    except (TypeError, ValueError):
+        return "—"
+    return f"{val * 10000:+.0f}bp"
+
+
+def _strip_html(text: str) -> str:
+    if not text:
+        return ""
+    import re
+    return re.sub(r"<[^>]+>", "", str(text)).strip()
+
+
+def _weighted_return(items: List[Dict[str, Any]]) -> float:
+    total_w = 0.0
+    total_r = 0.0
+    for item in items:
+        w = abs(float(item.get('weight', 0) or 0))
+        r = float(item.get('return_1d', 0) or 0)
+        total_w += w
+        total_r += w * r
+    if total_w == 0:
+        return 0.0
+    return total_r / total_w
+
+
 def build_sections(data: Dict[str, Any]) -> List[Dict]:
     """Build Phase 1 style sections from portfolio data."""
     sections = []
-    
-    # Get summary data
+
     summary = data.get('summary', {})
-    
-    # 1. Portfolio At A Glance
-    sections.append({
-        'title': 'PORTFOLIO AT A GLANCE',
-        'narrative': f"Portfolio returned {summary.get('portfolio_return_1d', 0):+.2f}% today with "
-                    f"${summary.get('gross_exposure', 0):,.0f} gross exposure across "
-                    f"{summary.get('long_count', 0)} long and {summary.get('short_count', 0)} short positions.",
-        'tables': [{
-            'title': 'Portfolio Metrics',
-            'headers': ['Metric', 'Value', 'Context'],
-            'column_widths': ['40%', '30%', '30%'],
-            'column_alignments': ['left', 'right', 'left'],
-            'rows': [
-                ['Portfolio Return (1D)', f"{summary.get('portfolio_return_1d', 0):+.2f}%", 
-                 '🟢 Positive' if summary.get('portfolio_return_1d', 0) >= 0 else '🔴 Negative'],
-                ['Gross Exposure', f"${summary.get('gross_exposure', 0):,.0f}", 'Total capital at risk'],
-                ['Net Exposure', f"${summary.get('net_exposure', 0):,.0f}", 
-                 f"{summary.get('net_exposure', 0) / summary.get('gross_exposure', 1) * 100:.0f}% net long"],
-                ['Long Positions', str(summary.get('long_count', 0)), 'Active long bets'],
-                ['Short Positions', str(summary.get('short_count', 0)), 'Hedges/shorts'],
-                ['Total Unrealized P&L', f"${summary.get('total_open_pnl', 0):,.0f}", 
-                 'In the money' if summary.get('total_open_pnl', 0) >= 0 else 'Underwater'],
-            ]
-        }]
-    })
-    
-    # 2. Top Contributors & Detractors
+    aggregates = data.get('aggregates', [])
+    holdings = data.get('holdings', [])
+
+    # Contributors/detractors
     top_contributors = summary.get('top_contributors', [])
     top_detractors = summary.get('top_detractors', [])
-    
     if isinstance(top_contributors, str):
         top_contributors = json.loads(top_contributors)
     if isinstance(top_detractors, str):
         top_detractors = json.loads(top_detractors)
-    
-    contributor_rows = []
-    for c in top_contributors[:5]:
-        contributor_rows.append([
-            c.get('symbol', ''),
-            f"{c.get('return_1d', 0):+.2f}%",
-            f"{c.get('weight', 0) * 100:.1f}%",
-            f"🟢 {c.get('contribution', 0) * 10000:+.0f}bp",
-            'Top contributor'
-        ])
-    
-    contributor_rows.append(['...' for _ in range(5)])
-    
-    for d in top_detractors[:5]:
-        contributor_rows.append([
-            d.get('symbol', ''),
-            f"{d.get('return_1d', 0):+.2f}%",
-            f"{d.get('weight', 0) * 100:.1f}%",
-            f"🔴 {d.get('contribution', 0) * 10000:+.0f}bp",
-            'Top detractor'
-        ])
-    
-    sections.append({
-        'title': 'TOP CONTRIBUTORS & DETRACTORS',
-        'narrative': data.get('contributors_narrative', ''),
-        'tables': [{
-            'title': 'Performance Attribution',
-            'headers': ['Position', 'Return', 'Weight', 'Contribution', 'Signal'],
-            'column_widths': ['20%', '15%', '15%', '20%', '30%'],
-            'column_alignments': ['left', 'right', 'right', 'right', 'left'],
-            'rows': contributor_rows
-        }]
-    })
-    
-    # 3. Regional Exposure
+
+    # Aggregates
     regional_breakdown = []
-    aggregates = data.get('aggregates', [])
+    sector_breakdown = []
     for agg in aggregates:
         if agg.get('dimension_type') == 'region':
             regional_breakdown.append(agg)
-    
-    if regional_breakdown:
-        regional_rows = []
-        for r in sorted(regional_breakdown, key=lambda x: abs(x.get('total_weight', 0)), reverse=True):
-            regional_rows.append([
-                r.get('dimension_value', ''),
-                f"{r.get('total_weight', 0) * 100:.1f}%",
-                str(r.get('holding_count', 0)),
-                f"{'🟢' if r.get('weighted_return_1d', 0) >= 0 else '🔴'} {r.get('weighted_return_1d', 0):+.2f}%",
-                f"{r.get('contribution_1d', 0) * 10000:+.0f}bp"
-            ])
-        
+        elif agg.get('dimension_type') in ('tier2', 'sector'):
+            sector_breakdown.append(agg)
+
+    # 1. Portfolio At A Glance
+    gross_exposure = summary.get('gross_exposure', 0)
+    net_exposure = summary.get('net_exposure', 0)
+    long_count = summary.get('long_count', 0)
+    short_count = summary.get('short_count', 0)
+    total_pnl = summary.get('total_open_pnl', 0)
+    net_long_pct = (net_exposure / gross_exposure * 100) if gross_exposure else 0
+    portfolio_return = summary.get('portfolio_return_1d', 0)
+
+    sections.append({
+        'title': 'Portfolio At A Glance',
+        'narrative': (
+            f"Portfolio returned {_fmt_pct(portfolio_return)} today with {_fmt_currency(gross_exposure)} "
+            f"gross exposure across {long_count} long and {short_count} short positions."
+        ),
+        'tables': [{
+            'title': None,
+            'headers': ['Metric', 'Value', 'Context'],
+            'column_widths': ['40%', '30%', '30%'],
+            'column_alignments': ['left', 'right', 'left'],
+            'rows': [
+                ['Portfolio Return (1D)', _fmt_pct(portfolio_return), 'Positive' if portfolio_return >= 0 else 'Negative'],
+                ['Gross Exposure', _fmt_currency(gross_exposure), 'Total capital at risk'],
+                ['Net Exposure', _fmt_currency(net_exposure), f"{net_long_pct:.0f}% net long"],
+                ['Long Positions', str(long_count), 'Active long bets'],
+                ['Short Positions', str(short_count), 'Hedges/shorts'],
+                ['Total Unrealized P&L', _fmt_currency(total_pnl), 'In the money' if total_pnl >= 0 else 'Underwater'],
+            ]
+        }]
+    })
+
+    # 2. Top Contributors & Detractors
+    contributor_rows = []
+    for c in top_contributors[:5]:
+        contributor_rows.append([
+            c.get('symbol', 'N/A'),
+            _fmt_pct(c.get('return_1d', 0)),
+            f"{float(c.get('weight', 0) or 0) * 100:.1f}%",
+            _fmt_bp(c.get('contribution', 0)),
+        ])
+
+    detractor_rows = []
+    for d in top_detractors[:5]:
+        detractor_rows.append([
+            d.get('symbol', 'N/A'),
+            _fmt_pct(d.get('return_1d', 0)),
+            f"{float(d.get('weight', 0) or 0) * 100:.1f}%",
+            _fmt_bp(d.get('contribution', 0)),
+        ])
+
+    sections.append({
+        'title': 'Top Contributors & Detractors',
+        'narrative': _strip_html(data.get('contributors_narrative', '')),
+        'tables': [
+            {
+                'title': 'Top Contributors',
+                'headers': ['Position', 'Return', 'Weight', 'Contribution'],
+                'column_widths': ['30%', '20%', '20%', '30%'],
+                'column_alignments': ['left', 'right', 'right', 'right'],
+                'rows': contributor_rows or [['—', '—', '—', '—']],
+            },
+            {
+                'title': 'Top Detractors',
+                'headers': ['Position', 'Return', 'Weight', 'Contribution'],
+                'column_widths': ['30%', '20%', '20%', '30%'],
+                'column_alignments': ['left', 'right', 'right', 'right'],
+                'rows': detractor_rows or [['—', '—', '—', '—']],
+            },
+        ]
+    })
+
+    # 3. Regional Exposure Analysis
+    regional_rows = []
+    for r in sorted(regional_breakdown, key=lambda x: abs(x.get('total_weight', 0)), reverse=True)[:10]:
+        regional_rows.append([
+            r.get('dimension_value', '—'),
+            f"{r.get('total_weight', 0) * 100:.1f}%",
+            _fmt_pct(r.get('weighted_return_1d', 0)),
+            _fmt_bp(r.get('contribution_1d', 0)),
+            str(r.get('holding_count', 0)),
+        ])
+
+    sections.append({
+        'title': 'Regional Exposure Analysis',
+        'narrative': _strip_html(data.get('regional_narrative', '')),
+        'tables': [{
+            'title': None,
+            'headers': ['Region', 'Weight', 'Return', 'Contribution', 'Holdings'],
+            'column_widths': ['30%', '15%', '15%', '20%', '20%'],
+            'column_alignments': ['left', 'right', 'right', 'right', 'right'],
+            'rows': regional_rows or [['—', '—', '—', '—', '—']],
+        }]
+    })
+
+    # 4. Sector/Theme Exposure
+    sector_rows = []
+    for s in sorted(sector_breakdown, key=lambda x: abs(x.get('total_weight', 0)), reverse=True)[:10]:
+        sector_rows.append([
+            s.get('dimension_value', '—'),
+            f"{s.get('total_weight', 0) * 100:.1f}%",
+            _fmt_pct(s.get('weighted_return_1d', 0)),
+            _fmt_bp(s.get('contribution_1d', 0)),
+        ])
+
+    sections.append({
+        'title': 'Sector/Theme Exposure',
+        'narrative': _strip_html(data.get('sector_narrative', '')),
+        'tables': [{
+            'title': None,
+            'headers': ['Sector/Theme', 'Weight', 'Return', 'Contribution'],
+            'column_widths': ['40%', '20%', '20%', '20%'],
+            'column_alignments': ['left', 'right', 'right', 'right'],
+            'rows': sector_rows or [['—', '—', '—', '—']],
+        }]
+    })
+
+    # 5. Long vs Short Analysis
+    long_items = [h for h in holdings if (h.get('position_type', 'LONG') or 'LONG').upper() == 'LONG']
+    short_items = [h for h in holdings if (h.get('position_type', 'LONG') or 'LONG').upper() == 'SHORT']
+    if long_items or short_items:
+        long_return = _weighted_return(long_items)
+        short_return = _weighted_return(short_items)
+        long_contrib = sum(float(h.get('contribution_1d', 0) or 0) for h in long_items)
+        short_contrib = sum(float(h.get('contribution_1d', 0) or 0) for h in short_items)
+        long_value = summary.get('total_long_value', None)
+        short_value = summary.get('total_short_value', None)
+
         sections.append({
-            'title': 'REGIONAL EXPOSURE',
-            'narrative': data.get('regional_narrative', ''),
+            'title': 'Long vs Short Analysis',
+            'narrative': _strip_html(data.get('long_short_narrative', '')),
             'tables': [{
-                'title': 'Regional Performance Breakdown',
-                'headers': ['Region', 'Weight', '# Holdings', 'Wtd Return', 'Contribution'],
-                'column_widths': ['25%', '15%', '15%', '20%', '25%'],
-                'column_alignments': ['left', 'right', 'center', 'right', 'right'],
-                'rows': regional_rows
+                'title': None,
+                'headers': ['Position Type', 'Exposure', 'Return', 'Contribution'],
+                'column_widths': ['30%', '30%', '20%', '20%'],
+                'column_alignments': ['left', 'right', 'right', 'right'],
+                'rows': [
+                    ['Long', _fmt_currency(long_value) if long_value is not None else '—',
+                     _fmt_pct(long_return), _fmt_bp(long_contrib)],
+                    ['Short', _fmt_currency(short_value) if short_value is not None else '—',
+                     _fmt_pct(short_return), _fmt_bp(short_contrib)],
+                ],
             }]
         })
-    
-    # 4. Holdings Detail
-    holdings = data.get('holdings', [])
-    if holdings:
-        holdings_rows = []
-        for h in sorted(holdings, key=lambda x: abs(x.get('contribution_1d', 0)), reverse=True)[:20]:
-            holdings_rows.append([
-                h.get('symbol', ''),
-                h.get('position_type', 'LONG'),
-                f"{abs(h.get('weight', 0)) * 100:.1f}%",
-                f"${abs(h.get('market_value_usd', 0)):,.0f}",
-                f"{'🟢' if h.get('return_1d', 0) >= 0 else '🔴'} {h.get('return_1d', 0):+.2f}%",
-                f"{h.get('contribution_1d', 0) * 100:+.0f}bp",
-                f"${h.get('open_pnl', 0):,.0f}"
-            ])
-        
-        sections.append({
-            'title': 'HOLDINGS DETAIL',
-            'tables': [{
-                'title': 'Top 20 Positions by Contribution',
-                'headers': ['Symbol', 'Type', 'Weight', 'Mkt Value', 'Return', 'Contribution', 'Unreal P&L'],
-                'column_widths': ['12%', '10%', '12%', '18%', '12%', '18%', '18%'],
-                'column_alignments': ['left', 'center', 'right', 'right', 'right', 'right', 'right'],
-                'rows': holdings_rows
-            }]
-        })
-    
-    # 5. Risk & Concentration
+
+    # 6. P&L Analysis
+    holdings_detail = sorted(
+        [{
+            'symbol': h.get('symbol', ''),
+            'open_pnl': h.get('open_pnl', 0),
+            'market_value': h.get('market_value_usd', 0),
+            'return_1d': h.get('return_1d', 0),
+        } for h in holdings],
+        key=lambda x: x['open_pnl'],
+    )
+    gains = list(reversed(holdings_detail[-5:]))
+    losses = holdings_detail[:5]
+
+    gains_rows = [
+        [g['symbol'] or '—', _fmt_currency(g['open_pnl']), _fmt_currency(g['market_value']), _fmt_pct(g['return_1d'])]
+        for g in gains if g.get('symbol')
+    ]
+    losses_rows = [
+        [l['symbol'] or '—', _fmt_currency(l['open_pnl']), _fmt_currency(l['market_value']), _fmt_pct(l['return_1d'])]
+        for l in losses if l.get('symbol')
+    ]
+
+    sections.append({
+        'title': 'P&L Analysis',
+        'narrative': _strip_html(data.get('pnl_narrative', '')),
+        'tables': [
+            {
+                'title': 'Largest Unrealized Gains',
+                'headers': ['Position', 'Unrealized P&L', 'Market Value', 'Return'],
+                'column_widths': ['30%', '25%', '25%', '20%'],
+                'column_alignments': ['left', 'right', 'right', 'right'],
+                'rows': gains_rows or [['—', '—', '—', '—']],
+            },
+            {
+                'title': 'Largest Unrealized Losses',
+                'headers': ['Position', 'Unrealized P&L', 'Market Value', 'Return'],
+                'column_widths': ['30%', '25%', '25%', '20%'],
+                'column_alignments': ['left', 'right', 'right', 'right'],
+                'rows': losses_rows or [['—', '—', '—', '—']],
+            }
+        ]
+    })
+
+    # 7. Concentration, Risk & Scenario Analysis
     risk_alerts = data.get('risk_alerts', [])
-    risk_narrative = data.get('risk_narrative', '')
-    
-    if risk_alerts or risk_narrative:
+    risk_rows = [[r.get('title', 'RISK'), r.get('detail', '')] for r in risk_alerts]
+    sections.append({
+        'title': 'Concentration, Risk & Scenario Analysis',
+        'narrative': _strip_html(data.get('risk_narrative', '')),
+        'tables': [{
+            'title': None,
+            'headers': ['Risk Flag', 'Detail'],
+            'column_widths': ['30%', '70%'],
+            'column_alignments': ['left', 'left'],
+            'rows': risk_rows or [['—', '—']],
+        }]
+    })
+
+    # 8. Market Context for Portfolio (optional)
+    market_context = _strip_html(data.get('market_context_narrative', ''))
+    if market_context:
         sections.append({
-            'title': 'RISK & CONCENTRATION',
-            'narrative': risk_narrative,
-            'tables': []  # Risk alerts handled separately in template
+            'title': 'Market Context for Portfolio',
+            'narrative': market_context,
+            'tables': [],
         })
-    
+
     return sections
 
 
@@ -210,96 +353,77 @@ def prepare_template_data(data: Dict[str, Any]) -> Dict[str, Any]:
     except:
         formatted_date = report_date
     
-    # Get summary data
     summary = data.get('summary', {})
-    
-    # Get contributors/detractors from JSON if needed
+
+    # Contributors/detractors
     top_contributors = summary.get('top_contributors', [])
     top_detractors = summary.get('top_detractors', [])
-    
     if isinstance(top_contributors, str):
         top_contributors = json.loads(top_contributors)
     if isinstance(top_detractors, str):
         top_detractors = json.loads(top_detractors)
-    
-    # Get regional breakdown from aggregates
-    aggregates = data.get('aggregates', [])
-    regional_breakdown = []
-    sector_breakdown = []
-    
-    for agg in aggregates:
-        if agg.get('dimension_type') == 'region':
-            regional_breakdown.append({
-                'region': agg['dimension_value'],
-                'weight': agg.get('total_weight', 0) * 100,
-                'count': agg.get('holding_count', 0),
-                'return_1d': agg.get('weighted_return_1d', 0),
-                'contribution': agg.get('contribution_1d', 0),
-            })
-        elif agg.get('dimension_type') == 'tier2':
-            sector_breakdown.append({
-                'sector': agg['dimension_value'],
-                'weight': agg.get('total_weight', 0) * 100,
-                'return_1d': agg.get('weighted_return_1d', 0),
-                'contribution': agg.get('contribution_1d', 0),
-            })
-    
-    # Sort by weight
-    regional_breakdown.sort(key=lambda x: -abs(x['weight']))
-    sector_breakdown.sort(key=lambda x: -abs(x['weight']))
-    
-    # Get holdings detail
+
+    # Risk alerts (simple concentration check)
     holdings = data.get('holdings', [])
-    holdings_detail = []
-    
-    for h in holdings:
-        holdings_detail.append({
-            'symbol': h.get('symbol', ''),
-            'position_type': h.get('position_type', 'LONG'),
-            'weight': abs(h.get('weight', 0)) * 100,
-            'market_value': abs(h.get('market_value_usd', 0)),
-            'return_1d': h.get('return_1d', 0),
-            'contribution': h.get('contribution_1d', 0),
-            'open_pnl': h.get('open_pnl', 0),
-        })
-    
-    # Sort by absolute contribution
-    holdings_detail.sort(key=lambda x: -abs(x['contribution']))
-    
-    # Build risk alerts
-    risk_alerts = []
-    
-    # Check for concentration
-    if holdings_detail:
-        top_weight = holdings_detail[0]['weight'] if holdings_detail else 0
-        if top_weight > 10:
-            risk_alerts.append({
-                'severity': 'warning',
-                'title': 'CONCENTRATION WARNING',
-                'detail': f"Top position is {top_weight:.1f}% of portfolio"
-            })
-    
-    # Generate charts
+    risk_alerts = data.get('risk_alerts', [])
+    if not risk_alerts and holdings:
+        try:
+            top_weight = max(abs(float(h.get('weight', 0) or 0)) * 100 for h in holdings)
+            if top_weight > 10:
+                risk_alerts.append({
+                    'severity': 'warning',
+                    'title': 'CONCENTRATION WARNING',
+                    'detail': f"Top position is {top_weight:.1f}% of portfolio"
+                })
+        except ValueError:
+            pass
+
+    # Executive synthesis
+    exec_summary = (data.get('executive_summary') or "").strip()
+    if not exec_summary:
+        exec_summary = f"Portfolio returned {_fmt_pct(summary.get('portfolio_return_1d', 0))} today."
+    executive_synthesis = {
+        'single_most_important': _strip_html(exec_summary),
+        'key_takeaways': data.get('key_takeaways', []),
+        'what_to_watch': data.get('what_to_watch', []),
+    }
+
+    # Flash headlines derived from portfolio data
+    flash_headlines = []
+    if top_contributors:
+        top_c = top_contributors[0]
+        flash_headlines.append(
+            f"Top contributor {top_c.get('symbol', 'N/A')} added {_fmt_bp(top_c.get('contribution', 0))}."
+        )
+    if top_detractors:
+        top_d = top_detractors[0]
+        flash_headlines.append(
+            f"Top detractor {top_d.get('symbol', 'N/A')} detracted {_fmt_bp(top_d.get('contribution', 0))}."
+        )
+
+    if not flash_headlines:
+        flash_headlines = ["Portfolio performance drivers summarized below."]
+
+    # Charts (kept for compatibility)
     chart_data = {}
     if CHARTS_AVAILABLE:
         chart_data = charts.generate_all_charts({
             'top_contributors': top_contributors[:5],
             'top_detractors': top_detractors[:5],
-            'regional_breakdown': regional_breakdown,
-            'holdings_detail': holdings_detail[:20],
+            'regional_breakdown': [],
+            'holdings_detail': [],
         })
-    
-    # Build data structure for Phase 1 template
+
+    data_for_sections = dict(data)
+    data_for_sections['risk_alerts'] = risk_alerts
+
     return {
         'report_date': formatted_date,
-        'executive_synthesis': {
-            'single_most_important': data.get('executive_summary', 'Portfolio performance summary.'),
-            'key_takeaways': data.get('key_takeaways', []),
-            'what_to_watch': data.get('what_to_watch', []),
-        },
-        'flash_headlines': [],  # Could add market headlines here
-        'sections': build_sections(data),
+        'executive_synthesis': executive_synthesis,
+        'flash_headlines': flash_headlines,
+        'sections': build_sections(data_for_sections),
         'css_content': load_css(),
+        'charts': chart_data,
     }
 
 
@@ -321,7 +445,7 @@ def render_html(data: Dict[str, Any]) -> str:
     env = Environment(loader=FileSystemLoader(str(template_dir)))
     
     # Use Phase 1 style template for consistent look
-    template = env.get_template('report_phase1_style.html')
+    template = env.get_template('report.html')
     
     # Prepare data
     template_data = prepare_template_data(data)

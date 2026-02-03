@@ -1452,8 +1452,21 @@ def generate_daily_report(date: str, providers: List[str] = None,
     # Import PDF converter based on engine choice
     pdf_available = False
     pdf_converter = None
+    use_prince = False
     
-    if pdf_engine == 'kimi':
+    # Try PrinceXML first (professional quality)
+    if pdf_engine in ['prince', 'auto']:
+        try:
+            from utils.pdf_prince.parser import extract_json_from_response
+            from utils.pdf_prince.convert import convert_from_data
+            pdf_available = True
+            use_prince = True
+            if verbose:
+                print(f"      Using PrinceXML PDF engine (professional quality)")
+        except ImportError:
+            pass
+    
+    if not pdf_available and pdf_engine == 'kimi':
         try:
             from utils.pdf_kimi import convert_report as kimi_convert
             pdf_converter = kimi_convert
@@ -1465,7 +1478,7 @@ def generate_daily_report(date: str, providers: List[str] = None,
                 print(f"      WARNING: Kimi PDF engine not available: {e}")
                 print("               Install with: pip install playwright jinja2 && playwright install chromium")
     
-    if not pdf_available and pdf_engine in ['weasyprint', 'auto']:
+    if not pdf_available and pdf_engine in ['weasyprint']:
         try:
             from utils.pdf_weasyprint import convert_report as weasy_convert
             pdf_converter = weasy_convert
@@ -1497,12 +1510,30 @@ def generate_daily_report(date: str, providers: List[str] = None,
             saved_files.append(md_path)
             
             # Convert to PDF
-            if pdf_available and pdf_converter:
-                pdf_path = pdf_converter(str(md_path))
-                if pdf_path:
-                    saved_files.append(Path(pdf_path))
-                    if verbose:
-                        print(f"      Converted to PDF: {Path(pdf_path).name}")
+            if pdf_available:
+                if use_prince:
+                    # PrinceXML requires structured data - parse markdown to sections
+                    from utils.pdf_prince.parser import extract_json_from_response
+                    from utils.pdf_prince.convert import convert_from_data
+                    
+                    # Parse markdown into structured format
+                    structured_data = parse_markdown_to_prince_format(result['content'], date)
+                    
+                    # Generate PDF with PrinceXML
+                    pdf_filename = f"daily_wrap_{date}_{provider}.pdf"
+                    pdf_path = OUTPUT_DIR / pdf_filename
+                    
+                    success_path = convert_from_data(structured_data, str(pdf_path))
+                    if success_path:
+                        saved_files.append(Path(success_path))
+                        if verbose:
+                            print(f"      Converted to PDF: {Path(success_path).name}")
+                elif pdf_converter:
+                    pdf_path = pdf_converter(str(md_path))
+                    if pdf_path:
+                        saved_files.append(Path(pdf_path))
+                        if verbose:
+                            print(f"      Converted to PDF: {Path(pdf_path).name}")
             
             # Save to database
             report_id = f"daily_{date}_{provider}"
@@ -1626,6 +1657,126 @@ def test_report_generation(date: str) -> bool:
     return tests_failed == 0
 
 
+def parse_markdown_to_prince_format(md_content: str, date: str) -> Dict[str, Any]:
+    """
+    Parse markdown report into structured data format for PrinceXML.
+    
+    Args:
+        md_content: Markdown content from LLM
+        date: Report date (YYYY-MM-DD)
+        
+    Returns:
+        Structured data dict for PrinceXML template
+    """
+    import re
+    from datetime import datetime
+    
+    # Format date
+    try:
+        dt = datetime.strptime(date, '%Y-%m-%d')
+        formatted_date = dt.strftime('%B %d, %Y')
+    except:
+        formatted_date = date
+    
+    # Extract executive synthesis
+    exec_match = re.search(r'## EXECUTIVE SYNTHESIS(.*?)(?=##|\Z)', md_content, re.DOTALL)
+    exec_text = exec_match.group(1).strip() if exec_match else ""
+    
+    # Extract single most important thing
+    single_important = ""
+    important_match = re.search(r'\*\*THE SINGLE MOST IMPORTANT THING:\*\*(.*?)(?=\*\*|$)', exec_text, re.DOTALL)
+    if important_match:
+        single_important = important_match.group(1).strip()
+    
+    # Extract key takeaways
+    key_takeaways = []
+    takeaways_match = re.search(r'\*\*KEY TAKEAWAYS:\*\*(.*?)(?=\*\*|$)', exec_text, re.DOTALL)
+    if takeaways_match:
+        takeaway_text = takeaways_match.group(1).strip()
+        for line in takeaway_text.split('\n'):
+            line = line.strip()
+            if line and (line.startswith('-') or line.startswith('•') or re.match(r'^\d+\.', line)):
+                key_takeaways.append(re.sub(r'^[-•\d\.]\s*', '', line))
+    
+    # Extract what to watch
+    what_to_watch = []
+    watch_match = re.search(r'\*\*WHAT TO WATCH:\*\*(.*?)(?=\*\*|##|$)', exec_text, re.DOTALL)
+    if watch_match:
+        watch_text = watch_match.group(1).strip()
+        for line in watch_text.split('\n'):
+            line = line.strip()
+            if line and (line.startswith('-') or line.startswith('•') or re.match(r'^\d+\.', line)):
+                what_to_watch.append(re.sub(r'^[-•\d\.]\s*', '', line))
+    
+    # Extract flash headlines
+    flash_headlines = []
+    flash_match = re.search(r'## FLASH HEADLINES(.*?)(?=##|\Z)', md_content, re.DOTALL)
+    if flash_match:
+        flash_text = flash_match.group(1).strip()
+        for line in flash_text.split('\n'):
+            line = line.strip()
+            if line and (line.startswith('-') or line.startswith('•')):
+                flash_headlines.append(re.sub(r'^[-•]\s*', '', line))
+    
+    # Extract main sections
+    sections = []
+    section_pattern = r'## ([A-Z][^\n]+)\n(.*?)(?=##|\Z)'
+    
+    for match in re.finditer(section_pattern, md_content, re.DOTALL):
+        title = match.group(1).strip()
+        content = match.group(2).strip()
+        
+        # Skip executive synthesis and flash headlines (already extracted)
+        if title in ['EXECUTIVE SYNTHESIS', 'FLASH HEADLINES']:
+            continue
+        
+        # Extract narrative (text before first table)
+        table_start = content.find('|')
+        if table_start > 0:
+            narrative = content[:table_start].strip()
+        else:
+            narrative = content
+        
+        # Extract tables
+        tables = []
+        table_matches = re.finditer(r'\|([^\n]+)\|', content)
+        current_table = []
+        
+        for table_match in table_matches:
+            row = [cell.strip() for cell in table_match.group(1).split('|')]
+            if row and not all(c.startswith('-') for c in row):  # Skip separator rows
+                current_table.append(row)
+        
+        if current_table:
+            headers = current_table[0]
+            rows = current_table[1:]
+            
+            tables.append({
+                'title': None,
+                'headers': headers,
+                'rows': rows,
+                'column_widths': [f"{100//len(headers)}%" for _ in headers],
+                'column_alignments': ['left'] * len(headers),
+            })
+        
+        sections.append({
+            'title': title,
+            'narrative': narrative,
+            'tables': tables,
+        })
+    
+    return {
+        'report_date': formatted_date,
+        'executive_synthesis': {
+            'single_most_important': single_important,
+            'key_takeaways': key_takeaways,
+            'what_to_watch': what_to_watch,
+        },
+        'flash_headlines': flash_headlines,
+        'sections': sections,
+    }
+
+
 def get_last_trading_day(target_date: str = None) -> str:
     """
     Get the last trading day with data in the database.
@@ -1689,9 +1840,9 @@ def main():
     parser.add_argument("--test", action="store_true",
                        help="Test mode (skip LLM calls)")
     parser.add_argument("--pdf-engine", type=str,
-                       choices=['weasyprint', 'kimi', 'reportlab', 'auto'],
-                       default='weasyprint',
-                       help="PDF engine: weasyprint (default), kimi (premium), reportlab")
+                       choices=['prince', 'weasyprint', 'kimi', 'reportlab', 'auto'],
+                       default='prince',
+                       help="PDF engine: prince (default, professional), weasyprint, kimi (premium), reportlab, auto")
     parser.add_argument("--run-tests", action="store_true",
                        help="Run pipeline tests")
     args = parser.parse_args()
