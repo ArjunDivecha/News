@@ -82,6 +82,7 @@ The pipeline consists of 4 steps that run automatically:
 - Loads portfolio data and Phase 1 market context
 - Injects into prompt template
 - Generates report with Claude Opus 4.5
+- Converts to professional PDF using PrinceXML
 - Outputs Markdown and PDF to `outputs/` directory
 
 ## Output
@@ -90,8 +91,14 @@ Reports are saved in:
 ```
 outputs/{portfolio_id}/
 ├── portfolio_wrap_2026-01-30.md    # Markdown report
-└── portfolio_wrap_2026-01-30.pdf   # PDF report
+└── portfolio_wrap_2026-01-30.pdf   # Professional PDF (PrinceXML, PDF/X-1a:2003)
 ```
+
+**PDF Quality:**
+- Generated with PrinceXML for professional print quality
+- PDF/X-1a:2003 profile with sRGB color management
+- Proper typography, tables, and page layout
+- Matches Phase 1 report styling
 
 ### Report Structure
 
@@ -128,19 +135,23 @@ sqlite3 database/portfolio.db < database/schema.sql
 
 ## Dependencies
 
+### Required Software
+- **PrinceXML** (for professional PDF generation): https://www.princexml.com/
+- **Python 3.11+**
+
+### Python Packages
 ```
 pandas>=2.0
 openpyxl
 yfinance>=0.2.30
 anthropic>=0.25
 python-dotenv
-markdown
-weasyprint
+jinja2
 ```
 
 Install with:
 ```bash
-pip install pandas openpyxl yfinance anthropic python-dotenv markdown weasyprint
+pip install pandas openpyxl yfinance anthropic python-dotenv jinja2
 ```
 
 ## Cost Estimation
@@ -174,7 +185,11 @@ Phase 2 Portfolio Reports/
 │       ├── db.py                   # Database utilities
 │       ├── llm.py                  # LLM utilities
 │       ├── taxonomy.py             # Classification mappings
-│       └── yfinance_utils.py       # Yahoo Finance utilities
+│       ├── yfinance_utils.py       # Yahoo Finance utilities
+│       └── pdf_prince/             # PrinceXML PDF converter
+│           ├── convert.py          # PDF generation
+│           ├── charts.py           # Chart generation
+│           └── templates/          # HTML/CSS templates
 ├── prompts/
 │   └── portfolio_daily_wrap.md     # Report prompt template
 ├── outputs/                        # Generated reports
@@ -197,10 +212,10 @@ Phase 2 Portfolio Reports/
 - Missing prices use the market value from holdings file as fallback
 
 ### PDF Generation Errors
-- WeasyPrint requires system dependencies (Cairo, Pango)
-- On macOS: `brew install cairo pango gdk-pixbuf libffi`
-- On Ubuntu: `apt-get install libcairo2-dev libpango1.0-dev`
+- Ensure PrinceXML is installed and the `prince` command is in your PATH
+- Download from: https://www.princexml.com/download/
 - Markdown version is always generated even if PDF fails
+- Check PrinceXML installation: `prince --version`
 
 ## Future Enhancements
 
