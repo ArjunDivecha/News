@@ -75,26 +75,34 @@ Build a personal report generation system that:
 
 ## Production Workflow
 
-### Daily Report Generation (RECOMMENDED)
+### Daily Report Generation (Single Command)
 
 ```bash
-# 1. Load Bloomberg data from Excel
-python scripts/07_load_excel.py --date 2026-02-03
+cd "Step 4 Report Generation/scripts"
 
-# 2. Generate professional PDF report with PrinceXML
-python scripts/05_compare_models.py --date 2026-02-03 --models anthropic --structured
+# Complete workflow: Load data + Generate PDF
+python generate_report.py --date 2026-02-03 --models anthropic --structured
 
-# Output: outputs/comparison/2026-02-03/anthropic_report.pdf
+# Output: ../outputs/comparison/2026-02-03/anthropic_report.pdf
 ```
 
-### Alternative: Markdown Reports
+**What it does:**
+1. Automatically loads Bloomberg data from Excel into SQLite
+2. Computes category statistics and factor returns
+3. Generates structured JSON report via Claude
+4. Converts to professional PDF with PrinceXML
+
+**Options:**
+- `--skip-load-data` - Skip data loading if already loaded
+- `--models anthropic openai google` - Compare multiple models
+- `--structured` - Use structured JSON output (REQUIRED for best PDFs)
+
+### One-Time Setup
 
 ```bash
-# Generate markdown report (with optional PDF via markdown parser)
-python scripts/03_generate_daily_report.py --date 2026-02-03 --provider anthropic --pdf-engine prince
+# Initialize database and sync Final 1000 list
+python setup_database.py
 ```
-
-**Note:** The structured JSON method (`05_compare_models.py --structured`) produces superior PDFs with proper formatting, sections, tables, and narratives.
 
 ---
 

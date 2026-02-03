@@ -5,22 +5,16 @@ Generate daily market wrap and flash reports using LLMs, powered by your curated
 ## Quick Start
 
 ```bash
-cd "Step 4 Report Generation"
+cd "Step 4 Report Generation/scripts"
 
-# Initialize database (one-time)
-python database/init_db.py
+# One-time setup
+python setup_database.py
 
-# Sync static data (run when Final 1000 list changes)
-python scripts/01_sync_static_data.py
+# Daily report generation (SINGLE COMMAND - loads data + generates PDF)
+python generate_report.py --date 2026-02-03 --models anthropic --structured
 
-# Load Bloomberg data from Excel (daily)
-python scripts/07_load_excel.py --date 2026-02-03
-
-# Generate professional PDF report with PrinceXML (RECOMMENDED)
-python scripts/05_compare_models.py --date 2026-02-03 --models anthropic --structured
-
-# Alternative: Generate markdown report only
-python scripts/03_generate_daily_report.py --date 2026-02-03 --provider anthropic
+# Optional: Skip data loading if already loaded
+python generate_report.py --date 2026-02-03 --models anthropic --structured --skip-load-data
 ```
 
 ## Overview
@@ -33,36 +27,29 @@ This pipeline transforms Bloomberg market data into professional investment comm
 4. **Report Layer:** Multi-model LLM generation (GPT, Claude, Gemini)
 5. **Output Layer:** Professional PDF reports
 
-## Report Generation Methods
+## Report Generation
 
-### Method 1: Structured JSON → PrinceXML (RECOMMENDED)
-**Best for:** Professional-quality PDFs with proper formatting
+### Single Command Workflow (RECOMMENDED)
+
+The `generate_report.py` script automatically:
+1. Loads Bloomberg data from Excel into SQLite
+2. Prepares data summaries and category statistics
+3. Generates structured JSON report via LLM
+4. Converts to professional PDF with PrinceXML
 
 ```bash
-# Generate structured JSON report and convert to PDF with PrinceXML
-python scripts/05_compare_models.py --date 2026-02-03 --models anthropic --structured
+# Complete workflow in one command
+python scripts/generate_report.py --date 2026-02-03 --models anthropic --structured
 
 # Output: outputs/comparison/2026-02-03/anthropic_report.pdf
 ```
 
 **Features:**
+- Automatic data loading (use `--skip-load-data` to disable)
 - Structured JSON output with sections, tables, and narratives
 - Professional PDF/X-1a:2003 quality via PrinceXML
-- Proper typography, tables, and page layout
 - Executive synthesis, flash headlines, and detailed sections
-
-### Method 2: Markdown → PDF (Alternative)
-**Best for:** Quick markdown reports with basic PDF conversion
-
-```bash
-# Generate markdown report with optional PDF
-python scripts/03_generate_daily_report.py --date 2026-02-03 --provider anthropic --pdf-engine prince
-
-# Output: outputs/daily/daily_wrap_2026-02-03_anthropic.md
-#         outputs/daily/daily_wrap_2026-02-03_anthropic.pdf
-```
-
-**Note:** Method 1 (structured) produces superior PDFs with better formatting.
+- ~2-3 minutes total runtime
 
 ## Report Types
 
@@ -150,18 +137,20 @@ Step 4 Report Generation/
 │   ├── daily_wrap_structured.md   # Structured JSON prompt (for PrinceXML)
 │   └── flash_report.md            # Flash report prompt
 ├── scripts/
-│   ├── 01_sync_static_data.py     # Sync Final 1000 list to DB
-│   ├── 03_generate_daily_report.py # Generate markdown reports
-│   ├── 05_compare_models.py       # Generate structured JSON → PDF (RECOMMENDED)
-│   ├── 07_load_excel.py           # Load Bloomberg Excel data
+│   ├── generate_report.py         # PRIMARY: Single-command report generation
+│   ├── setup_database.py          # One-time: Sync Final 1000 list to DB
+│   ├── compute_correlations.py   # Optional: Compute asset correlations
+│   ├── calculate_ytd.py           # Utility: Calculate YTD returns
+│   ├── bloomberg_backfill.py      # Windows: Historical data backfill
+│   ├── bloomberg_daily.py         # Windows: Daily data fetch
+│   ├── bloomberg_fetcher.py       # Windows: Bloomberg API wrapper
 │   └── utils/
 │       ├── pdf_prince/            # PrinceXML PDF converter
 │       ├── pdf_weasyprint.py      # WeasyPrint fallback
 │       ├── db.py                  # Database utilities
 │       └── llm.py                 # LLM API wrappers
 └── outputs/
-    ├── comparison/         # Structured reports (PrinceXML PDFs)
-    └── daily/              # Markdown reports
+    └── comparison/         # Professional PDF reports
 ```
 
 ## Requirements
