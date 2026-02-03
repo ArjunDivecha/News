@@ -84,7 +84,12 @@ def _strip_html(text: str) -> str:
     if not text:
         return ""
     import re
-    return re.sub(r"<[^>]+>", "", str(text)).strip()
+    # Convert markdown bold to HTML before stripping (so it renders in PDF)
+    text = str(text)
+    text = re.sub(r'\*\*([^*]+)\*\*', r'<strong>\1</strong>', text)  # **bold** -> <strong>bold</strong>
+    text = re.sub(r'\*([^*]+)\*', r'<em>\1</em>', text)  # *italic* -> <em>italic</em>
+    # Don't strip HTML tags - we want them for PDF rendering
+    return text.strip()
 
 
 def _weighted_return(items: List[Dict[str, Any]]) -> float:
