@@ -81,6 +81,9 @@ def format_portfolio_summary(summary: dict) -> str:
     lines.append(f"  - Short positions: {summary.get('short_count', 0)}")
     lines.append(f"")
     lines.append(f"Portfolio Return (1D): {summary.get('portfolio_return_1d', 0):+.2f}%")
+    ytd = summary.get('portfolio_return_ytd')
+    if ytd is not None:
+        lines.append(f"Portfolio Return (YTD): {ytd:+.2f}%")
     lines.append(f"Total Unrealized P&L: ${summary.get('total_open_pnl', 0):,.2f}")
     
     return "\n".join(lines)
@@ -106,29 +109,66 @@ def format_contributors(contributors: list, label: str) -> str:
     return "\n".join(lines)
 
 
-def format_aggregates(aggregates: pd.DataFrame, dim_type: str) -> str:
-    """Format aggregates for a specific dimension as table."""
+def format_aggregates(aggregates: pd.DataFrame, dim_type: str, snapshot: pd.DataFrame = None) -> str:
+    """Format aggregates for a specific dimension as table with YTD."""
     dim_data = aggregates[aggregates['dimension_type'] == dim_type].copy()
     
     if dim_data.empty:
         return f"No {dim_type} breakdown available."
     
+    # Compute YTD averages from snapshot if available
+    ytd_map = {}
+    if snapshot is not None and not snapshot.empty:
+        # Need to get the dimension field from holdings
+        # For tier1/tier2, we need to join with assets table
+        # For now, compute weighted YTD from snapshot grouped by the dimension
+        conn = get_db()
+        
+        # Get holdings with their classifications
+        holdings_df = pd.read_sql_query("""
+            SELECT h.symbol, h.tier1, h.tier2, h.yf_sector, h.country
+            FROM portfolio_holdings h
+        """, conn)
+        conn.close()
+        
+        # Merge snapshot with holdings to get classifications
+        merged = snapshot.merge(holdings_df, on='symbol', how='left')
+        
+        # Map dimension type to column name
+        dim_col_map = {
+            'tier1': 'tier1',
+            'tier2': 'tier2',
+            'sector': 'yf_sector',
+            'region': 'country',
+        }
+        
+        dim_col = dim_col_map.get(dim_type)
+        if dim_col and dim_col in merged.columns:
+            # Compute weighted YTD for each dimension value
+            for dim_val in merged[dim_col].dropna().unique():
+                subset = merged[merged[dim_col] == dim_val]
+                if not subset.empty and subset['weight'].sum() > 0:
+                    # Weighted average YTD
+                    weighted_ytd = (subset['return_ytd'] * subset['weight']).sum() / subset['weight'].sum()
+                    ytd_map[dim_val] = weighted_ytd
+    
     # Sort by total weight descending
     dim_data = dim_data.sort_values('total_weight', ascending=False)
     
     lines = []
-    lines.append(f"| {dim_type.title()} | Weight | Return | Contribution | Holdings |")
-    lines.append(f"|{'-'*20}|--------|--------|--------------|----------|")
+    lines.append(f"| {dim_type.title()} | Weight | 1D Ret | YTD Ret | Contribution | Holdings |")
+    lines.append(f"|{'-'*20}|--------|--------|---------|--------------|----------|")
     
     for _, row in dim_data.iterrows():
         value = row['dimension_value']
         weight = row['total_weight'] * 100
         ret = row['weighted_return_1d']
+        ytd = ytd_map.get(value, 0)
         contrib = row['contribution_1d']
         count = row['holding_count']
         
         if weight > 0.5:  # Only show if meaningful weight
-            lines.append(f"| {value:<18} | {weight:>5.1f}% | {ret:>+6.2f}% | {contrib:>+9.1f}bp | {count:>8} |")
+            lines.append(f"| {value:<18} | {weight:>5.1f}% | {ret:>+6.2f}% | {ytd:>+6.2f}% | {contrib:>+9.1f}bp | {count:>8} |")
     
     return "\n".join(lines)
 
@@ -144,8 +184,8 @@ def format_holdings_detail(snapshot: pd.DataFrame) -> str:
     snapshot = snapshot.sort_values('abs_contrib', ascending=False)
     
     lines = []
-    lines.append(f"| Symbol | Type | Weight | Price | Return | Contrib | P&L |")
-    lines.append(f"|--------|------|--------|-------|--------|---------|-----|")
+    lines.append(f"| Symbol | Type | Weight | Price | 1D Ret | YTD Ret | Contrib | P&L |")
+    lines.append(f"|--------|------|--------|-------|--------|---------|---------|-----|")
     
     for _, row in snapshot.head(20).iterrows():  # Top 20 by impact
         symbol = row['symbol']
@@ -153,10 +193,11 @@ def format_holdings_detail(snapshot: pd.DataFrame) -> str:
         weight = (row['weight'] * 100) if pd.notna(row['weight']) else 0
         price = row['price'] if pd.notna(row['price']) else 0
         ret = row['return_1d'] if pd.notna(row['return_1d']) else 0
+        ytd = row['return_ytd'] if pd.notna(row['return_ytd']) else 0
         contrib = row['contribution_1d'] if pd.notna(row['contribution_1d']) else 0
         pnl = row['open_pnl'] if pd.notna(row['open_pnl']) else 0
         
-        lines.append(f"| {symbol:<6} | {pos_type:5} | {weight:>5.1f}% | ${price:>7.2f} | {ret:>+5.2f}% | {contrib:>+6.1f}bp | ${pnl:>+10,.0f} |")
+        lines.append(f"| {symbol:<6} | {pos_type:5} | {weight:>5.1f}% | ${price:>7.2f} | {ret:>+5.2f}% | {ytd:>+6.2f}% | {contrib:>+6.1f}bp | ${pnl:>+10,.0f} |")
     
     return "\n".join(lines)
 
@@ -226,10 +267,10 @@ def prepare_prompt_data(portfolio_id: str, date: str) -> dict:
         'portfolio_summary': format_portfolio_summary(summary),
         'top_contributors': format_contributors(summary.get('top_contributors', []), 'Contributors'),
         'top_detractors': format_contributors(summary.get('top_detractors', []), 'Detractors'),
-        'regional_breakdown': format_aggregates(aggregates, 'region'),
-        'tier1_breakdown': format_aggregates(aggregates, 'tier1'),
-        'tier2_breakdown': format_aggregates(aggregates, 'tier2'),
-        'sector_breakdown': format_aggregates(aggregates, 'sector'),
+        'regional_breakdown': format_aggregates(aggregates, 'region', snapshot),
+        'tier1_breakdown': format_aggregates(aggregates, 'tier1', snapshot),
+        'tier2_breakdown': format_aggregates(aggregates, 'tier2', snapshot),
+        'sector_breakdown': format_aggregates(aggregates, 'sector', snapshot),
         'holdings_detail': format_holdings_detail(snapshot),
         'market_context': market_context,
     }

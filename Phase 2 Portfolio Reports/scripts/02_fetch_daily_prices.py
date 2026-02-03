@@ -262,6 +262,20 @@ def fetch_daily_prices(portfolio_id: str, date: str = None,
     short_count = sum(1 for d in daily_data if d['position_type'] == 'SHORT')
     total_open_pnl = sum(d['open_pnl'] or 0 for d in daily_data)
     
+    # Compute portfolio-level YTD return (weighted average)
+    portfolio_return_ytd = 0
+    total_weight_ytd = 0
+    for d in daily_data:
+        if d.get('weight') is not None and d.get('return_ytd') is not None:
+            weight = abs(d['weight'])  # Use absolute weight for YTD calculation
+            portfolio_return_ytd += weight * d['return_ytd']
+            total_weight_ytd += weight
+    
+    if total_weight_ytd > 0:
+        portfolio_return_ytd = portfolio_return_ytd / total_weight_ytd
+    else:
+        portfolio_return_ytd = None
+    
     summary = {
         'total_market_value': total_long_value + total_short_value,
         'total_long_value': total_long_value,
@@ -272,7 +286,7 @@ def fetch_daily_prices(portfolio_id: str, date: str = None,
         'long_count': long_count,
         'short_count': short_count,
         'portfolio_return_1d': portfolio_return / 100,  # Convert bps to %
-        'portfolio_return_ytd': None,  # Would need historical calculation
+        'portfolio_return_ytd': portfolio_return_ytd,
         'total_open_pnl': total_open_pnl,
         'daily_pnl': None,
         'top_contributors': top_contributors,
