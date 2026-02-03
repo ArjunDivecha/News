@@ -109,23 +109,43 @@ def prepare_data_summary(date: str) -> Dict:
     """Prepare data summary from database for the given date."""
     conn = get_db()
     
-    # Get tier1 stats
+    # Get tier1 stats with YTD
     tier1_df = pd.read_sql_query("""
-        SELECT category_value, avg_return, count, best_ticker, best_return, worst_ticker, worst_return
-        FROM category_stats
-        WHERE date = ? AND category_type = 'tier1'
+        SELECT 
+            a.tier1 as category_value,
+            AVG(dp.return_1d) as avg_return,
+            AVG(dp.return_ytd) as avg_return_ytd,
+            COUNT(*) as count,
+            MAX(CASE WHEN dp.return_1d = (SELECT MAX(return_1d) FROM daily_prices dp2 JOIN assets a2 ON dp2.ticker = a2.ticker WHERE dp2.date = ? AND a2.tier1 = a.tier1) THEN dp.ticker END) as best_ticker,
+            MAX(dp.return_1d) as best_return,
+            MIN(CASE WHEN dp.return_1d = (SELECT MIN(return_1d) FROM daily_prices dp2 JOIN assets a2 ON dp2.ticker = a2.ticker WHERE dp2.date = ? AND a2.tier1 = a.tier1) THEN dp.ticker END) as worst_ticker,
+            MIN(dp.return_1d) as worst_return
+        FROM daily_prices dp
+        JOIN assets a ON dp.ticker = a.ticker
+        WHERE dp.date = ?
+        GROUP BY a.tier1
         ORDER BY avg_return DESC
-    """, conn, params=[date])
+    """, conn, params=[date, date, date])
     
     tier1_stats = tier1_df.to_dict('records') if not tier1_df.empty else []
     
-    # Get tier2 stats
+    # Get tier2 stats with YTD
     tier2_df = pd.read_sql_query("""
-        SELECT category_value, avg_return, count, best_ticker, best_return, worst_ticker, worst_return
-        FROM category_stats
-        WHERE date = ? AND category_type = 'tier2'
+        SELECT 
+            a.tier2 as category_value,
+            AVG(dp.return_1d) as avg_return,
+            AVG(dp.return_ytd) as avg_return_ytd,
+            COUNT(*) as count,
+            MAX(CASE WHEN dp.return_1d = (SELECT MAX(return_1d) FROM daily_prices dp2 JOIN assets a2 ON dp2.ticker = a2.ticker WHERE dp2.date = ? AND a2.tier2 = a.tier2) THEN dp.ticker END) as best_ticker,
+            MAX(dp.return_1d) as best_return,
+            MIN(CASE WHEN dp.return_1d = (SELECT MIN(return_1d) FROM daily_prices dp2 JOIN assets a2 ON dp2.ticker = a2.ticker WHERE dp2.date = ? AND a2.tier2 = a.tier2) THEN dp.ticker END) as worst_ticker,
+            MIN(dp.return_1d) as worst_return
+        FROM daily_prices dp
+        JOIN assets a ON dp.ticker = a.ticker
+        WHERE dp.date = ?
+        GROUP BY a.tier2
         ORDER BY avg_return DESC
-    """, conn, params=[date])
+    """, conn, params=[date, date, date])
     
     tier2_stats = tier2_df.to_dict('records') if not tier2_df.empty else []
     
@@ -154,8 +174,10 @@ def inject_data_into_prompt(template: str, data: Dict) -> str:
     # Format tier1 stats
     tier1_lines = []
     for stat in data.get('tier1_stats', []):
+        ytd = stat.get('avg_return_ytd')
+        ytd_str = f", YTD: {ytd:+.2f}%" if ytd is not None else ""
         tier1_lines.append(
-            f"  {stat['category_value']}: {stat['avg_return']:+.2f}% "
+            f"  {stat['category_value']}: {stat['avg_return']:+.2f}%{ytd_str} "
             f"({stat['count']} assets, best: {stat.get('best_ticker', 'N/A')} {stat.get('best_return', 0):+.2f}%, "
             f"worst: {stat.get('worst_ticker', 'N/A')} {stat.get('worst_return', 0):+.2f}%)"
         )
@@ -164,8 +186,10 @@ def inject_data_into_prompt(template: str, data: Dict) -> str:
     # Format tier2 stats
     tier2_lines = []
     for stat in data.get('tier2_stats', []):
+        ytd = stat.get('avg_return_ytd')
+        ytd_str = f", YTD: {ytd:+.2f}%" if ytd is not None else ""
         tier2_lines.append(
-            f"  {stat['category_value']}: {stat['avg_return']:+.2f}% ({stat['count']} assets)"
+            f"  {stat['category_value']}: {stat['avg_return']:+.2f}%{ytd_str} ({stat['count']} assets)"
         )
     tier2_str = "\n".join(tier2_lines) if tier2_lines else "No data available"
     
