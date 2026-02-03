@@ -397,13 +397,15 @@ def prepare_template_data(data: Dict[str, Any]) -> Dict[str, Any]:
     flash_headlines = []
     if top_contributors:
         top_c = top_contributors[0]
+        contrib_bp = top_c.get('contribution', 0)
         flash_headlines.append(
-            f"Top contributor {top_c.get('symbol', 'N/A')} added {_fmt_bp(top_c.get('contribution', 0))}."
+            f"Top contributor {top_c.get('symbol', 'N/A')} added {contrib_bp:+.1f}bp."
         )
     if top_detractors:
         top_d = top_detractors[0]
+        contrib_bp = top_d.get('contribution', 0)
         flash_headlines.append(
-            f"Top detractor {top_d.get('symbol', 'N/A')} detracted {_fmt_bp(top_d.get('contribution', 0))}."
+            f"Top detractor {top_d.get('symbol', 'N/A')} detracted {contrib_bp:+.1f}bp."
         )
 
     if not flash_headlines:
