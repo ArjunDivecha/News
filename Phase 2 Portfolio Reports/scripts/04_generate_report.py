@@ -125,10 +125,12 @@ def format_aggregates(aggregates: pd.DataFrame, dim_type: str, snapshot: pd.Data
         conn = get_db()
         
         # Get holdings with their classifications
+        portfolio_id = snapshot['portfolio_id'].iloc[0]
         holdings_df = pd.read_sql_query("""
             SELECT h.symbol, h.tier1, h.tier2, h.yf_sector, h.country
             FROM portfolio_holdings h
-        """, conn)
+            WHERE h.portfolio_id = ?
+        """, conn, params=[portfolio_id])
         conn.close()
         
         # Merge snapshot with holdings to get classifications

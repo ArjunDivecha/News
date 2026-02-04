@@ -21,6 +21,14 @@ CRITICAL GUIDELINES
 • Connect market themes to specific portfolio holdings
 • Use calibrated uncertainty for forward-looking statements
 
+STRUCTURAL ENFORCEMENT:
+□ You MUST include ALL 8 numbered sections (0-7) using EXACT headers provided
+□ Section 3 (Regional) and Section 4 (Sector) are MANDATORY - do not skip even if data seems redundant
+□ Use EXACT table column headers specified in each section
+□ Do NOT rename sections (e.g., don't change "Market Context" to "Bottom Line")
+□ Do NOT add unprompted subsections like "Short Utilization Efficiency"
+□ Follow the numbered sequence exactly: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+
 ============================================================
 Z-SCORE VISUAL FORMATTING
 ============================================================
@@ -43,6 +51,15 @@ PERFORMANCE FORMATTING
   - Show in basis points (bps) for precision
   - Positive contribution = helped portfolio
   - Negative contribution = hurt portfolio
+
+TABLE FORMAT VERIFICATION:
+Before outputting each table, verify column headers match the prompt exactly:
+- Regional table MUST have: Region | Weight | Return | Contribution | Holdings
+- Sector table MUST have: Sector/Theme | Weight | Return | Contribution
+- P&L tables MUST have: Position | Cost Basis | Current Value | Unrealized P&L
+- Contributors table MUST have: Position | Return | Weight | Contribution
+- Do NOT add extra columns (e.g., YTD Return) to required tables
+- Do NOT omit required columns
 
 USER
 Generate today's portfolio wrap report.
