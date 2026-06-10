@@ -424,4 +424,28 @@ For technical issues:
 
 ---
 
+## Learned User Preferences
+
+- Verify pipeline changes by actually running the end-to-end reports and comparing old vs new generated output ("the proof of the pudding") — never claim success without produced artifacts.
+- Reports must be visually polished, institutional-grade PDFs; sparse or ugly report output is unacceptable and will be rejected.
+- The daily report targets a hedge-fund IC audience: highlight unusual patterns, reference history, be willing to challenge consensus, and stay mainly informational (actionable only in unusual circumstances).
+- Never name Goldman Sachs or Bloomberg in generated reports — refer only to categories and themes.
+- Daily reports run after market close; on weekends/holidays use the last trading day's data rather than failing.
+- Once given a green light, build and test all phases autonomously without prompting, but leave a readable status report of what was done.
+- Check broker connectivity at the start of every report run and prompt the user in the loop when the Schwab token is stale or IBKR/TWS is not running.
+- Do not enforce any maximum file-length rule — the user explicitly deleted the old 500-line-limit rule.
+
+## Learned Workspace Facts
+
+- The `rearchitect` branch contains the new unified daily report system: a single command `python3 report/main.py` (~2.5 min run) replaces the legacy Phase 0 → Step 4 → Phase 2 chain; outputs land in `outputs/unified/`.
+- The daily universe is now ETF-only (~808 Yahoo Finance tickers in `data/universe.xlsx` with taxonomy and 15 factor ETFs) — no Bloomberg terminal dependency for daily reports.
+- A single SQLite database `data/report.db` replaces `market_data.db` + `portfolio.db` in the new system.
+- IBKR access requires the `.venv-ibkr312` Python 3.12 venv; `ib_insync.reqAccountUpdates` hangs forever on this multi-account setup — use one-shot `reqPositions()` + `accountSummary()` instead.
+- Schwab tokens live in `~/.schwabdev/tokens.db`: access tokens auto-refresh (~30 min) but the refresh token expires every 7 days and requires interactive browser re-auth; credentials are stored in `.env` as `SCHWAB_APP_KEY`/`SCHWAB_APP_SECRET`.
+- Holdings are pulled live from Schwab (7 accounts) and IBKR (3 accounts, including short positions) on every report run after preflight checks; VIX futures positions are tagged `VIX.FUT` so they are never priced as stocks.
+- PrinceXML is the chosen PDF engine (HTML/CSS → print-quality PDF) for report generation.
+- The system is built for personal use only (no redistribution), which avoids Bloomberg data licensing constraints.
+
+---
+
 *This AGENTS.md file is intended for AI coding agents. For human documentation, see README.md files in each directory.*

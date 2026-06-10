@@ -61,13 +61,14 @@ def generate_report(data_package: str) -> dict:
     for attempt in range(1, SETTINGS["llm_retries"] + 1):
         t0 = time.time()
         try:
+            effort = SETTINGS["thinking_effort"]
             print(f"  LLM call attempt {attempt}/{SETTINGS['llm_retries']} "
-                  f"(model={model}, thinking={SETTINGS['thinking_budget']} tokens)...")
+                  f"(model={model}, thinking=adaptive/{effort})...")
             response = client.messages.create(
                 model=model,
                 max_tokens=SETTINGS["max_tokens"],
-                thinking={"type": "enabled",
-                          "budget_tokens": SETTINGS["thinking_budget"]},
+                thinking={"type": "adaptive"},
+                output_config={"effort": effort},
                 system=system_prompt,
                 messages=[{"role": "user", "content": data_package}],
                 timeout=SETTINGS["llm_timeout_s"],

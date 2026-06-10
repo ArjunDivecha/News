@@ -94,9 +94,9 @@ SETTINGS = {
     "percentile_window": 60,
     "min_beta_obs": 30,              # minimum observations to trust a beta
     # Report
-    "model": os.getenv("REPORT_MODEL", "claude-opus-4-6"),
-    "max_tokens": 16000,
-    "thinking_budget": 8000,         # extended thinking budget for the report call
+    "model": os.getenv("REPORT_MODEL", "claude-opus-4-8"),
+    "max_tokens": 32000,             # covers both thinking + response on 4.8
+    "thinking_effort": "max",        # adaptive thinking: low/medium/high/max
     "llm_retries": 3,
     "llm_timeout_s": 600,
     "continuity_days": 5,            # prior executive summaries fed back into prompt
