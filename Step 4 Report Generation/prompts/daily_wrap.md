@@ -192,7 +192,23 @@ Candidates to watch:
 - Quantitative/Factor-Based: Systematic strategy performance
 - Defensive/Low Vol: Risk-off rotation signals
 
-### 8. MOMENTUM & TECHNICAL CONTEXT
+### 8. MEME / SOCIAL FLOW
+
+Write this section as a standalone memo on meme activity today:
+- Use the latest available meme/social snapshot even if the market-data date lags behind today
+- Explicitly name the 3-6 strongest social signals from the injected context
+- Focus only on: which names are memeing, why they are memeing, and what happened to them today and over the last 5 sessions
+- Use the injected reasons, returns, and source mix to explain why each name is memeing
+- Mention company names, platforms, and catalysts when they improve clarity
+- Do not reference factor returns, institutional rotation, curated-universe overlap, or any other section of the report
+- If the snapshot is stale or unavailable, say so explicitly and limit the inference
+
+Suggested table:
+
+| Ticker | Mentions | Today | 5-Day | Why It Is A Meme Today |
+|--------|----------|-------|-------|------------------------|
+
+### 9. MOMENTUM & TECHNICAL CONTEXT
 
 Incorporate RSI, 5-day momentum, and volatility regime data:
 
@@ -326,6 +342,9 @@ BY INVESTMENT THEME:
 HEDGE BASKETS (What's being hedged today):
 {goldman_hedges}
 
+MEME / SOCIAL FLOW:
+{meme_social_flow}
+
 FACTOR RETURNS (for beta attribution):
 {factor_returns}
 
@@ -379,4 +398,3 @@ CORRELATION SUMMARY BY ASSET CLASS:
 
 ============================================================
 END OF PROMPT
-

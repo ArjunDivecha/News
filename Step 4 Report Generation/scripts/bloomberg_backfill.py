@@ -1,28 +1,45 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-BLOOMBERG HISTORICAL DATA BACKFILL
+SCRIPT NAME: bloomberg_backfill.py
 =============================================================================
 
+DESCRIPTION:
+    Fetches historical market data from Bloomberg for ~970 assets, an
+    associated set of factor/benchmark indices, and saves everything into
+    a local SQLite database for downstream use. The script reads a master
+    asset list (Excel) to obtain tickers, connects to the Bloomberg API,
+    and pulls ~90 trading days of daily price/volatility/RSI fields in
+    batches of 50 to stay within Bloomberg rate limits. Results are stored
+    in the `daily_prices`, `factor_returns`, and `category_stats` tables.
+    After the pull, derived metrics are computed in-database: 60-day
+    percentiles, z-scores, category-level statistics (tier1/tier2 with
+    percentiles), and consecutive-day streaks. Designed as a one-time
+    bootstrap; supports --test (5 tickers) and --resume (skip already-
+    loaded tickers) flags.
+
 INPUT FILES:
-- /Step 2 Data Processing - Final1000/Final 1000 Asset Master List.xlsx
-  Contains: 970 Bloomberg tickers with classifications
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 2 Data Processing - Final1000/Final 1000 Asset Master List.xlsx
+        Contains the universe of Bloomberg tickers (column Bloomberg_Ticker)
+        with tier1/tier2/tier3_tags classifications. Read via pd.read_excel.
 
 OUTPUT FILES:
-- database/market_data.db (populates daily_prices, factor_returns, category_stats)
-- logs/bloomberg_backfill_YYYYMMDD.log
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/database/market_data.db
+        SQLite database populated with tables:
+        - daily_prices: per-ticker daily prices, returns, volatility, RSI
+        - factor_returns: daily returns for benchmark indices
+        - category_stats: aggregated tier1/tier2 statistics with percentiles
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/logs/bloomberg_backfill_<YYYYMMDD_HHMMSS>.log
+        Timestamped log file capturing INFO-level progress and errors.
 
-VERSION: 1.0.0
-CREATED: 2026-01-31
+VERSION: 1.0
+LAST UPDATED: 2026-06-05
+AUTHOR: Arjun Divecha
 
-PURPOSE:
-Backfill 90 days of historical data from Bloomberg for all 970 assets.
-This is a ONE-TIME script to bootstrap the database with history.
-
-PREREQUISITES:
-- Bloomberg Terminal running and logged in
-- blpapi Python package installed
-- Run from Windows (Parallels) with Bloomberg access
+DEPENDENCIES:
+    - blpapi (Bloomberg API SDK)
+    - pandas
+    - numpy
 
 USAGE:
     python bloomberg_backfill.py                    # Default: 90 days
@@ -30,11 +47,13 @@ USAGE:
     python bloomberg_backfill.py --test             # Test with 5 tickers only
     python bloomberg_backfill.py --resume           # Resume interrupted run
 
-RUNTIME ESTIMATE:
-- ~970 tickers × 90 days = ~87,000 data points
-- Batched requests: ~50 tickers per batch
-- Estimated time: 15-30 minutes
-
+NOTES:
+    - Bloomberg Terminal must be open and logged in on Windows (Parallels)
+      before running.
+    - blpapi must be installed and bbcomm.exe must be reachable.
+    - The script runs from macOS; Bloomberg is accessed via localhost:8194
+      through Parallels port forwarding.
+    - Rate-limited: 0.5 s delay between batches of 50 tickers.
 =============================================================================
 """
 

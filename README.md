@@ -2,10 +2,27 @@
 
 A multi-phase data pipeline that transforms raw multi-asset market data (ETFs, Bloomberg Indices, Goldman Sachs baskets) into a curated dataset of ~1,000 diversified assets for news analysis and market monitoring.
 
+> ## NEW (2026-06-09): Unified Daily Report - `report/`
+>
+> The daily reporting workflow (Phase 0 holdings feed + Step 4 market
+> report + Phase 2 portfolio report) has been **replaced by a single
+> command** on the `rearchitect` branch:
+>
+> ```bash
+> python3 report/main.py
+> ```
+>
+> Live Schwab + IBKR holdings, free Yahoo Finance prices (no Bloomberg
+> terminal), unit-tested analytics, and ONE unified market + portfolio
+> report written by Claude Opus. See `report/README.md` for full docs.
+> The legacy phases below remain for the universe-construction pipeline
+> (Steps 1-3), which is unchanged.
+
 ## Overview
 
 | Stage | Purpose | Output |
 |-------|---------|--------|
+| **Phase 0: Portfolio Feed** | Broker holdings sync (Schwab + IBKR) | `Client.xlsx` for Phase 2 |
 | **Step 1: Data Collection** | Raw data acquisition | Filtered datasets from 3 sources |
 | **Step 2: Data Processing** | Classification & selection | Final 1000 Asset Master List |
 | **Step 3: Data Analysis** | Performance analytics | Factor profiles & deduplication |
@@ -16,6 +33,9 @@ A multi-phase data pipeline that transforms raw multi-asset market data (ETFs, B
 ```bash
 # Install dependencies
 pip install pandas numpy scipy scikit-learn openpyxl anthropic
+
+# Optional: Build latest Phase 2 client feed from Schwab + IBKR
+python runphase0.py
 
 # Run full pipeline (45-80 minutes)
 cd "Step 1 Data Collection"
@@ -59,10 +79,13 @@ python final_selection_algorithm_v2.py
 
 ```
 News/
+├── Phase 0 Portfolio Feed/          # Broker holdings normalization for Client.xlsx
+├── Phase 2 Portfolio Reports/       # Personalized portfolio report pipeline
 ├── Step 1 Data Collection/          # Raw data acquisition
 ├── Step 2 Data Processing - Final1000/  # Classification & selection
 ├── Step 3 Data Analysis/            # Performance analytics
 ├── fine tuning/                     # ML model training
+├── runphase0.py                     # Phase 0 runner
 ├── AGENTS.md                        # AI agent instructions
 └── README.md                        # This file
 ```
@@ -108,5 +131,5 @@ News/
 
 ---
 
-**Last Updated**: 2026-01-30  
-**Version**: 2.0.0
+**Last Updated**: 2026-02-20  
+**Version**: 2.1.0

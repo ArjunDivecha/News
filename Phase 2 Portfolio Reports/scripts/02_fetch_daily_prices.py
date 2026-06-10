@@ -167,8 +167,8 @@ def fetch_daily_prices(portfolio_id: str, date: str = None,
         else:
             open_pnl_pct = None
         
-        # Track totals for weight calculation
-        if market_value is not None:
+        # Track totals for weight calculation (skip NaN from failed price fetches)
+        if market_value is not None and not (isinstance(market_value, float) and market_value != market_value):
             if position_type == 'LONG':
                 total_long_value += market_value
             else:

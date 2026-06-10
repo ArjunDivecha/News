@@ -4,8 +4,8 @@
 LLM UTILITIES - Phase 2 Portfolio Reports
 =============================================================================
 
-Wrapper functions for LLM providers. 
-- Claude Opus 4.5 for report generation
+Wrapper functions for LLM providers.
+- Claude Opus 4.6 for report generation
 - Claude Haiku for ETF classification
 
 USAGE:
@@ -24,6 +24,12 @@ from dotenv import load_dotenv
 # Load .env from project root
 load_dotenv(Path(__file__).parent.parent.parent.parent / ".env")
 
+# Runtime configuration (Opus default with bounded latency controls)
+DEFAULT_ANTHROPIC_TIMEOUT_SECONDS = float(os.getenv('ANTHROPIC_TIMEOUT_SECONDS', '90'))
+DEFAULT_REPORT_MODEL = os.getenv('PHASE2_REPORT_MODEL', 'claude-opus-4-6')
+DEFAULT_REPORT_MAX_TOKENS = int(os.getenv('PHASE2_REPORT_MAX_TOKENS', '2600'))
+FALLBACK_REPORT_MODEL = os.getenv('PHASE2_REPORT_FALLBACK_MODEL', '')
+
 # Import Anthropic
 try:
     from anthropic import Anthropic
@@ -35,7 +41,8 @@ except ImportError:
 
 # Model configurations
 MODELS = {
-    'report': 'claude-opus-4-5-20251101',    # Report generation (matches Phase 1)
+    'report': DEFAULT_REPORT_MODEL,
+    'report_fallback': FALLBACK_REPORT_MODEL,
     'classify': 'claude-haiku-4-5-20251001',  # ETF classification
 }
 
@@ -46,7 +53,16 @@ def _get_anthropic():
     if _anthropic_client is None and ANTHROPIC_AVAILABLE:
         api_key = os.getenv('ANTHROPIC_API_KEY')
         if api_key:
-            _anthropic_client = Anthropic(api_key=api_key)
+            # Enforce client-level timeout so long generations fail fast instead
+            # of appearing hung forever.
+            try:
+                _anthropic_client = Anthropic(
+                    api_key=api_key,
+                    timeout=DEFAULT_ANTHROPIC_TIMEOUT_SECONDS,
+                )
+            except TypeError:
+                # Backward compatibility with older SDK signatures.
+                _anthropic_client = Anthropic(api_key=api_key)
     return _anthropic_client
 
 
@@ -91,20 +107,40 @@ def generate_anthropic(system_prompt: str, user_prompt: str,
         return {'error': str(e), 'model': model, 'provider': 'anthropic'}
 
 
-def generate_report(system_prompt: str, user_prompt: str, 
-                   max_tokens: int = 8000) -> Dict:
+def generate_report(system_prompt: str, user_prompt: str,
+                   max_tokens: int = None) -> Dict:
     """
-    Generate a portfolio report using Claude Opus 4.5.
+    Generate a portfolio report using the configured primary model.
     
     Args:
         system_prompt: System instructions
         user_prompt: User prompt with data
-        max_tokens: Maximum tokens to generate
+        max_tokens: Maximum tokens to generate (defaults to PHASE2_REPORT_MAX_TOKENS)
         
     Returns:
         Dict with generation result
     """
-    return generate_anthropic(system_prompt, user_prompt, MODELS['report'], max_tokens)
+    if max_tokens is None:
+        max_tokens = DEFAULT_REPORT_MAX_TOKENS
+
+    primary_model = MODELS['report']
+    result = generate_anthropic(system_prompt, user_prompt, primary_model, max_tokens)
+
+    # Fast fallback if primary model fails or times out.
+    if 'error' in result:
+        fallback_model = MODELS.get('report_fallback')
+        if fallback_model and fallback_model != primary_model:
+            fallback_result = generate_anthropic(system_prompt, user_prompt, fallback_model, max_tokens)
+            if 'error' not in fallback_result:
+                fallback_result['fallback_from'] = primary_model
+                return fallback_result
+
+    return result
+
+
+def get_report_model() -> str:
+    """Return currently configured report model."""
+    return MODELS['report']
 
 
 def classify_with_haiku(ticker: str, name: str, description: str = None,

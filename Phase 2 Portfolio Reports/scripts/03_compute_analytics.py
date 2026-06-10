@@ -82,6 +82,7 @@ def compute_aggregates(portfolio_id: str, date: str = None,
     dimensions = [
         ('tier1', lambda row: row['tier1']),
         ('tier2', lambda row: row['tier2']),
+        ('account', lambda row: str(row.get('account_number', 'None')).replace('.0', '') if pd.notna(row.get('account_number')) else 'Unknown'),
         ('country', lambda row: row['country']),
         ('sector', lambda row: next((t for t in row['tier3_list'] 
             if t in ['Tech', 'Energy', 'Financials', 'Healthcare', 'Industrials', 

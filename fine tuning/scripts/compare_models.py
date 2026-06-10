@@ -1,27 +1,63 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-MODEL COMPARISON: Fine-Tuned Llama vs Haiku
+SCRIPT NAME: compare_models.py
 =============================================================================
 
-Compares classifications between Haiku (baseline) and fine-tuned Llama-3.1-8B.
+DESCRIPTION:
+    Compares ETF classifications produced by a Haiku baseline model against
+    those produced by a fine-tuned Llama-3.1-8B model. Loads an Excel file
+    containing ETF metadata and pre-existing Haiku classifications, runs
+    inference via the Tinker sampling API using the fine-tuned model, then
+    computes exact and partial agreement metrics between the two model
+    outputs. Generates a multi-sheet Excel comparison workbook and a
+    plain-text summary report.
 
 INPUT FILES:
-- ETF Master List Classified.xlsx (with Haiku classifications)
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/fine tuning/Step 2 Data Processing - Final1000/ETF Master List Classified.xlsx
+        ETF master list with columns containing asset metadata (Name,
+        Ticker, Bloomberg, FUND_ASSET_CLASS_FOCUS, FUND_GEO_FOCUS,
+        FUND_OBJECTIVE_LONG, FUND_STRATEGY, STYLE_ANALYSIS_REGION_FOCUS)
+        as well as pre-existing Haiku baseline classifications
+        (category_tier1, category_tier2, category_tags).
 
 OUTPUT FILES:
-- ETF_Master_List_FineTuned.xlsx (with Llama classifications)
-- model_comparison_report.xlsx (detailed comparison)
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/fine tuning/scripts/outputs/comparison/ETF_Master_List_FineTuned.xlsx
+        ETF master list augmented with the fine-tuned Llama model's
+        classifications (llama_tier1, llama_tier2, llama_tier3) and
+        agreement metrics (tier1_match, tier2_match, agreement).
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/fine tuning/scripts/outputs/comparison/ETF_Master_List_Comparison.xlsx
+        Multi-sheet Excel workbook containing:
+        - Full_Comparison: side-by-side Haiku and Llama classifications
+        - Disagreements: rows where the two models disagree
+        - Summary_Stats: overall agreement statistics
+        - Tier1_Distribution: distribution comparison for Tier-1 categories
+        - Confusion_Matrix: cross-tabulation of mismatches
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/fine tuning/scripts/outputs/comparison/comparison_report.txt
+        Plain-text summary of agreement statistics, Tier-1 distribution
+        comparison, top disagreement pairs, and sample disagreement rows.
+
+VERSION: 1.0
+LAST UPDATED: 2026-06-05
+AUTHOR: Arjun Divecha
+
+DEPENDENCIES:
+    - pandas
+    - numpy
+    - tqdm
+    - transformers
+    - tinker (custom package in parent directory)
 
 USAGE:
     python compare_models.py
-    python compare_models.py --limit 100  # Test with first 100
+    python compare_models.py --limit 100  # Test with first 100 ETFs only
 
-VERSION HISTORY:
-v1.0.0 (2026-01-29): Initial release
-
-PURPOSE:
-Generate comprehensive comparison between Haiku and fine-tuned model.
+NOTES:
+    - Requires a valid TINKER_API_KEY environment variable.
+    - The model path defaults to a Tinker URI referencing a fine-tuned
+      Llama-3.1-8B checkpoint. Can be overridden with --model-path.
+    - The tokenizer is loaded from the Hugging Face hub
+      (thinkingmachineslabinc/meta-llama-3-tokenizer).
 =============================================================================
 """
 

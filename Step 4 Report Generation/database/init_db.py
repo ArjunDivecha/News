@@ -1,25 +1,47 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-DATABASE INITIALIZATION SCRIPT
+SCRIPT NAME: init_db.py
 =============================================================================
 
+DESCRIPTION:
+    Initializes the SQLite database for the News from Data report generation
+    pipeline. Reads the SQL schema from schema.sql, creates the database
+    file market_data.db, executes table/view/index creation, then runs a
+    series of validation tests (insert test rows, verify foreign key
+    constraints, query views) before cleaning up test data. Supports a
+    --reset flag to drop and recreate the database from scratch. Exits with
+    code 0 on success, 1 on failure.
+
 INPUT FILES:
-- database/schema.sql: SQL schema definition
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report
+    Generation/database/schema.sql
+        SQL DDL script defining tables, indexes, and views to be executed
+        against the database.
 
 OUTPUT FILES:
-- database/market_data.db: SQLite database file
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report
+    Generation/database/market_data.db
+        SQLite database file created (or overwritten with --reset) by
+        executing the schema and running validation tests.
 
-VERSION: 1.0.0
-CREATED: 2026-01-30
+VERSION: 1.0
+LAST UPDATED: 2026-06-05
+AUTHOR: Arjun Divecha
 
-PURPOSE:
-Initialize the SQLite database with the schema for the News from Data
-report generation pipeline. Creates tables, indexes, and views.
+DEPENDENCIES:
+    - sqlite3 (stdlib)
+    - os, sys, argparse, pathlib, datetime (stdlib)
 
 USAGE:
-    python database/init_db.py
-    python database/init_db.py --reset  # Drop and recreate all tables
+    python init_db.py
+    python init_db.py --reset    # Drop and recreate all tables
+    python init_db.py --test     # Run tests (always runs by default)
+
+NOTES:
+    - Tests always run regardless of --test flag (see line 266).
+    - Must be executed from the database/ directory or with correct
+      relative path for schema.sql resolution (uses Path(__file__).parent).
 =============================================================================
 """
 

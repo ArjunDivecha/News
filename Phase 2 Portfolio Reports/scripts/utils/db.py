@@ -102,13 +102,14 @@ def save_holdings(portfolio_id: str, holdings: List[dict]) -> int:
     for h in holdings:
         cursor.execute("""
             INSERT INTO portfolio_holdings (
-                portfolio_id, symbol, position_type, quantity, market_value, avg_price, open_pnl,
+                portfolio_id, account_number, symbol, position_type, quantity, market_value, avg_price, open_pnl,
                 yf_ticker, security_name, security_type, yf_sector, yf_industry, yf_category,
                 country, currency, tier1, tier2, tier3_tags, final1000_ticker,
                 classification_source, resolution_status, resolution_error
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             portfolio_id,
+            h.get('account_number'),
             h.get('symbol'),
             h.get('position_type', 'LONG'),
             h.get('quantity'),
@@ -137,6 +138,31 @@ def save_holdings(portfolio_id: str, holdings: List[dict]) -> int:
     conn.close()
     return count
 
+
+def lookup_existing_classification(symbol: str) -> Optional[dict]:
+    """Look up a successful classification for a symbol from previous ingestion runs."""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT tier1, tier2, tier3_tags, classification_source
+        FROM portfolio_holdings
+        WHERE symbol = ? AND resolution_status = 'resolved'
+        ORDER BY updated_at DESC LIMIT 1
+    """, (symbol,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        d = dict(row)
+        if d.get('tier3_tags'):
+            try:
+                d['tier3_tags'] = json.loads(d['tier3_tags'])
+            except:
+                d['tier3_tags'] = []
+        else:
+            d['tier3_tags'] = []
+        return d
+    return None
 
 def get_holdings(portfolio_id: str, resolved_only: bool = True) -> pd.DataFrame:
     """
@@ -301,7 +327,7 @@ def get_daily_snapshot(portfolio_id: str, date: str) -> pd.DataFrame:
     """Get daily portfolio snapshot."""
     conn = get_db()
     df = pd.read_sql_query("""
-        SELECT d.*, h.tier1, h.tier2, h.tier3_tags, h.security_name, h.country
+        SELECT d.*, h.tier1, h.tier2, h.tier3_tags, h.security_name, h.country, h.account_number
         FROM portfolio_daily d
         JOIN portfolio_holdings h ON d.holding_id = h.id
         WHERE d.date = ? AND d.portfolio_id = ?
@@ -322,6 +348,10 @@ def save_aggregates(portfolio_id: str, date: str, aggregates: List[dict]) -> int
     
     count = 0
     for a in aggregates:
+        dimension_value = a.get('dimension_value')
+        if pd.isna(dimension_value) or (isinstance(dimension_value, str) and not dimension_value.strip()):
+            dimension_value = 'Unknown'
+
         cursor.execute("""
             INSERT INTO portfolio_aggregates (
                 date, portfolio_id, dimension_type, dimension_value,
@@ -330,7 +360,7 @@ def save_aggregates(portfolio_id: str, date: str, aggregates: List[dict]) -> int
                 weighted_return_1d, contribution_1d
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            date, portfolio_id, a.get('dimension_type'), a.get('dimension_value'),
+            date, portfolio_id, a.get('dimension_type'), dimension_value,
             a.get('holding_count'), a.get('long_count'), a.get('short_count'),
             a.get('total_weight'), a.get('long_weight'), a.get('short_weight'),
             a.get('total_value_usd'), a.get('weighted_return_1d'), a.get('contribution_1d'),

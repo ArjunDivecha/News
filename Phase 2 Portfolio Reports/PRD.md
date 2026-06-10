@@ -35,7 +35,7 @@ Phase 2 reuses the **taxonomy concepts** (Tier 1/2/3 classification) from Phase 
 - Curated 970 assets (Final 1000 Asset Master List) across 7 Tier-1 categories
 - Built 3-tier taxonomy classification system using Claude Haiku 4.5
 - Trained fine-tuned Llama 3.1 8B model for cost-free classification
-- Created daily market wrap report generation using Claude Opus 4.5
+- Created daily market wrap report generation using Claude Opus 4.6
 - Established SQLite database with assets, daily_prices, factor_returns, category_stats tables
 - Implemented PDF generation via WeasyPrint/PrinceXML
 
@@ -111,7 +111,7 @@ Portfolio managers need reports that answer: "What happened in the markets **tha
 | ID | Requirement | Priority |
 |----|-------------|----------|
 | FR-6.1 | Generate integrated report rewriting market wrap through portfolio lens | P0 |
-| FR-6.2 | Use Claude Opus 4.5 for report generation | P0 |
+| FR-6.2 | Use Claude Opus 4.6 for report generation | P0 |
 | FR-6.3 | Include portfolio performance summary at top (BLUF format) | P0 |
 | FR-6.4 | Include sector contribution analysis with comparison to market | P0 |
 | FR-6.5 | Include top contributors and detractors with context | P0 |
@@ -395,7 +395,7 @@ Phase 2 Portfolio Reports/
 │   └── utils/
 │       ├── __init__.py
 │       ├── db.py                         # Database utilities
-│       ├── llm.py                        # LLM utilities (Claude Opus 4.5)
+│       ├── llm.py                        # LLM utilities (Claude Opus 4.6)
 │       ├── yfinance_utils.py             # Yahoo Finance helpers
 │       ├── taxonomy.py                   # Tier 1/2/3 taxonomy definitions
 │       └── classifier.py                 # Haiku classification for ETFs
@@ -517,7 +517,7 @@ For 100-500 holdings, cannot send all to LLM. Strategy:
 - Create `scripts/portfolio/04_generate_report.py`
 - Load Phase 1 market data
 - Prepare portfolio context (smart summarization)
-- Generate via Claude Opus 4.5
+- Generate via Claude Opus 4.6
 - Convert to PDF
 
 ### Step 10: Pipeline Orchestrator

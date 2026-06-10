@@ -1,28 +1,62 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-SYNC STATIC DATA TO SQLITE
+SCRIPT NAME: setup_database.py
 =============================================================================
 
+DESCRIPTION:
+    Loads the Final 1000 Asset Master List spreadsheet and optionally the
+    Final Master spreadsheet (for additional beta factor columns), merges
+    them by ticker, standardises column names, converts tier-3 tags into
+    JSON arrays, and upserts the resulting rows into the `assets` table of
+    a SQLite database. After writing, it queries the database to print a
+    verification report (total asset count, tier-1 and tier-2 category
+    distributions, source distribution, beta-coverage statistics). This
+    script is intended to be run once to initially populate the database
+    and then re-run whenever the asset master list is updated.
+
 INPUT FILES:
-- /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 2 Data Processing - Final1000/Final 1000 Asset Master List.xlsx
-- /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 2 Data Processing - Final1000/Final Master.xlsx (for beta data)
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 2 Data Processing - Final1000/Final 1000 Asset Master List.xlsx
+        Primary asset list containing ticker, name, description, category
+        tiers, performance metrics (Sharpe, returns, vol), betas, and
+        quality/thematic scores. Loaded with pd.read_excel().
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 2 Data Processing - Final1000/Final Master.xlsx
+        Optional supplemental spreadsheet providing up to 14 additional
+        beta columns (Russell 2000, Nasdaq-100, EAFE, EM, HY credit,
+        Treasuries, TIPS, commodity, agriculture, crypto, REITs). Merged
+        on ticker column. If absent, a warning is printed and the 14 beta
+        fields in the database remain NULL.
 
-OUTPUT:
-- Updates assets table in database/market_data.db
+OUTPUT FILES:
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/database/market_data.db
+        SQLite database whose `assets` table is updated (INSERT OR REPLACE)
+        with the merged asset data. The table is expected to already exist
+        (created by init_db.py). The script prints a verification report
+        to stdout after syncing.
 
-VERSION: 1.0.0
-CREATED: 2026-01-30
+VERSION: 1.0
+LAST UPDATED: 2026-06-05
+AUTHOR: Arjun Divecha
 
-PURPOSE:
-Sync the Final 1000 Asset Master List (with classifications and betas) 
-to the SQLite database. This script should be run:
-- Once initially to populate the database
-- Monthly/quarterly when the asset list is updated
+DEPENDENCIES:
+    - pandas
+    - sqlite3 (stdlib)
+    - json (stdlib)
+    - argparse (stdlib)
+    - pathlib (stdlib)
+    - datetime (stdlib)
 
 USAGE:
-    python scripts/01_sync_static_data.py
-    python scripts/01_sync_static_data.py --dry-run  # Preview without writing
+    python setup_database.py
+    python setup_database.py --dry-run    # Preview without writing
+
+NOTES:
+    - The database must already exist with an `assets` table schema.
+      Run the init_db.py script first if it does not.
+    - The --dry-run flag loads and prepares data but skips database
+      writes, allowing preview of row/column counts.
+    - If Final Master.xlsx is missing, the script continues without
+      the extended beta columns but still syncs the core asset data.
 =============================================================================
 """
 

@@ -1,13 +1,43 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-YAHOO FINANCE UTILITIES - Phase 2 Portfolio Reports
+SCRIPT NAME: yfinance_utils.py
 =============================================================================
 
-Utilities for resolving tickers and fetching data from Yahoo Finance.
+DESCRIPTION:
+    Utility module for fetching market data from Yahoo Finance (primary) and
+    Stooq (fallback). Provides functions to resolve ticker symbols (including
+    exchange suffix fallbacks for international equities), retrieve stock/ETF
+    metadata (name, sector, industry, currency, exchange, market cap, etc.),
+    fetch historical OHLCV price data, and fetch latest prices with 1-day and
+    YTD returns for multiple symbols. Includes a rate-limit probe that detects
+    Yahoo HTTP 429 responses and switches to Stooq as a fallback data source.
+    Designed to be imported as a library; the __main__ block runs a quick
+    self-test on a predefined set of tickers.
+
+INPUT FILES:
+    (none -- all data is fetched from external APIs over HTTP)
+
+OUTPUT FILES:
+    (none -- functions return Python dicts/DataFrames to the caller)
+
+VERSION: 1.0
+LAST UPDATED: 2026-06-05
+AUTHOR: Arjun Divecha
+
+DEPENDENCIES:
+    - yfinance
+    - pandas
+    - requests
 
 USAGE:
-    from utils.yfinance_utils import resolve_ticker, get_stock_info, get_prices
+    from yfinance_utils import resolve_ticker, get_stock_info, get_prices
+    OR: python yfinance_utils.py  (runs self-test)
+
+NOTES:
+    - Requires internet access; Yahoo Finance API may rate-limit.
+    - Stooq fallback is used when Yahoo returns HTTP 429 or no data.
+    - All functions that access Yahoo expect the standard yfinance library.
 =============================================================================
 """
 
@@ -16,6 +46,8 @@ import pandas as pd
 from typing import Optional, Dict, List, Tuple
 from datetime import datetime, timedelta
 import time
+import io
+import requests
 
 
 def resolve_ticker(symbol: str) -> Tuple[Optional[str], Optional[Dict]]:
@@ -140,6 +172,126 @@ def get_historical_prices(symbol: str, start_date: str, end_date: str) -> Option
         return None
 
 
+def _yahoo_rate_limited() -> bool:
+    """
+    Quick probe to detect Yahoo throttling (HTTP 429).
+    When this trips, avoid hammering Yahoo and fall back to Stooq.
+    """
+    url = "https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1d&interval=1d"
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    try:
+        response = requests.get(url, headers=headers, timeout=8)
+        return response.status_code == 429
+    except requests.RequestException:
+        return True
+
+
+def _fetch_from_yahoo(symbol: str, start_dt: datetime, end_dt: datetime) -> Dict:
+    """Fetch price/returns from Yahoo Finance for one symbol."""
+    ticker = yf.Ticker(symbol)
+    df = ticker.history(
+        start=start_dt.strftime('%Y-%m-%d'),
+        end=(end_dt + timedelta(days=1)).strftime('%Y-%m-%d')
+    )
+
+    if df.empty:
+        return {'status': 'failed', 'error': 'No data from Yahoo'}
+
+    df = df.reset_index()
+    df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
+    latest_row = df.iloc[-1]
+
+    return_1d = None
+    if len(df) >= 2:
+        prev_close = df.iloc[-2]['Close']
+        curr_close = latest_row['Close']
+        if prev_close and prev_close > 0:
+            return_1d = ((curr_close / prev_close) - 1) * 100
+
+    return_ytd = None
+    year_start = f"{end_dt.year}-01-01"
+    try:
+        ytd_df = ticker.history(
+            start=year_start,
+            end=(end_dt + timedelta(days=1)).strftime('%Y-%m-%d')
+        )
+        if len(ytd_df) >= 2:
+            ytd_start_price = ytd_df.iloc[0]['Close']
+            current_price = latest_row['Close']
+            if ytd_start_price and ytd_start_price > 0:
+                return_ytd = ((current_price / ytd_start_price) - 1) * 100
+    except Exception:
+        pass
+
+    return {
+        'status': 'success',
+        'source': 'yahoo',
+        'date': latest_row['Date'],
+        'price': float(latest_row['Close']),
+        'open': float(latest_row['Open']) if pd.notna(latest_row['Open']) else None,
+        'high': float(latest_row['High']) if pd.notna(latest_row['High']) else None,
+        'low': float(latest_row['Low']) if pd.notna(latest_row['Low']) else None,
+        'volume': float(latest_row['Volume']) if pd.notna(latest_row['Volume']) else None,
+        'return_1d': return_1d,
+        'return_ytd': return_ytd,
+    }
+
+
+def _fetch_from_stooq(symbol: str, end_dt: datetime) -> Dict:
+    """Fetch price/returns from Stooq for one symbol as fallback."""
+    stooq_symbol = f"{symbol.lower()}.us"
+    url = f"https://stooq.com/q/d/l/?s={stooq_symbol}&i=d"
+    response = requests.get(url, timeout=15)
+    response.raise_for_status()
+
+    raw = response.text.strip()
+    if not raw or raw == "No data":
+        return {'status': 'failed', 'error': 'No data from Stooq'}
+
+    df = pd.read_csv(io.StringIO(raw))
+    if df.empty or 'Date' not in df.columns or 'Close' not in df.columns:
+        return {'status': 'failed', 'error': 'Malformed Stooq response'}
+
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+    df = df.dropna(subset=['Date', 'Close']).sort_values('Date')
+    df = df[df['Date'] <= pd.Timestamp(end_dt)]
+
+    if df.empty:
+        return {'status': 'failed', 'error': 'No Stooq data on/before target date'}
+
+    latest_idx = df.index[-1]
+    latest_row = df.loc[latest_idx]
+    latest_pos = df.index.get_loc(latest_idx)
+
+    return_1d = None
+    if latest_pos >= 1:
+        prev_close = float(df.iloc[latest_pos - 1]['Close'])
+        curr_close = float(latest_row['Close'])
+        if prev_close > 0:
+            return_1d = ((curr_close / prev_close) - 1) * 100
+
+    return_ytd = None
+    ytd_df = df[df['Date'].dt.year == end_dt.year]
+    if len(ytd_df) >= 2:
+        ytd_start_price = float(ytd_df.iloc[0]['Close'])
+        current_price = float(latest_row['Close'])
+        if ytd_start_price > 0:
+            return_ytd = ((current_price / ytd_start_price) - 1) * 100
+
+    return {
+        'status': 'success',
+        'source': 'stooq',
+        'date': latest_row['Date'].strftime('%Y-%m-%d'),
+        'price': float(latest_row['Close']),
+        'open': float(latest_row['Open']) if 'Open' in latest_row and pd.notna(latest_row['Open']) else None,
+        'high': float(latest_row['High']) if 'High' in latest_row and pd.notna(latest_row['High']) else None,
+        'low': float(latest_row['Low']) if 'Low' in latest_row and pd.notna(latest_row['Low']) else None,
+        'volume': float(latest_row['Volume']) if 'Volume' in latest_row and pd.notna(latest_row['Volume']) else None,
+        'return_1d': return_1d,
+        'return_ytd': return_ytd,
+    }
+
+
 def get_prices_for_date(symbols: List[str], date: str) -> Dict[str, Dict]:
     """
     Get prices for multiple symbols for a specific date.
@@ -158,58 +310,25 @@ def get_prices_for_date(symbols: List[str], date: str) -> Dict[str, Dict]:
     end_dt = datetime.strptime(date, '%Y-%m-%d')
     start_dt = end_dt - timedelta(days=10)
     
+    use_yahoo = not _yahoo_rate_limited()
+
     for symbol in symbols:
         try:
-            ticker = yf.Ticker(symbol)
-            df = ticker.history(start=start_dt.strftime('%Y-%m-%d'), 
-                               end=(end_dt + timedelta(days=1)).strftime('%Y-%m-%d'))
-            
-            if df.empty:
-                results[symbol] = {'status': 'failed', 'error': 'No data'}
-                continue
-            
-            # Get the latest available data point
-            df.reset_index(inplace=True)
-            df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
-            
-            # Find closest date to target
-            latest_row = df.iloc[-1]
-            actual_date = latest_row['Date']
-            
-            # Calculate daily return if we have enough data
-            return_1d = None
-            if len(df) >= 2:
-                prev_close = df.iloc[-2]['Close']
-                curr_close = latest_row['Close']
-                if prev_close and prev_close > 0:
-                    return_1d = ((curr_close / prev_close) - 1) * 100
-            
-            # Calculate YTD return
-            return_ytd = None
-            year_start = f"{end_dt.year}-01-01"
-            try:
-                ytd_df = ticker.history(start=year_start, 
-                                       end=(end_dt + timedelta(days=1)).strftime('%Y-%m-%d'))
-                if len(ytd_df) >= 2:
-                    ytd_start_price = ytd_df.iloc[0]['Close']
-                    current_price = latest_row['Close']
-                    if ytd_start_price and ytd_start_price > 0:
-                        return_ytd = ((current_price / ytd_start_price) - 1) * 100
-            except Exception:
-                pass
-            
-            results[symbol] = {
-                'status': 'success',
-                'date': actual_date,
-                'price': latest_row['Close'],
-                'open': latest_row['Open'],
-                'high': latest_row['High'],
-                'low': latest_row['Low'],
-                'volume': latest_row['Volume'],
-                'return_1d': return_1d,
-                'return_ytd': return_ytd,
-            }
-            
+            # Use Yahoo when available; fallback to Stooq for rate limits / symbol errors.
+            if use_yahoo:
+                yahoo_result = _fetch_from_yahoo(symbol, start_dt, end_dt)
+                if yahoo_result.get('status') == 'success':
+                    results[symbol] = yahoo_result
+                    continue
+
+            stooq_result = _fetch_from_stooq(symbol, end_dt)
+            if stooq_result.get('status') == 'success':
+                results[symbol] = stooq_result
+            else:
+                results[symbol] = {
+                    'status': 'failed',
+                    'error': stooq_result.get('error', 'No data from Yahoo/Stooq')
+                }
         except Exception as e:
             results[symbol] = {'status': 'failed', 'error': str(e)}
     

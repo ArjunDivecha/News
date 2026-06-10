@@ -74,7 +74,7 @@
     }
     
     @top-center {
-        content: "Daily Market Wrap";
+        content: "Portfolio Report";
         font-family: var(--font-sans);
         font-size: 7pt;
         color: var(--gray-500);
@@ -99,7 +99,7 @@
     }
     
     @bottom-center {
-        content: "Daily Market Wrap — " string(report-date);
+        content: "Portfolio Report — " string(report-date);
         font-family: var(--font-sans);
         font-size: 7pt;
         color: var(--gray-500);

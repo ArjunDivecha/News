@@ -1,23 +1,41 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-RUN PHASE 2 - Complete Portfolio Report Pipeline
+SCRIPT NAME: runphase2.py
 =============================================================================
 
+DESCRIPTION:
+    Orchestrates the Phase 2 portfolio report pipeline. Fetches daily prices
+    from yfinance, computes portfolio analytics, generates a personalized
+    portfolio report via Claude Opus 4.6, and converts the report to a
+    professional PDF using PrinceXML.
+
+INPUT FILES:
+    (none -- subprocess-calls child scripts; no direct file reads)
+
+OUTPUT FILES:
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Phase 2 Portfolio Reports/outputs/{portfolio_id}/portfolio_wrap_{date}.pdf
+        Generated portfolio report PDF.
+
+VERSION: 1.0
+LAST UPDATED: 2026-06-05
+AUTHOR: Arjun Divecha
+
+DEPENDENCIES:
+    - Python 3
+    - subprocess (standard library)
+    - pathlib (standard library)
+    - yfinance (via child script 02_fetch_daily_prices.py)
+    - PrinceXML (via child script 04_generate_report.py)
+
 USAGE:
-    ./runphase2 --portfolio TEST --date 2026-02-03
-    ./runphase2 --portfolio TEST --date 2026-02-03 --skip-fetch
+    python runphase2.py --portfolio TEST --date 2026-02-03
+    python runphase2.py --portfolio TEST --date 2026-02-03 --skip-fetch
 
-WHAT IT DOES:
-    1. Fetches daily prices from yfinance (unless --skip-fetch)
-    2. Computes portfolio analytics and aggregates
-    3. Generates personalized portfolio report via Claude Opus 4.5
-    4. Converts to professional PDF with PrinceXML
-
-OUTPUT:
-    - PDF report in Phase 2 Portfolio Reports/outputs/{portfolio_id}/
-    - Markdown version
-    - Saved to portfolio_reports table
+NOTES:
+    - Child scripts live under Phase 2 Portfolio Reports/scripts/.
+    - Use --skip-fetch to reuse previously fetched price data.
+    - Use --skip-analytics to reuse previously computed analytics.
 =============================================================================
 """
 

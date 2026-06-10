@@ -60,6 +60,16 @@ Step 4 Report Generation/outputs/
 # IDE config
 .roo/
 
-# Test files
+# Test files (scratch tests only - the real suite in tests/ IS tracked)
 test_*.py
 *_test.py
+!tests/test_*.py
+
+# Unified report system (rearchitect)
+.venv-ibkr312/
+data_backups/
+outputs/
+data/holdings.xlsx
+data/report.db*
+.cursor/
+ibkr_err.log

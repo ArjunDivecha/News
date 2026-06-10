@@ -234,7 +234,19 @@ REQUIRED SECTIONS (in order)
    - Group by theme category (Defensive, Hedge Baskets, Commodity, etc.)
    - Narrative: 3-4 sentences on which themes worked/failed, unusual patterns
 
-9. MOMENTUM & TECHNICAL CONTEXT
+9. MEME / SOCIAL FLOW
+   - Title: "MEME / SOCIAL FLOW"
+   - Table columns EXACTLY: Ticker | Mentions | Today | 5-Day | Why It Is A Meme Today
+   - Write this section as a standalone meme-flow memo, independent from the rest of the daily report
+   - Answer only: which names are memeing today, why they are memeing, and what happened to them today and recently
+   - Name the 3-6 highest-conviction social names from the injected context
+   - For each name, use the injected reasons, return profile, and source mix to explain the meme driver
+   - Mention company names, platforms, and catalysts when they materially improve clarity
+   - Do NOT reference factor returns, institutional rotation, curated-universe overlap, or any other section of the report
+   - If freshness is AGING or STALE, say so explicitly in narrative and interpretation
+   - If there is no usable snapshot, include the section with a concise note that the signal is unavailable
+
+10. MOMENTUM & TECHNICAL CONTEXT
     - Narrative: RSI, 5-day momentum, volatility regime analysis
     - Tables: OPTIONAL - Only include if they add unique insight beyond the narrative:
       * Momentum divergences (Category | 1-Day | 5-Day | Divergence Signal) - ONLY if reversals are unusual
@@ -242,7 +254,7 @@ REQUIRED SECTIONS (in order)
       * RSI extremes with context (Category | Overbought | Oversold | Today's Return) - ONLY if extremes are actionable
     - If no unusual patterns exist, skip tables entirely and rely on narrative
 
-10. HISTORICAL PATTERN CONTEXT
+11. HISTORICAL PATTERN CONTEXT
     - Narrative: Streaks, extremes, similar days, regime context
     - Tables: OPTIONAL - Only include if they add unique insight beyond the narrative:
       * Correlation regime changes (Asset | Factor | Correlation Change | Signal) - ONLY if regime shifts detected
@@ -318,6 +330,9 @@ BY INVESTMENT THEME:
 
 HEDGE BASKETS:
 {goldman_hedges}
+
+MEME / SOCIAL FLOW:
+{meme_social_flow}
 
 FACTOR RETURNS:
 {factor_returns}

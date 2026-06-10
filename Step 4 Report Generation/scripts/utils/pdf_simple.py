@@ -1,14 +1,64 @@
 """
 =============================================================================
-SIMPLE MARKDOWN TO PDF CONVERTER
+SCRIPT NAME: pdf_simple.py
 =============================================================================
 
-Uses WeasyPrint to convert markdown reports to professional PDFs.
-This is a fallback when PrinceXML structured output is not available.
+DESCRIPTION:
+    Converts a markdown (.md) file to a professionally styled PDF using
+    WeasyPrint. This is a fallback PDF generator used when PrinceXML
+    structured output is not available.
+
+    The script preprocesses the markdown to ensure proper table parsing,
+    converts it to HTML via Python-Markdown (with 'tables', 'fenced_code',
+    and 'toc' extensions), wraps the result in a full HTML document, then
+    renders it to PDF using WeasyPrint with a built-in CSS stylesheet
+    designed for investment committee reports.
+
+    The embedded stylesheet includes: letter-sized pages with page numbers,
+    a "Confidential - For Investment Committee Use Only" footer, professional
+    table formatting with alternating row colors and monospaced right-aligned
+    numeric columns, color-coded positive/negative values, executive summary
+    blockquote styling, and print-optimized page break behavior.
+
+INPUT FILES:
+    <user-provided-path>/report.md
+        Path to the markdown input file, provided as a command-line argument
+        (sys.argv[1]) when run as a script, or passed directly to the
+        convert_report() function when used as a library module. Supports
+        pipe-delimited tables and fenced code blocks.
+
+OUTPUT FILES:
+    <user-provided-path>/report.pdf
+        PDF file generated alongside the input markdown file (same path,
+        .pdf extension substituted for .md). Uses the investment committee
+        report template described above.
+
+VERSION: 1.0
+LAST UPDATED: 2026-06-05
+AUTHOR: Arjun Divecha
+
+DEPENDENCIES:
+    - markdown
+    - weasyprint
+    - pathlib (stdlib)
+    - typing (stdlib)
 
 USAGE:
+    # As a script:
+    python pdf_simple.py /path/to/report.md
+
+    # As a library module:
     from utils.pdf_simple import convert_report
     pdf_path = convert_report('/path/to/report.md')
+
+NOTES:
+    - WeasyPrint must be installed separately: pip install weasyprint
+    - If WeasyPrint is unavailable, the script falls back gracefully by
+      returning None from convert_report() (no hard import error).
+    - All errors are caught and printed to stderr; the script exits with
+      code 1 on failure rather than raising an unhandled exception.
+    - The generated PDF includes a "Confidential - For Investment Committee
+      Use Only" footer on every page and page numbers in the top-right.
 =============================================================================
 """
 

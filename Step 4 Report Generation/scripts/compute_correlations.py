@@ -1,33 +1,75 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-ROLLING CORRELATION COMPUTATION
+SCRIPT NAME: compute_correlations.py
 =============================================================================
 
+DESCRIPTION:
+    Computes rolling 60-day Pearson correlations between each asset ticker
+    and 15 factor indices (e.g. SPX, Russell2000, Nasdaq100, Value,
+    Growth, EAFE, EM, HY Credit, Treasuries, TIPS, Commodities,
+    Agriculture, Crypto, REIT US, REIT Global) using daily return data
+    stored in a SQLite database. Results are written back into the same
+    database in an asset_correlations table for downstream use in regime
+    detection and factor attribution analysis.
+
+    The script determines the best-fitting factor per ticker (highest
+    R-squared) and detects regime changes — abrupt shifts in correlation
+    exceeding a configurable threshold (0.3) relative to a prior window.
+    Supports two modes: full backfill over all historical dates
+    (--backfill, recommended for initial population) and daily update
+    for a single date (--date or latest date by default).
+
+    Backfill mode processes dates sequentially so that each ticker-date
+    row carries correlation data sourced from the preceding LOOKBACK_DAYS
+    (default 60) trading days, subject to a MIN_DATA_POINTS floor of 20
+    observations. Prior correlations from REGIME_LOOKBACK_DAYS (default 5)
+    days ago are used to flag regime changes.
+
 INPUT FILES:
-- database/market_data.db (daily_prices, factor_returns)
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/database/market_data.db
+        SQLite database (read via sqlite3 + pandas.read_sql_query).
+        Tables read:
+          - daily_prices (columns: date, ticker, return_1d): daily
+            asset returns used to compute ticker-side correlation inputs.
+          - factor_returns (columns: date, factor_name, return_1d):
+            daily factor-index returns used as the independent side of
+            each correlation pair.
 
 OUTPUT FILES:
-- database/market_data.db (asset_correlations table)
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/database/market_data.db
+        The same SQLite database written to via INSERT OR REPLACE into
+        the asset_correlations table (columns: date, ticker,
+        corr_<factor_name> for 15 factors, r_squared_best, best_factor,
+        regime_change). Data is saved in batches of 1000 records.
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/logs/correlations_<YYYYMMDD_HHMMSS>.log
+        Timestamped log file recording progress, summary statistics, and
+        any regime changes detected. Written via Python logging with
+        FileHandler and StreamHandler.
 
-VERSION: 1.0.0
-CREATED: 2026-01-31
+VERSION: 1.0
+LAST UPDATED: 2026-06-05
+AUTHOR: Arjun Divecha
 
-PURPOSE:
-Compute rolling 60-day correlations between each asset and 15 factor indices.
-Store results for use in regime detection and factor attribution analysis.
+DEPENDENCIES:
+    - pandas (SQL queries, DataFrame joins, .corr())
+    - numpy (used implicitly via pandas)
 
 USAGE:
-    python scripts/04_compute_correlations.py                    # Latest date only
-    python scripts/04_compute_correlations.py --backfill         # All historical dates
-    python scripts/04_compute_correlations.py --date 2026-01-30  # Specific date
-    python scripts/04_compute_correlations.py --test             # Test with 10 tickers
+    python compute_correlations.py                          # Daily: latest date only
+    python compute_correlations.py --backfill                # Full historical backfill
+    python compute_correlations.py --backfill --test         # Test: last 10 days, 50 tickers
+    python compute_correlations.py --date 2026-01-30         # Specific date
 
-RUNTIME ESTIMATE:
-- ~955 tickers x 87 dates = ~83,000 correlation sets
-- Backfill: 5-10 minutes (parallelized)
-- Daily: <30 seconds
-
+NOTES:
+    - Bloomberg Terminal / blpapi is NOT required — all data is pulled
+      from the local SQLite database that must be pre-populated.
+    - The asset_correlations table is created externally (not by this
+      script); the script assumes it already exists.
+    - Runtime: backfill ~5-10 minutes, daily update <30 seconds on
+      typical hardware (955 tickers x 87 dates).
+    - A process-level logger is configured on import; adjust
+      logging.basicConfig call to change output verbosity.
 =============================================================================
 """
 

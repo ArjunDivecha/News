@@ -5,7 +5,7 @@ LLM API UTILITIES
 =============================================================================
 
 PURPOSE:
-Wrapper functions for LLM providers. Primary focus: Claude Opus 4.5.
+Wrapper functions for LLM providers. Primary focus: Claude Opus 4.6.
 Other providers (OpenAI, Google) are kept for legacy/comparison purposes.
 
 USAGE:
@@ -40,18 +40,18 @@ _anthropic_client = None
 _google_model = None
 
 # Model configurations
-# Primary: Claude Opus 4.5 for daily reports
+# Primary: Claude Opus 4.6 for daily reports
 MODELS = {
     'openai': {
-        'daily': 'gpt-5.2',  # Legacy/comparison only
+        'daily': 'gpt-5.4',  # Legacy/comparison only
         'flash': 'gpt-4o-mini',
     },
     'anthropic': {
-        'daily': 'claude-opus-4-5-20251101',  # PRIMARY: Claude Opus 4.5
+        'daily': 'claude-opus-4-6',  # PRIMARY: Claude Opus 4.6
         'flash': 'claude-haiku-4-5-20251001',
     },
     'google': {
-        'daily': 'gemini-3-pro-preview',  # Legacy/comparison only
+        'daily': 'gemini-3.1-pro-preview',  # Legacy/comparison only
         'flash': 'gemini-2.0-flash',
     },
 }
@@ -109,7 +109,7 @@ def generate_openai(system_prompt: str, user_prompt: str,
     
     start = time.time()
     try:
-        # GPT-5.2 requires max_completion_tokens instead of max_tokens
+        # GPT-5 models require max_completion_tokens instead of max_tokens
         params = {
             'model': model,
             'messages': [
@@ -142,7 +142,7 @@ def generate_openai(system_prompt: str, user_prompt: str,
 
 
 def generate_anthropic(system_prompt: str, user_prompt: str,
-                       model: str = 'claude-sonnet-4-5-20250929', 
+                       model: str = 'claude-opus-4-6',
                        max_tokens: int = 4000) -> Dict:
     """
     Generate text using Anthropic.
@@ -181,7 +181,7 @@ def generate_anthropic(system_prompt: str, user_prompt: str,
 
 
 def generate_google(system_prompt: str, user_prompt: str,
-                    model: str = 'gemini-2.5-pro-preview-05-06',
+                    model: str = 'gemini-3.1-pro-preview',
                     max_tokens: int = 4000) -> Dict:
     """
     Generate text using Google Gemini.
@@ -221,8 +221,8 @@ def generate_google(system_prompt: str, user_prompt: str,
         return {'error': str(e), 'model': model, 'provider': 'google'}
 
 
-def generate_report(system_prompt: str, user_prompt: str, 
-                   provider: str = 'anthropic',  # Opus 4.5
+def generate_report(system_prompt: str, user_prompt: str,
+                   provider: str = 'anthropic',  # Opus 4.6
                    report_type: str = 'daily',
                    max_tokens: int = 4000) -> Dict:
     """
@@ -231,7 +231,7 @@ def generate_report(system_prompt: str, user_prompt: str,
     Args:
         system_prompt: System instructions
         user_prompt: User prompt with data
-        provider: 'anthropic' (Opus 4.5) - other providers kept for legacy
+        provider: 'anthropic' (Opus 4.6) - other providers kept for legacy
         report_type: 'daily' or 'flash' (determines model selection)
         max_tokens: Maximum tokens to generate
         
@@ -258,7 +258,7 @@ def generate_parallel(system_prompt: str, user_prompt: str,
                       max_tokens: int = 4000) -> Dict[str, Dict]:
     """
     Generate reports from multiple providers in parallel.
-    Default: Opus 4.5 only. Other providers kept for legacy/comparison.
+    Default: Opus 4.6 only. Other providers kept for legacy/comparison.
     
     Args:
         system_prompt: System instructions

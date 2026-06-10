@@ -1,22 +1,42 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-RUN PHASE 1 - Complete Market Report Pipeline
+SCRIPT NAME: runphase1.py
 =============================================================================
 
+DESCRIPTION:
+    Orchestrates the Phase 1 market report pipeline. Loads Bloomberg data
+    from Excel into SQLite, computes category statistics and factor returns,
+    generates a structured market report via Claude, and converts it to a
+    professional PDF using PrinceXML.
+
+INPUT FILES:
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/scripts/generate_report.py
+        Child script responsible for report generation and data loading.
+
+OUTPUT FILES:
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/outputs/comparison/{date}/{models}_report.pdf
+        Generated market report PDF.
+
+VERSION: 1.0
+LAST UPDATED: 2026-06-05
+AUTHOR: Arjun Divecha
+
+DEPENDENCIES:
+    - Python 3
+    - subprocess (standard library)
+    - pathlib (standard library)
+    - Claude API (via child script)
+    - PrinceXML (via child script)
+
 USAGE:
-    ./runphase1 --date 2026-02-03
-    ./runphase1 --date 2026-02-03 --skip-load-data
+    python runphase1.py --date 2026-02-03
+    python runphase1.py --date 2026-02-03 --skip-load-data
 
-WHAT IT DOES:
-    1. Loads Bloomberg data from Excel into SQLite (unless --skip-load-data)
-    2. Computes category statistics and factor returns
-    3. Generates structured report via Claude
-    4. Converts to professional PDF with PrinceXML
-
-OUTPUT:
-    - PDF report in Step 4 Report Generation/outputs/comparison/{date}/
-    - Markdown and JSON versions
+NOTES:
+    - Child scripts live under Step 4 Report Generation/scripts/.
+    - Pass --skip-load-data to reuse previously loaded Excel data.
+    - --models flag controls which LLM drives report generation.
 =============================================================================
 """
 

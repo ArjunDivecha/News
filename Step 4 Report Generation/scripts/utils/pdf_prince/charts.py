@@ -20,7 +20,7 @@ CREATED: 2026-01-31
 
 import io
 import base64
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt

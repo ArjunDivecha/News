@@ -1,25 +1,53 @@
 #!/usr/bin/env python3
 """
 =============================================================================
-CALCULATE HISTORICAL YTD RETURNS
+SCRIPT NAME: calculate_ytd.py
 =============================================================================
 
-PURPOSE:
-Calculate Year-to-Date returns for all historical dates by compounding
-daily returns from the start of each year.
+DESCRIPTION:
+    Reads 1-day percentage returns (return_1d) from a SQLite database
+    (market_data.db) and computes year-to-date (YTD) returns for every
+    ticker on every historical date. For each ticker, daily returns are
+    sorted chronologically and compounded from the start of each calendar
+    year, resetting the cumulative product on January 1. The resulting
+    YTD percentages are written back into the return_ytd column of the
+    daily_prices table in the same database.
 
 INPUT FILES:
-- database/market_data.db (daily_prices table with return_1d)
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/database/market_data.db
+        SQLite database containing a daily_prices table with columns
+        ticker, date, return_1d (daily return as a percentage). The
+        script reads return_1d for every ticker and writes return_ytd.
 
 OUTPUT FILES:
-- database/market_data.db (updates return_ytd column)
+    /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/database/market_data.db
+        The same database file is updated in place: the return_ytd column
+        is populated for each ticker and date with the computed YTD return
+        (percentage). Existing records are modified; no new tables or
+        files are created.
 
-VERSION: 1.0.0
-CREATED: 2026-02-01
+VERSION: 1.0
+LAST UPDATED: 2026-06-05
+AUTHOR: Arjun Divecha
+
+DEPENDENCIES:
+    - sqlite3 (stdlib)
+    - sys (stdlib)
+    - pathlib (stdlib)
+    - datetime (stdlib)
+    - typing (stdlib)
 
 USAGE:
-    python3 scripts/calculate_historical_ytd.py
+    python /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/Step 4 Report Generation/scripts/calculate_ytd.py
 
+NOTES:
+    - The database file must already exist with a populated daily_prices
+      table that includes ticker, date, return_1d, and return_ytd columns.
+    - YTD values are computed by compounding daily returns from January 1
+      of each year. Returns stored as percentages (e.g., 1.5 for 1.5%)
+      are divided by 100 before compounding.
+    - The script prints progress updates every 100 tickers and a summary
+      of total records updated upon completion.
 =============================================================================
 """
 

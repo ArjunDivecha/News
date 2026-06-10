@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS portfolios (
 CREATE TABLE IF NOT EXISTS portfolio_holdings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     portfolio_id TEXT NOT NULL,
+    account_number TEXT,               -- Brokerage account reference
     symbol TEXT NOT NULL,              -- Plain ticker from portfolio file (AAPL, EWZ)
     position_type TEXT NOT NULL,       -- 'LONG' or 'SHORT'
     
@@ -62,7 +63,7 @@ CREATE TABLE IF NOT EXISTS portfolio_holdings (
     updated_at TEXT DEFAULT (datetime('now')),
     
     FOREIGN KEY (portfolio_id) REFERENCES portfolios(portfolio_id),
-    UNIQUE (portfolio_id, symbol, position_type)
+    UNIQUE (portfolio_id, account_number, symbol, position_type)
 );
 
 -- Daily portfolio snapshot

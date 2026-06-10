@@ -37,7 +37,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from utils.db import (
     get_db, create_portfolio, save_holdings, get_holdings_summary,
-    lookup_final1000
+    lookup_final1000, lookup_existing_classification
 )
 from utils.yfinance_utils import resolve_ticker, batch_get_info
 from utils.taxonomy import map_stock_to_taxonomy
@@ -62,7 +62,9 @@ def load_portfolio_file(file_path: str) -> pd.DataFrame:
     col_mapping = {}
     for col in df.columns:
         lower_col = col.lower().strip()
-        if 'symbol' in lower_col or 'ticker' in lower_col:
+        if 'account' in lower_col:
+            col_mapping[col] = 'account_number'
+        elif 'symbol' in lower_col or 'ticker' in lower_col:
             col_mapping[col] = 'symbol'
         elif 'quantity' in lower_col:
             col_mapping[col] = 'quantity'
@@ -127,6 +129,22 @@ def classify_holding(symbol: str, yf_info: dict, verbose: bool = True) -> dict:
         classification['final1000_ticker'] = final1000['ticker']
         if verbose:
             print(f"    → Final 1000 match: {final1000['tier1']}")
+        return classification
+    
+    # Step 1.5: Check previously classified holdings
+    cached_class = lookup_existing_classification(symbol)
+    if cached_class:
+        classification['tier1'] = cached_class['tier1']
+        classification['tier2'] = cached_class['tier2']
+        classification['tier3_tags'] = cached_class.get('tier3_tags', [])
+        
+        src = cached_class.get('classification_source', 'historical')
+        if not src.endswith('_cached'):
+            src += '_cached'
+        classification['classification_source'] = src
+        
+        if verbose:
+            print(f"    → Cached match: {cached_class['tier1']}")
         return classification
     
     # Step 2: Check quote type
@@ -239,6 +257,9 @@ def ingest_portfolio(portfolio_id: str, file_path: str,
     
     for idx, row in df.iterrows():
         symbol = str(row['symbol']).strip().upper()
+        account_number = str(row['account_number']).strip() if 'account_number' in row else None
+        if account_number == 'nan' or not account_number:
+            account_number = None
         quantity = float(row['quantity'])
         market_value = float(row['market_value']) if pd.notna(row.get('market_value')) else None
         avg_price = float(row['avg_price']) if pd.notna(row.get('avg_price')) else None
@@ -297,6 +318,7 @@ def ingest_portfolio(portfolio_id: str, file_path: str,
         
         # Build holding record
         holding = {
+            'account_number': account_number,
             'symbol': symbol,
             'position_type': position_type,
             'quantity': quantity,
@@ -331,7 +353,7 @@ def ingest_portfolio(portfolio_id: str, file_path: str,
     
     aggregated = {}
     for h in holdings:
-        key = (h['symbol'], h['position_type'])
+        key = (h.get('account_number'), h['symbol'], h['position_type'])
         if key in aggregated:
             # Combine quantities, values, and P&L
             existing = aggregated[key]

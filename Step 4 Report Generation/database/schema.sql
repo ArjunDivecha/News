@@ -191,6 +191,43 @@ CREATE TABLE IF NOT EXISTS asset_correlations (
     FOREIGN KEY (ticker) REFERENCES assets(ticker)
 );
 
+-- Meme/social snapshots (ingested from MemeFinder JSON output)
+CREATE TABLE IF NOT EXISTS meme_social_snapshots (
+    snapshot_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    snapshot_ts TEXT NOT NULL UNIQUE,
+    snapshot_date TEXT NOT NULL,
+    source_file TEXT,
+    search_queries TEXT,           -- JSON array
+    total_found INTEGER,
+    ingested_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Meme/social snapshot constituents enriched against the asset universe
+CREATE TABLE IF NOT EXISTS meme_social_assets (
+    snapshot_id INTEGER NOT NULL,
+    symbol TEXT NOT NULL,
+    name TEXT,
+    mentions INTEGER,
+    source_domains TEXT,           -- JSON array
+    volume_spike REAL,
+    price_change_1d REAL,
+    price_change_5d REAL,
+    current_volume INTEGER,
+    avg_volume INTEGER,
+    market_cap_b REAL,
+    reasons TEXT,                  -- JSON array
+    sample_context TEXT,           -- JSON array
+    meme_score REAL,
+    in_universe INTEGER DEFAULT 0,
+    universe_ticker TEXT,
+    tier1 TEXT,
+    tier2 TEXT,
+    tier3_tags TEXT,
+
+    PRIMARY KEY (snapshot_id, symbol),
+    FOREIGN KEY (snapshot_id) REFERENCES meme_social_snapshots(snapshot_id)
+);
+
 -- Generated reports archive
 CREATE TABLE IF NOT EXISTS reports (
     report_id TEXT PRIMARY KEY,
@@ -241,6 +278,10 @@ CREATE INDEX IF NOT EXISTS idx_correlations_date ON asset_correlations(date);
 CREATE INDEX IF NOT EXISTS idx_correlations_ticker ON asset_correlations(ticker);
 CREATE INDEX IF NOT EXISTS idx_correlations_best_factor ON asset_correlations(best_factor);
 CREATE INDEX IF NOT EXISTS idx_correlations_regime_change ON asset_correlations(regime_change);
+
+CREATE INDEX IF NOT EXISTS idx_meme_social_snapshots_date ON meme_social_snapshots(snapshot_date);
+CREATE INDEX IF NOT EXISTS idx_meme_social_assets_snapshot ON meme_social_assets(snapshot_id);
+CREATE INDEX IF NOT EXISTS idx_meme_social_assets_universe ON meme_social_assets(in_universe, tier1, tier2);
 
 -- =============================================================================
 -- VIEWS for common queries

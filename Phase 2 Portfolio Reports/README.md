@@ -1,6 +1,6 @@
 # Phase 2 Portfolio Reports
 
-Personalized daily portfolio wrap reports powered by Claude Opus 4.5.
+Personalized daily portfolio wrap reports powered by Claude Opus 4.6.
 
 ## Overview
 
@@ -81,7 +81,7 @@ The pipeline consists of 4 steps that run automatically:
 ### Step 4: Report Generation (`04_generate_report.py`)
 - Loads portfolio data and Phase 1 market context
 - Injects into prompt template
-- Generates report with Claude Opus 4.5
+- Generates report with Claude Opus 4.6
 - Converts to professional PDF using PrinceXML
 - Outputs Markdown and PDF to `outputs/` directory
 
@@ -157,7 +157,7 @@ pip install pandas openpyxl yfinance anthropic python-dotenv jinja2
 ## Cost Estimation
 
 - **Claude Haiku** (classification): ~$0.002 per ETF/fund classification
-- **Claude Opus 4.5** (report): ~$0.15-0.30 per report
+- **Claude Opus 4.6** (report): ~$0.15-0.30 per report
 - **Yahoo Finance**: Free
 
 For a 50-holding portfolio:

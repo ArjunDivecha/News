@@ -15,6 +15,9 @@ python generate_report.py --date 2026-02-03 --models anthropic --structured
 
 # Optional: Skip data loading if already loaded
 python generate_report.py --date 2026-02-03 --models anthropic --structured --skip-load-data
+
+# Optional: Ingest a specific meme/social snapshot JSON before report generation
+python ingest_meme_social.py --file "../../Step 2 Data Processing - Final1000/search_based_meme_stocks.json"
 ```
 
 ## Overview
@@ -33,9 +36,10 @@ This pipeline transforms Bloomberg market data into professional investment comm
 
 The `generate_report.py` script automatically:
 1. Loads Bloomberg data from Excel into SQLite
-2. Prepares data summaries and category statistics
-3. Generates structured JSON report via LLM
-4. Converts to professional PDF with PrinceXML
+2. Ingests the latest meme/social snapshot into SQLite (unless skipped)
+3. Prepares data summaries and category statistics
+4. Generates structured JSON report via LLM
+5. Converts to professional PDF with PrinceXML
 
 ```bash
 # Complete workflow in one command
@@ -46,9 +50,11 @@ python scripts/generate_report.py --date 2026-02-03 --models anthropic --structu
 
 **Features:**
 - Automatic data loading (use `--skip-load-data` to disable)
+- Automatic meme/social snapshot ingestion (use `--skip-ingest-meme-social` to disable)
 - Structured JSON output with sections, tables, and narratives
 - Professional PDF/X-1a:2003 quality via PrinceXML
 - Executive synthesis, flash headlines, and detailed sections
+- Dedicated Meme / Social Flow section with freshness checks
 - ~2-3 minutes total runtime
 
 ## Report Types
@@ -99,6 +105,8 @@ SQLite database at `database/market_data.db`:
 | `intraday_prices` | Intraday data (7-day retention) |
 | `category_stats` | Pre-computed aggregates |
 | `factor_returns` | Factor returns for attribution |
+| `meme_social_snapshots` | Meme/social snapshot metadata from MemeFinder |
+| `meme_social_assets` | Snapshot constituents enriched against the asset universe |
 | `reports` | Generated report archive |
 
 ## Bloomberg Integration
@@ -138,6 +146,7 @@ Step 4 Report Generation/
 │   └── flash_report.md            # Flash report prompt
 ├── scripts/
 │   ├── generate_report.py         # PRIMARY: Single-command report generation
+│   ├── ingest_meme_social.py      # Import MemeFinder JSON into SQLite
 │   ├── setup_database.py          # One-time: Sync Final 1000 list to DB
 │   ├── compute_correlations.py   # Optional: Compute asset correlations
 │   ├── calculate_ytd.py           # Utility: Calculate YTD returns
