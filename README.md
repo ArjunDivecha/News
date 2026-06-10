@@ -1,135 +1,88 @@
-# Financial Asset Classification Pipeline
+# News - Unified Daily Market & Portfolio Report
 
-A multi-phase data pipeline that transforms raw multi-asset market data (ETFs, Bloomberg Indices, Goldman Sachs baskets) into a curated dataset of ~1,000 diversified assets for news analysis and market monitoring.
-
-> ## NEW (2026-06-09): Unified Daily Report - `report/`
->
-> The daily reporting workflow (Phase 0 holdings feed + Step 4 market
-> report + Phase 2 portfolio report) has been **replaced by a single
-> command** on the `rearchitect` branch:
->
-> ```bash
-> python3 report/main.py
-> ```
->
-> Live Schwab + IBKR holdings, free Yahoo Finance prices (no Bloomberg
-> terminal), unit-tested analytics, and ONE unified market + portfolio
-> report written by Claude Opus. See `report/README.md` for full docs.
-> The legacy phases below remain for the universe-construction pipeline
-> (Steps 1-3), which is unchanged.
-
-## Overview
-
-| Stage | Purpose | Output |
-|-------|---------|--------|
-| **Phase 0: Portfolio Feed** | Broker holdings sync (Schwab + IBKR) | `Client.xlsx` for Phase 2 |
-| **Step 1: Data Collection** | Raw data acquisition | Filtered datasets from 3 sources |
-| **Step 2: Data Processing** | Classification & selection | Final 1000 Asset Master List |
-| **Step 3: Data Analysis** | Performance analytics | Factor profiles & deduplication |
-| **Fine Tuning** | ML model training | Fine-tuned Llama classifier |
-
-## Quick Start
+One command pulls live Schwab + IBKR holdings, fetches ~800 ETF prices from
+Yahoo Finance (no Bloomberg terminal), runs unit-tested analytics, and has
+Claude Opus write a single unified market + portfolio report as a PDF:
 
 ```bash
-# Install dependencies
-pip install pandas numpy scipy scikit-learn openpyxl anthropic
-
-# Optional: Build latest Phase 2 client feed from Schwab + IBKR
-python runphase0.py
-
-# Run full pipeline (45-80 minutes)
-cd "Step 1 Data Collection"
-python Bloomberg_Indices_Cluster.py
-python "ETF Cluster.py"
-python gs_basket_data.py
-
-cd "../Step 2 Data Processing - Final1000"
-python classify_bloomberg_full.py
-python classify_etfs_full.py
-python classify_goldman_full.py
-python merge_classified_files.py
-python final_selection_algorithm_v2.py
+python3 report/main.py
 ```
 
-## Data Sources
+Full documentation: [`report/README.md`](report/README.md)
 
-| Source | Raw Count | After Filtering | Description |
-|--------|-----------|-----------------|-------------|
-| Bloomberg Indices | ~1,000+ | 438 | Market indices with performance metrics |
-| ETF Master List | 1,619 | 500 | Exchange-traded funds with metadata |
-| Goldman Sachs Baskets | 2,667 | 2,667 | Thematic baskets via Marquee API |
-| Thematic ETFs | 231 | 231 | Specialized thematic ETFs |
-| **Total** | **~5,500** | **~4,933** | Merged into master list |
+```bash
+python3 report/main.py --no-llm           # data + analytics only (free, fast)
+python3 report/main.py --non-interactive  # cron mode (stale fallback, no prompts)
+python3 -m pytest tests/ -v               # 25 tests on the financial math
+```
 
-## Final Output
-
-**Final 1000 Asset Master List.xlsx** — ~970 diversified assets with:
-
-| Tier-1 Category | Target Allocation |
-|-----------------|-------------------|
-| Equities | 52% (~520) |
-| Fixed Income | 17% (~170) |
-| Commodities | 11% (~110) |
-| Currencies (FX) | 7% (~70) |
-| Multi-Asset / Thematic | 8% (~80) |
-| Volatility / Risk Premia | 5% (~50) |
-| Alternative / Synthetic | 2% (~20) |
-
-## Project Structure
+## Repository layout
 
 ```
 News/
-├── Phase 0 Portfolio Feed/          # Broker holdings normalization for Client.xlsx
-├── Phase 2 Portfolio Reports/       # Personalized portfolio report pipeline
-├── Step 1 Data Collection/          # Raw data acquisition
-├── Step 2 Data Processing - Final1000/  # Classification & selection
-├── Step 3 Data Analysis/            # Performance analytics
-├── fine tuning/                     # ML model training
-├── runphase0.py                     # Phase 0 runner
+├── report/                          # THE daily report system (start here)
+│   ├── main.py                      #   one-command pipeline
+│   ├── prompts/system.md            #   LLM strategist prompt
+│   └── README.md                    #   full docs
+├── tests/                           # pytest suite for the financial math
+├── data/                            # universe.xlsx, report.db, holdings.xlsx
+├── outputs/unified/                 # generated reports (PDF/MD + data packages)
+│
+├── Step 1 Data Collection/          # Universe construction (run rarely)
+├── Step 2 Data Processing - Final1000/  #   classification & selection
+├── Step 3 Data Analysis/            #   analytics on the universe
+├── fine tuning/                     #   ML classifier training
+│
+├── archive/                         # Legacy reporting chain (replaced by report/)
 ├── AGENTS.md                        # AI agent instructions
-└── README.md                        # This file
+└── README.md                        # this file
 ```
 
-## Classification Methods
+## The two pipelines
 
-### 1. Haiku Classification (Original)
-- Uses Anthropic Claude Haiku 4.5 for taxonomy assignment
-- Cost: ~$50-100 per full run
-- Runtime: 30-60 minutes
+### 1. Daily report (`report/`) - run every day
 
-### 2. Fine-Tuned Llama (New)
-- Fine-tuned Llama 3.1 8B via Tinker
-- Cost: $0 per inference run
-- Runtime: ~22 minutes for 970 assets
-- Location: `fine tuning/`
+See `report/README.md`. Replaces the old Phase 0 -> Step 4 -> Phase 2 chain
+(now in `archive/`). Universe: 763 unique ETFs in `data/universe.xlsx`,
+priced via Yahoo Finance. History: single SQLite db at `data/report.db`.
 
-## Selection Algorithm
+### 2. Universe construction (Steps 1-3 + fine tuning) - run rarely
 
-**Version 2** (`final_selection_algorithm_v2.py`) includes:
-- Proxy Sharpe calculation for assets missing performance data
-- Source quotas (15% Goldman, 5% Bloomberg minimum per category)
-- Thematic rarity scoring for diversity
-- Improved Goldman representation: 13% → 23%
+Builds the Final 1000 Asset Master List from Bloomberg indices, ETFs, and
+Goldman baskets via LLM classification. Only needed to rebuild/refresh the
+universe; after changing it, regenerate the report universe with:
+
+```bash
+python3 report/build_universe.py
+```
+
+| Stage | Purpose | Output |
+|-------|---------|--------|
+| Step 1 Data Collection | Raw data acquisition | Filtered datasets from 3 sources |
+| Step 2 Data Processing | Classification & selection | Final 1000 Asset Master List |
+| Step 3 Data Analysis | Performance analytics | Factor profiles & deduplication |
+| Fine Tuning | ML model training | Fine-tuned Llama classifier |
 
 ## Requirements
 
-- **Python**: 3.11+
-- **Memory**: 8GB+ (128GB recommended)
-- **APIs**: Anthropic, Goldman Sachs Marquee (optional), Exa (optional)
+- **Python** 3.14 (`yfinance`, `pandas`, `anthropic>=0.109`, `schwabdev`,
+  `python-dotenv`, `markdown`, `pytest`)
+- `.venv-ibkr312/` - Python 3.12 venv with `ib_insync` (IBKR API requirement)
+- **PrinceXML** (`brew install prince`) for PDF rendering
+- `.env` at repo root: `ANTHROPIC_API_KEY`, `SCHWAB_APP_KEY`, `SCHWAB_APP_SECRET`
+- TWS / IB Gateway logged in (auto-launched if not running)
 
 ## Documentation
 
 | File | Purpose |
 |------|---------|
+| `report/README.md` | Daily report system - full guide |
 | `AGENTS.md` | AI coding agent instructions |
-| `Step 1/README.md` | Data collection details |
-| `Step 2/README.md` | Classification workflow |
-| `Step 2/CLAUDE.md` | Architecture overview |
-| `Step 2/PRD.md` | Product requirements |
+| `archive/README.md` | What the legacy code was and what replaced it |
+| `Step 2 .../README.md` | Classification workflow |
 | `fine tuning/README.md` | ML training guide |
-| `fine tuning/INFERENCE.md` | Model inference guide |
 
 ---
 
-**Last Updated**: 2026-02-20  
-**Version**: 2.1.0
+**Last Updated**: 2026-06-10
+**Version**: 3.0.0 (unified report rearchitecture)

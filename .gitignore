@@ -73,3 +73,7 @@ data/holdings.xlsx
 data/report.db*
 .cursor/
 ibkr_err.log
+
+# Personal/regenerable data kept local
+GMO.xlsx
+Step 3 Data Analysis/search_based_meme_stocks.json

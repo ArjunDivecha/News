@@ -50,9 +50,9 @@ PATHS = {
     "db": DATA_DIR / "report.db",
     "output_dir": OUTPUT_DIR,
     "system_prompt": REPORT_DIR / "prompts" / "system.md",
-    # Legacy databases (read-only, used by migrate_history.py)
-    "legacy_market_db": ROOT_DIR / "Step 4 Report Generation" / "database" / "market_data.db",
-    "legacy_portfolio_db": ROOT_DIR / "Phase 2 Portfolio Reports" / "database" / "portfolio.db",
+    # Legacy databases (read-only, used by migrate_history.py; archived 2026-06-10)
+    "legacy_market_db": ROOT_DIR / "archive" / "Step 4 Report Generation" / "database" / "market_data.db",
+    "legacy_portfolio_db": ROOT_DIR / "archive" / "Phase 2 Portfolio Reports" / "database" / "portfolio.db",
     # Legacy holdings file (stale-fallback seed for first run)
     "legacy_client_xlsx": ROOT_DIR / "Client.xlsx",
     # IBKR fetch runs in its own interpreter (ib_insync needs Python 3.12)

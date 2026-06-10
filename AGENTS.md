@@ -1,7 +1,17 @@
 # AGENTS.md - Financial Analytics Pipeline
 
-**Last Updated**: 2026-01-31 (Critical YTD data lesson added)  
+**Last Updated**: 2026-06-10 (rearchitecture + repo cleanup)  
 **Project Root**: `/Users/arjundivecha/Dropbox/AAA Backup/A Working/News`
+
+---
+
+> ## IMPORTANT: Rearchitected 2026-06 - read this first
+>
+> The daily reporting chain (Phase 0 + Step 4 + Phase 2) described in parts
+> of this document was **replaced by the unified system in `report/`**
+> (single command: `python3 report/main.py`) and **moved to `archive/`**.
+> See `report/README.md` and the "Learned Workspace Facts" section at the
+> bottom of this file. Steps 1-3 (universe construction) are still current.
 
 ---
 
