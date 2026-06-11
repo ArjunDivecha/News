@@ -6,7 +6,9 @@ SCRIPT NAME: config.py
 
 INPUT FILES:
     - /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/.env
-      API keys (ANTHROPIC_API_KEY, SCHWAB_APP_KEY, SCHWAB_APP_SECRET).
+      API keys: ANTHROPIC_API_KEY, SCHWAB_APP_KEY, SCHWAB_APP_SECRET.
+      IBKR: IBKR_FLEX_TOKEN + IBKR_FLEX_QUERY_ID (primary, no TWS needed);
+             fallback still supported via .venv-ibkr312 subprocess.
 
 OUTPUT FILES:
     (none - this is a configuration module)
@@ -56,6 +58,7 @@ PATHS = {
     # Legacy holdings file (stale-fallback seed for first run)
     "legacy_client_xlsx": ROOT_DIR / "Client.xlsx",
     # IBKR fetch runs in its own interpreter (ib_insync needs Python 3.12)
+    # Kept as FALLBACK only — Flex Web Service (ibkr_flex.py) is primary
     "ibkr_python": ROOT_DIR / ".venv-ibkr312" / "bin" / "python3",
 }
 
@@ -101,6 +104,11 @@ SETTINGS = {
     "llm_timeout_s": 600,
     "continuity_days": 5,            # prior executive summaries fed back into prompt
     # Brokers
+    # IBKR Flex Web Service (primary — no TWS login required, token-based)
+    # Set both in .env to skip TWS entirely:
+    "ibkr_flex_token_env": "IBKR_FLEX_TOKEN",
+    "ibkr_flex_query_id_env": "IBKR_FLEX_QUERY_ID",
+    # TWS fallback (only used when Flex env vars are absent)
     "ibkr_port": 7496,
     "ibkr_client_id": 103,
     "schwab_app_key_env": "SCHWAB_APP_KEY",

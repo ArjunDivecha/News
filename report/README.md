@@ -94,13 +94,37 @@ ties out EXACTLY to dollar P&L over beginning-of-day gross.
 
 ## Requirements
 
-- Python 3.14 (`yfinance`, `pandas`, `anthropic`, `schwabdev`,
+- Python 3.14 (`yfinance`, `pandas`, `anthropic>=0.109`, `schwabdev`,
   `python-dotenv`, `markdown`, `pytest`)
-- `.venv-ibkr312` venv with `ib_insync` (IBKR only works on Python 3.12)
 - PrinceXML (`brew install prince`) for PDFs
 - `.env` at repo root: `ANTHROPIC_API_KEY`, `SCHWAB_APP_KEY`,
-  `SCHWAB_APP_SECRET`
-- TWS or IB Gateway running and logged in (it will launch it if not)
+  `SCHWAB_APP_SECRET`, and **`IBKR_FLEX_TOKEN` + `IBKR_FLEX_QUERY_ID`**
+  (see IBKR Flex setup below)
+- TWS / IB Gateway: **no longer required** when Flex is configured.
+  The `.venv-ibkr312` venv is kept as an optional TWS fallback.
+
+### IBKR Flex Web Service setup (one-time, 5 minutes)
+
+This is the primary IBKR path — no TWS login, no `.venv-ibkr312`, no
+interactive prompts. Once set up, it just works.
+
+1. **Log into Client Portal** at https://ndcdyn.interactivebrokers.com
+2. **Performance & Reports → Flex Queries → Create New Query**
+   - Name it "Daily Positions"
+   - Add an **Open Positions** section (all default fields are fine)
+   - Optionally add **Cash Transactions** to include cash balances
+   - Save — note the **Query ID** (a number)
+3. **Flex Web Service Configuration** (gear icon on the Flex Queries page)
+   - Enable Flex Web Service → **Generate Token**
+   - Copy the token and query ID into `.env`:
+     ```
+     IBKR_FLEX_TOKEN=<your-token-here>
+     IBKR_FLEX_QUERY_ID=<your-query-id-here>
+     ```
+
+That's it. The token is permanent until you regenerate it; no expiration,
+no re-auth, no TWS dependency. If Flex is NOT configured (env vars absent),
+the system falls back to the TWS subprocess path automatically.
 
 ## Daily history it maintains
 

@@ -6,7 +6,8 @@ SCRIPT NAME: holdings.py
 
 INPUT FILES:
     - ~/.schwabdev/tokens.db          (Schwab OAuth token store, via schwabdev)
-    - IBKR TWS/Gateway on 127.0.0.1   (via report/ibkr_fetch.py subprocess)
+    - IBKR Flex Web Service            (primary: HTTPS API, token-based, no TWS)
+    - IBKR TWS/Gateway on 127.0.0.1   (fallback: via report/ibkr_fetch.py subprocess)
     - data/holdings.xlsx              (previous snapshot, stale fallback)
     - Client.xlsx                     (legacy snapshot, first-run fallback)
 
@@ -20,21 +21,23 @@ LAST UPDATED: 2026-06-09
 AUTHOR: Arjun Divecha
 
 DESCRIPTION:
-    Pulls live holdings from Schwab (schwabdev) and IBKR (ib_insync via the
-    Python 3.12 venv subprocess) at the start of every report run.
+    Pulls live holdings from Schwab (schwabdev) and IBKR. For IBKR, the
+    PRIMARY path is now the Flex Web Service — a token-based HTTPS API that
+    requires NO TWS login. Set IBKR_FLEX_TOKEN + IBKR_FLEX_QUERY_ID in .env
+    and TWS is never needed. The old TWS subprocess path is kept as a
+    fallback that activates only when Flex env vars are absent.
 
     PREFLIGHTS (user-in-the-loop, per design decision):
       - Schwab: reads refresh_token_issued from ~/.schwabdev/tokens.db.
-        If the 7-day refresh token is expired/near expiry, prompts the user
-        and lets schwabdev run its interactive browser re-auth.
-      - IBKR: probes 127.0.0.1:7496. If closed, attempts to launch TWS and
-        prompts the user to log in, re-probing until ready or aborted.
+        If the 7-day refresh token is expired/near expiry, prompts the user.
+      - IBKR (Flex): NO preflight — the token is stateless, no login needed.
+        The run just works.
+      - IBKR (TWS fallback, only when Flex env is unset): probes the TWS
+        port; if closed, launches TWS and prompts for login.
 
     FALLBACK (explicitly approved): if a broker still fails after the
     prompts, the run continues on the LAST SAVED snapshot, loudly stamped
-    as stale with its as-of date. A consistent snapshot is preferred over
-    mixing fresh and stale brokers, so if either broker fails the whole
-    snapshot falls back.
+    as stale with its as-of date.
 
 DEPENDENCIES:
     - schwabdev, pandas, openpyxl
@@ -264,7 +267,29 @@ def fetch_schwab() -> pd.DataFrame:
     return df
 
 
-def fetch_ibkr(port: int) -> pd.DataFrame:
+def fetch_ibkr(port: int, flex_token: Optional[str] = None,
+               flex_query_id: Optional[str] = None) -> pd.DataFrame:
+    """
+    Pull IBKR positions: Flex Web Service (primary) or TWS subprocess (fallback).
+
+    Flex is tried first when a token + query ID are provided. If Flex
+    succeeds, TWS is never touched. If Flex env vars are not set, the
+    TWS subprocess is used as before. If Flex is configured but fails
+    (e.g. expired token), we DO NOT fall back to TWS — the token should work,
+    and a single failing path means a stale-fallback per the design rule.
+    """
+    use_flex = bool(flex_token and flex_query_id)
+    if not use_flex:
+        return _fetch_ibkr_tws(port)
+
+    from ibkr_flex import fetch_positions
+    try:
+        return fetch_positions(flex_token, flex_query_id)
+    except Exception as e:
+        raise BrokerError(f"IBKR Flex Web Service failed: {e}")
+
+
+def _fetch_ibkr_tws(port: int) -> pd.DataFrame:
     """Pull all IBKR positions + cash via the 3.12-venv subprocess."""
     py = PATHS["ibkr_python"]
     if not py.exists():
@@ -309,7 +334,7 @@ def fetch_ibkr(port: int) -> pd.DataFrame:
         })
     if not rows:
         raise BrokerError("IBKR returned zero positions")
-    print(f"  IBKR: {len(rows)} rows")
+    print(f"  IBKR: {len(rows)} rows via TWS subprocess")
     return pd.DataFrame(rows)
 
 
@@ -394,9 +419,20 @@ def get_holdings(interactive: bool = True) -> Tuple[pd.DataFrame, dict]:
         print(f"  !! Schwab pull failed: {e}")
 
     # --- IBKR ---
+    flex_token = os.getenv(SETTINGS["ibkr_flex_token_env"])
+    flex_query_id = os.getenv(SETTINGS["ibkr_flex_query_id_env"])
+    use_flex = bool(flex_token and flex_query_id)
+
     try:
-        preflight_ibkr(interactive, port)
-        frames.append(fetch_ibkr(port))
+        if use_flex:
+            print(f"  IBKR: Flex Web Service configured "
+                  f"(token {flex_token[:4]}..., query {flex_query_id})")
+            frames.append(fetch_ibkr(
+                port, flex_token=flex_token, flex_query_id=flex_query_id))
+        else:
+            print("  IBKR: Flex not configured, falling back to TWS...")
+            preflight_ibkr(interactive, port)
+            frames.append(fetch_ibkr(port))
     except (BrokerError, Exception) as e:
         failures.append(f"IBKR: {e}")
         print(f"  !! IBKR pull failed: {e}")
