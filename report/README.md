@@ -126,6 +126,32 @@ That's it. The token is permanent until you regenerate it; no expiration,
 no re-auth, no TWS dependency. If Flex is NOT configured (env vars absent),
 the system falls back to the TWS subprocess path automatically.
 
+### Schwab auto-auth setup (optional, one-time)
+
+Schwab requires OAuth every ~7 days. Two modes:
+
+**Auto-auth (Playwright — unattended):**
+1. Set three env vars in `.env`:
+   ```
+   SCHWAB_USERNAME=<your-schwab-login-id>
+   SCHWAB_PASSWORD=<your-schwab-password>
+   SCHWAB_TOTP_SECRET=<your-base32-totp-secret>
+   ```
+2. That's it. `report/main.py` will now refresh Schwab tokens
+   automatically in headless Chromium — no browser, no prompts.
+
+**Interactive (default fallback):**
+If the three env vars above are left empty, the system falls back to
+the original flow: opens a browser, you paste the redirect URL back.
+This is the same behavior as before.
+
+> **Getting your TOTP secret:** When you set up 2FA on Schwab, your
+> authenticator app (Google Authenticator, Authy, 1Password) received a
+> Base32 secret key — usually shown as a text string or QR code during
+> setup. This is the value for `SCHWAB_TOTP_SECRET`. If you don't have
+> 2FA enabled on Schwab, leave `SCHWAB_TOTP_SECRET` empty — auto-auth
+> will skip the TOTP step.
+
 ## Daily history it maintains
 
 - `prices` - adjusted closes for the full universe (self-healing: every

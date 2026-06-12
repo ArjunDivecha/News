@@ -113,6 +113,11 @@ SETTINGS = {
     "ibkr_client_id": 103,
     "schwab_app_key_env": "SCHWAB_APP_KEY",
     "schwab_app_secret_env": "SCHWAB_APP_SECRET",
+    # Schwab auto-auth via Playwright (primary — no interactive browser prompts)
+    # Set all three in .env to skip interactive OAuth entirely:
+    "schwab_username_env": "SCHWAB_USERNAME",
+    "schwab_password_env": "SCHWAB_PASSWORD",
+    "schwab_totp_secret_env": "SCHWAB_TOTP_SECRET",
 }
 
 

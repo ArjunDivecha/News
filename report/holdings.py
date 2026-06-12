@@ -6,6 +6,9 @@ SCRIPT NAME: holdings.py
 
 INPUT FILES:
     - ~/.schwabdev/tokens.db          (Schwab OAuth token store, via schwabdev)
+    - Schwab auto-auth credentials     (primary: env vars SCHWAB_USERNAME,
+      SCHWAB_PASSWORD, SCHWAB_TOTP_SECRET → Playwright headless OAuth)
+    - Schwab interactive fallback      (when auto-auth creds are absent)
     - IBKR Flex Web Service            (primary: HTTPS API, token-based, no TWS)
     - IBKR TWS/Gateway on 127.0.0.1   (fallback: via report/ibkr_fetch.py subprocess)
     - data/holdings.xlsx              (previous snapshot, stale fallback)
@@ -21,23 +24,26 @@ LAST UPDATED: 2026-06-09
 AUTHOR: Arjun Divecha
 
 DESCRIPTION:
-    Pulls live holdings from Schwab (schwabdev) and IBKR. For IBKR, the
-    PRIMARY path is now the Flex Web Service — a token-based HTTPS API that
-    requires NO TWS login. Set IBKR_FLEX_TOKEN + IBKR_FLEX_QUERY_ID in .env
-    and TWS is never needed. The old TWS subprocess path is kept as a
-    fallback that activates only when Flex env vars are absent.
+    Pulls live holdings from Schwab (schwabdev) and IBKR.
 
-    PREFLIGHTS (user-in-the-loop, per design decision):
-      - Schwab: reads refresh_token_issued from ~/.schwabdev/tokens.db.
-        If the 7-day refresh token is expired/near expiry, prompts the user.
-      - IBKR (Flex): NO preflight — the token is stateless, no login needed.
-        The run just works.
-      - IBKR (TWS fallback, only when Flex env is unset): probes the TWS
-        port; if closed, launches TWS and prompts for login.
+    SCHWAB: Two modes — auto-auth (primary) and interactive (fallback).
+      Auto-auth uses Playwright headless Chromium to log in to Schwab,
+      fill username/password, generate TOTP codes, and exchange the OAuth
+      authorization code — fully unattended. Falls back to the interactive
+      schwabdev browser+paste-URL flow when auto-auth env vars are absent.
 
-    FALLBACK (explicitly approved): if a broker still fails after the
-    prompts, the run continues on the LAST SAVED snapshot, loudly stamped
-    as stale with its as-of date.
+    IBKR: Flex Web Service (primary, token-based, no TWS login) or
+      TWS subprocess (automatic fallback when Flex env vars are absent).
+
+    PREFLIGHTS (user-in-the-loop, only when interactive fallback is active):
+      - Schwab auto-auth: NO preflight — Playwright handles everything.
+      - Schwab interactive: reads refresh_token_issued from tokens.db.
+        Prods user if the 7-day token is near expiry.
+      - IBKR (Flex): NO preflight — the token is stateless.
+      - IBKR (TWS fallback): probes TWS port; launches + prompts if closed.
+
+    FALLBACK (explicitly approved): if a broker still fails, the run
+    continues on the LAST SAVED snapshot, loudly stamped as stale.
 
 DEPENDENCIES:
     - schwabdev, pandas, openpyxl
@@ -102,11 +108,30 @@ def schwab_token_age_s() -> Optional[float]:
     return (now - issued).total_seconds()
 
 
-def preflight_schwab(interactive: bool) -> None:
+def preflight_schwab(interactive: bool, use_auto_auth: bool = False) -> None:
     """
-    Verify the Schwab refresh token is usable; trigger interactive re-auth
-    with the user's consent when it is expired or near expiry.
+    Verify the Schwab refresh token is usable.
+
+    When auto-auth is configured (Playwright + TOTP), this just reports the
+    token age and skips interactive prompts — schwabdev's call_on_auth hook
+    will handle token refresh automatically in headless Chromium.
+
+    When auto-auth is NOT configured, falls back to the original interactive
+    flow (browser window + paste URL).
     """
+    if use_auto_auth:
+        age = schwab_token_age_s()
+        if age is not None:
+            days = age / 86400
+            print(f"  Schwab: auto-auth active, refresh token "
+                  f"{'fresh' if days < 6.5 else 'near expiry'} "
+                  f"({days:.1f} days old)")
+        else:
+            print("  Schwab: auto-auth active, no existing token "
+                  "(will refresh automatically)")
+        return
+
+    # --- Interactive fallback (original behavior) ---
     age = schwab_token_age_s()
     if age is None:
         msg = "Schwab token store missing/unreadable (~/.schwabdev/tokens.db)"
@@ -195,8 +220,14 @@ def preflight_ibkr(interactive: bool, port: int) -> None:
 # ---------------------------------------------------------------------------
 
 def fetch_schwab() -> pd.DataFrame:
-    """Pull all Schwab positions + cash. Returns normalized DataFrame."""
+    """Pull all Schwab positions + cash. Returns normalized DataFrame.
+
+    Tries auto-auth (Playwright) first when SCHWAB_USERNAME/PASSWORD/
+    TOTP_SECRET are set in .env. Falls back to the interactive schwabdev
+    flow (browser + paste URL) if auto-auth is not configured or fails.
+    """
     import schwabdev
+    from schwab_auto import get_auth_function
 
     app_key = os.getenv(SETTINGS["schwab_app_key_env"])
     app_secret = os.getenv(SETTINGS["schwab_app_secret_env"])
@@ -204,7 +235,20 @@ def fetch_schwab() -> pd.DataFrame:
         raise BrokerError(
             "SCHWAB_APP_KEY / SCHWAB_APP_SECRET not set in .env")
 
-    client = schwabdev.Client(app_key, app_secret)
+    # Try auto-auth (Playwright) first
+    client_kwargs = {}
+    auto_auth_available = False
+    try:
+        client_kwargs["call_on_auth"] = get_auth_function()
+        auto_auth_available = True
+        print("  Schwab: auto-auth configured (Playwright + TOTP)")
+    except RuntimeError as e:
+        print(f"  Schwab: auto-auth not configured ({e}), "
+              f"will use interactive flow if needed")
+
+    client = schwabdev.Client(app_key, app_secret, **client_kwargs)
+    if auto_auth_available:
+        print("  Schwab: OAuth flow handled automatically (no prompts)")
     linked = client.linked_accounts().json()
     if not isinstance(linked, list) or not linked:
         raise BrokerError(f"Schwab linked_accounts returned: {linked}")
@@ -410,9 +454,16 @@ def get_holdings(interactive: bool = True) -> Tuple[pd.DataFrame, dict]:
     failures = []
     frames = []
 
+    # Detect auto-auth availability
+    schwab_auto_auth = (
+        bool(os.getenv(SETTINGS["schwab_username_env"]))
+        and bool(os.getenv(SETTINGS["schwab_password_env"]))
+        and bool(os.getenv(SETTINGS["schwab_totp_secret_env"]))
+    )
+
     # --- Schwab ---
     try:
-        preflight_schwab(interactive)
+        preflight_schwab(interactive, use_auto_auth=schwab_auto_auth)
         frames.append(fetch_schwab())
     except (BrokerError, Exception) as e:
         failures.append(f"Schwab: {e}")
