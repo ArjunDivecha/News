@@ -13,14 +13,14 @@ That's it. ~2.5 minutes later you have a PDF.
 
 ## What it does (in 10th-grade English)
 
-1. **Holdings** - Logs into Schwab and Interactive Brokers and downloads
-   every position in every account, live. If Schwab's weekly token has
-   expired it walks you through re-authorizing. If TWS isn't running it
-   launches it and waits for you to log in. If a broker still can't be
-   reached, it uses the last saved snapshot and stamps the report STALE.
-2. **Prices** - Downloads 1 year of daily prices for ~800 ETFs (the whole
-   market universe plus everything you own) from Yahoo Finance in one
-   batched call. Free, no Bloomberg terminal needed.
+1. **Holdings** - Pulls Schwab and IBKR positions automatically. Both
+   brokers can run fully unattended:
+   - **Schwab**: Playwright auto-auth (headless Chromium, TOTP) or
+     interactive OAuth fallback
+   - **IBKR**: Flex Web Service (token-based, no TWS) or TWS subprocess
+     fallback
+2. **Prices** - Downloads 1 year of daily prices for ~800 ETFs from
+   Yahoo Finance in one batched call.
 3. **Analytics** - Computes everything: returns, YTD, volatility, betas,
    factor exposures, per-position contributions (in bps), alpha vs what
    the portfolio's beta predicted, peer-group comparisons, streaks,
@@ -60,7 +60,11 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `config.py` | Every path, constant, window, and model name |
 | `data.py` | Batched yfinance download with loud coverage validation |
 | `holdings.py` | Schwab + IBKR pulls, preflights, stale fallback |
-| `ibkr_fetch.py` | IBKR subprocess (runs under `.venv-ibkr312`, Python 3.12) |
+| `notify.py` | Emails the report PDF (Mail.app or SMTP) |
+| `schwab_auto.py` | Playwright headless OAuth (auto-refresh tokens) |
+| `ibkr_flex.py` | IBKR Flex Web Service HTTP client (no TWS) |
+| `ibkr_fetch.py` | IBKR TWS subprocess (fallback, `.venv-ibkr312`) |
+| `run_daily.sh` | launchd wrapper — runs pipeline + emails |
 | `analytics.py` | ALL financial math (pure functions, fully unit-tested) |
 | `prompt.py` | Builds the LLM data package |
 | `llm.py` | Claude Opus call with extended thinking + retries |
@@ -161,5 +165,63 @@ This is the same behavior as before.
 - `reports` - every report's executive summary is fed back into the next
   report's prompt, so the narrative has memory (it migrated the legacy
   reports' summaries too)
+
+## Automated daily run (launchd — every weekday at 1:05 PM PT)
+
+The report fires automatically after market close. No manual steps after
+initial setup.
+
+### One-time setup (2 minutes)
+
+**1. Set your email in `.env`:**
+```
+REPORT_EMAIL_TO=<your-email@example.com>
+```
+
+That's it for zero-config. The automation uses your existing Mac Mail.app
+account — no SMTP credentials needed. For SMTP (Gmail, Fastmail, etc.),
+add the optional `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` variables.
+
+**2. Load the launchd job:**
+```bash
+launchctl load ~/Library/LaunchAgents/com.news.daily-report.plist
+```
+
+**3. Verify it's scheduled:**
+```bash
+launchctl list | grep com.news.daily-report
+```
+
+### What happens every weekday at 1:05 PM PT
+
+1. `launchd` fires `report/run_daily.sh`
+2. The wrapper runs `python3 report/main.py --non-interactive`
+3. Pipeline: holdings → prices → analytics → LLM report → PDF
+4. `report/notify.py` emails you the PDF
+5. Everything logged to `outputs/unified/daily_run.log`
+
+### If something fails
+- Check `outputs/unified/daily_run.log` for the full trace
+- `launchctl error` shows launchd-level error codes
+- The job won't retry automatically — if you miss a day, run
+  `python3 report/main.py` manually
+
+### Troubleshooting
+```bash
+# Stop the schedule
+launchctl unload ~/Library/LaunchAgents/com.news.daily-report.plist
+
+# Restart
+launchctl load ~/Library/LaunchAgents/com.news.daily-report.plist
+
+# Check if running
+launchctl list com.news.daily-report
+
+# Manual run (same as what launchd does)
+./report/run_daily.sh
+
+# Last 50 lines of the log
+tail -50 outputs/unified/daily_run.log
+```
 
 VERSION: 1.0 (2026-06-09) - initial release on the `rearchitect` branch

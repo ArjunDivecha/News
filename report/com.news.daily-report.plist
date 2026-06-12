@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.news.daily-report</string>
+
+    <key>Program</key>
+    <string>/Users/arjundivecha/Dropbox/AAA Backup/A Working/News/report/run_daily.sh</string>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/arjundivecha/Dropbox/AAA Backup/A Working/News</string>
+
+    <!-- Run weekdays (Mon-Fri) at 1:05 PM Pacific -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>13</integer>
+        <key>Minute</key>
+        <integer>5</integer>
+        <key>Weekday</key>
+        <integer>12345</integer>  <!-- Mon=1 through Fri=5 -->
+    </dict>
+
+    <!-- Launch on boot if the machine was off at schedule time -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- Standard I/O goes to the log file -->
+    <key>StandardOutPath</key>
+    <string>/Users/arjundivecha/Dropbox/AAA Backup/A Working/News/outputs/unified/launchd_stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/arjundivecha/Dropbox/AAA Backup/A Working/News/outputs/unified/launchd_stderr.log</string>
+
+    <!-- Keep the job alive; launchd will not restart if it exits cleanly -->
+    <key>KeepAlive</key>
+    <false/>
+
+    <!-- Nice the process so it doesn't hog CPU -->
+    <key>Nice</key>
+    <integer>10</integer>
+</dict>
+</plist>
