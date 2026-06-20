@@ -37,7 +37,7 @@ import sys
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=7496)
+    parser.add_argument("--port", type=int, default=4002)
     parser.add_argument("--client-id", type=int, default=103)
     parser.add_argument("--wait", type=float, default=3.0,
                         help="Seconds to allow portfolio updates to settle")

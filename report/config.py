@@ -55,6 +55,8 @@ PATHS = {
     # Legacy databases (read-only, used by migrate_history.py; archived 2026-06-10)
     "legacy_market_db": ROOT_DIR / "archive" / "Step 4 Report Generation" / "database" / "market_data.db",
     "legacy_portfolio_db": ROOT_DIR / "archive" / "Phase 2 Portfolio Reports" / "database" / "portfolio.db",
+    # GMO holdings (static positions with tickers, updated manually)
+    "gmo_xlsx": ROOT_DIR / "GMO.xlsx",
     # Legacy holdings file (stale-fallback seed for first run)
     "legacy_client_xlsx": ROOT_DIR / "Client.xlsx",
     # IBKR fetch runs in its own interpreter (ib_insync needs Python 3.12)
@@ -87,6 +89,28 @@ FACTORS = {
 # ---------------------------------------------------------------------------
 # Analytics & pipeline settings
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Sub-portfolio labels — maps (broker, account_number) to a friendly name.
+# Update these when accounts change. Unlisted accounts show as "broker account".
+# ---------------------------------------------------------------------------
+ACCOUNT_NAMES = {
+    ("Schwab", "12790167"): "Country Value",
+    ("Schwab", "28739966"): "Schwab Main",
+    ("Schwab", "28739970"): "IRA Mom",
+    ("Schwab", "36563696"): "Muni",
+    ("Schwab", "36959647"): "Dancing Elephant",
+    ("Schwab", "50913476"): "Schwab 50913476",
+    ("Schwab", "76705090"): "Country Momentum",
+    ("IBKR", "U1399611"): "IBKR Main",
+    ("IBKR", "U14983106"): "IBKR Experiment",
+    ("IBKR", "U24887919"): "IBKR Trading",
+}
+
+# ---------------------------------------------------------------------------
+# Cash-equivalent symbols — treated as cash in analytics (no return computed)
+# ---------------------------------------------------------------------------
+CASH_EQUIVALENTS = {"CASH", "SNSXX", "SNAXX"}
+
 SETTINGS = {
     # Price fetch
     "fetch_period": "1y",            # always refetch 1y; idempotent upsert self-heals gaps
@@ -108,8 +132,8 @@ SETTINGS = {
     # Set both in .env to skip TWS entirely:
     "ibkr_flex_token_env": "IBKR_FLEX_TOKEN",
     "ibkr_flex_query_id_env": "IBKR_FLEX_QUERY_ID",
-    # TWS fallback (only used when Flex env vars are absent)
-    "ibkr_port": 7496,
+    # IB Gateway API port (live=4002, paper=4001; override with IBKR_GATEWAY_PORT)
+    "ibkr_port": int(os.getenv("IBKR_GATEWAY_PORT", "4002")),
     "ibkr_client_id": 103,
     "schwab_app_key_env": "SCHWAB_APP_KEY",
     "schwab_app_secret_env": "SCHWAB_APP_SECRET",

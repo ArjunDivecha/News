@@ -50,7 +50,8 @@ def _md_table(df: pd.DataFrame, float_fmt: str = "{:.2f}") -> str:
 
 def build_data_package(market: dict, portfolio: dict, bridge: dict,
                        history: pd.DataFrame, prior_summaries: pd.DataFrame,
-                       holdings_meta: dict) -> str:
+                       holdings_meta: dict,
+                       subportfolios: pd.DataFrame = None) -> str:
     """Assemble the full user-message data package for the LLM."""
     parts = []
     asof = market["asof"]
@@ -147,6 +148,26 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                                         "market_value_mtm": "value_usd"})
     parts.append("\n## ALL POSITIONS (weight % of gross; contribution in bps)")
     parts.append(_md_table(pos_show.set_index("symbol")))
+
+    # ---------------- sub-portfolios ----------------
+    if subportfolios is not None and not subportfolios.empty:
+        parts.append("\n## SUB-PORTFOLIO RETURNS (per account + GMO)")
+        sp = subportfolios.copy()
+        sp = sp[sp["total_value"].abs() > 100]
+        sp["pnl_1d"] = sp.apply(
+            lambda r: r["total_value"] * r["return_1d"] / 100.0
+            if pd.notna(r["return_1d"]) else float("nan"), axis=1)
+        sp["pnl_1d"] = sp["pnl_1d"].map(
+            lambda v: f"${v:+,.0f}" if pd.notna(v) else "n/a")
+        sp["total_value"] = sp["total_value"].map(lambda v: f"${v:,.0f}")
+        sp["return_1d"] = sp["return_1d"].map(
+            lambda v: f"{v:+.2f}%" if pd.notna(v) else "n/a")
+        sp["return_ytd"] = sp["return_ytd"].map(
+            lambda v: f"{v:+.2f}%" if pd.notna(v) else "n/a")
+        show = sp[["name", "total_value", "return_1d", "pnl_1d", "return_ytd"]]
+        show = show.rename(columns={"total_value": "value", "return_1d": "1d %",
+                                     "pnl_1d": "1d $", "return_ytd": "YTD %"})
+        parts.append(show.set_index("name").to_markdown())
 
     parts.append("\n## PORTFOLIO FACTOR EXPOSURE (beta-weighted)")
     parts.append(_md_table(portfolio["factor_exposure"].set_index("factor")))

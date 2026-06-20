@@ -61,6 +61,40 @@ import pdf as pdf_mod
 import prompt as prompt_mod
 
 
+def _load_gmo() -> pd.DataFrame:
+    """Load GMO holdings from GMO.xlsx into the standard holdings format."""
+    gmo_path = PATHS.get("gmo_xlsx")
+    if not gmo_path or not gmo_path.exists():
+        return pd.DataFrame()
+    raw = pd.read_excel(gmo_path)
+    ticker_col = "Ticker.1" if "Ticker.1" in raw.columns else "Ticker"
+    rows = []
+    for _, r in raw.iterrows():
+        ticker = str(r.get(ticker_col, "")).strip()
+        if not ticker or ticker == "nan":
+            continue
+        # Strip "ISIN " prefix so "ISIN IE00BF199475" becomes "IE00BF199475"
+        # Handle non-breaking spaces (\xa0) from Excel
+        ticker = ticker.replace("\xa0", " ")
+        if ticker.upper().startswith("ISIN "):
+            ticker = ticker[5:].strip()
+        qty = float(r.get("Shares", 0) or 0)
+        mv = float(r.get("Value", 0) or 0)
+        avg = float(r.get("AvgCost", 0) or 0)
+        pnl = float(r.get("USD P&L", 0) or 0)
+        px = r.get("PX_LAST", 0)
+        px = float(px) if pd.notna(px) else 0.0
+        is_cash = (abs(avg - 1.0) < 0.01 and abs(px - 1.0) < 0.01)
+        rows.append({
+            "account": "GMO", "symbol": "CASH" if is_cash else ticker,
+            "quantity": qty, "avg_price": avg if avg else float("nan"),
+            "market_value": mv if mv else float("nan"),
+            "open_pnl": pnl,
+            "broker": "GMO", "fetched_at": "",
+        })
+    return pd.DataFrame(rows)
+
+
 def run(no_llm: bool = False, interactive: bool = True,
         asof: str = None) -> dict:
     t_start = time.time()
@@ -80,7 +114,9 @@ def run(no_llm: bool = False, interactive: bool = True,
     universe = data_mod.load_universe()
     db.sync_assets(universe)
     holding_syms = holdings_mod.priceable_symbols(holdings_df)
-    all_tickers = sorted(set(universe["yf_ticker"]) | set(holding_syms))
+    gmo_df = _load_gmo()
+    gmo_syms = holdings_mod.priceable_symbols(gmo_df) if not gmo_df.empty else []
+    all_tickers = sorted(set(universe["yf_ticker"]) | set(holding_syms) | set(gmo_syms))
     long_df = data_mod.fetch_prices(all_tickers)
     data_mod.store_prices(long_df)
     prices = db.load_prices()
@@ -93,6 +129,14 @@ def run(no_llm: bool = False, interactive: bool = True,
     portfolio = analytics.compute_portfolio(
         holdings_df, prices, asof, holdings_stale=holdings_meta["stale"])
     bridge = analytics.compute_bridge(market, portfolio)
+
+    # Sub-portfolio returns (per-account + GMO)
+    gmo_df = _load_gmo()
+    subportfolios = analytics.compute_subportfolios(
+        holdings_df, prices, asof, gmo_holdings=gmo_df)
+    n_subs = len(subportfolios)
+    print(f"  Sub-portfolios: {n_subs} accounts computed")
+
     s = portfolio["summary"]
     print(f"  Market: {market['data_quality']['n_priced_today']} assets priced "
           f"({market['data_quality']['coverage_pct']}%)")
@@ -117,7 +161,8 @@ def run(no_llm: bool = False, interactive: bool = True,
     history = db.get_portfolio_history(30)
     prior = db.get_prior_summaries(asof, SETTINGS["continuity_days"])
     package = prompt_mod.build_data_package(
-        market, portfolio, bridge, history, prior, holdings_meta)
+        market, portfolio, bridge, history, prior, holdings_meta,
+        subportfolios=subportfolios)
     pkg_path = PATHS["output_dir"] / f"Data_Package_{asof}.md"
     pkg_path.write_text(package)
     print(f"  Data package: {len(package):,} chars -> {pkg_path}")

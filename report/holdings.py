@@ -10,7 +10,7 @@ INPUT FILES:
       SCHWAB_PASSWORD, SCHWAB_TOTP_SECRET → Playwright headless OAuth)
     - Schwab interactive fallback      (when auto-auth creds are absent)
     - IBKR Flex Web Service            (primary: HTTPS API, token-based, no TWS)
-    - IBKR TWS/Gateway on 127.0.0.1   (fallback: via report/ibkr_fetch.py subprocess)
+    - IBKR Gateway on 127.0.0.1        (fallback: via report/ibkr_fetch.py subprocess)
     - data/holdings.xlsx              (previous snapshot, stale fallback)
     - Client.xlsx                     (legacy snapshot, first-run fallback)
 
@@ -32,15 +32,15 @@ DESCRIPTION:
       authorization code — fully unattended. Falls back to the interactive
       schwabdev browser+paste-URL flow when auto-auth env vars are absent.
 
-    IBKR: Flex Web Service (primary, token-based, no TWS login) or
-      TWS subprocess (automatic fallback when Flex env vars are absent).
+    IBKR: Flex Web Service (primary, token-based, no Gateway login) or
+      IB Gateway subprocess (automatic fallback when Flex env vars are absent).
 
     PREFLIGHTS (user-in-the-loop, only when interactive fallback is active):
       - Schwab auto-auth: NO preflight — Playwright handles everything.
       - Schwab interactive: reads refresh_token_issued from tokens.db.
         Prods user if the 7-day token is near expiry.
       - IBKR (Flex): NO preflight — the token is stateless.
-      - IBKR (TWS fallback): probes TWS port; launches + prompts if closed.
+      - IBKR (Gateway fallback): probes Gateway port; launches + prompts if closed.
 
     FALLBACK (explicitly approved): if a broker still fails, the run
     continues on the LAST SAVED snapshot, loudly stamped as stale.
@@ -167,9 +167,9 @@ def ibkr_port_open(port: int, timeout: float = 2.0) -> bool:
         return False
 
 
-def _try_launch_tws() -> bool:
-    """Try to launch TWS/IB Gateway on macOS. Returns True if launched."""
-    candidates = ["Trader Workstation", "IB Gateway", "Trader Workstation 10"]
+def _try_launch_gateway() -> bool:
+    """Try to launch IB Gateway (preferred) or TWS on macOS. Returns True if launched."""
+    candidates = ["IB Gateway", "IB Gateway 10.47", "Trader Workstation", "Trader Workstation 10"]
     for app in candidates:
         result = subprocess.run(["open", "-a", app], capture_output=True)
         if result.returncode == 0:
@@ -180,38 +180,37 @@ def _try_launch_tws() -> bool:
 
 def preflight_ibkr(interactive: bool, port: int) -> None:
     """
-    Verify TWS/Gateway is reachable; launch it and prompt the user to log
+    Verify IB Gateway is reachable; launch it and prompt the user to log
     in when it is not.
     """
     if ibkr_port_open(port):
         print(f"  IBKR API port {port} reachable")
         return
 
-    msg = f"IBKR TWS/Gateway not reachable on 127.0.0.1:{port}"
+    msg = f"IBKR Gateway not reachable on 127.0.0.1:{port}"
     if not interactive:
         raise BrokerError(msg + " and run is non-interactive")
 
     print(f"\n  !! {msg}")
-    launched = _try_launch_tws()
+    launched = _try_launch_gateway()
     if not launched:
-        print("  Could not auto-launch TWS. Please start TWS or IB Gateway "
+        print("  Could not auto-launch IB Gateway. Please start it "
               "manually and log in.")
 
     for attempt in range(1, 11):
         answer = input(
-            f"  [{attempt}/10] Press Enter once TWS is logged in "
+            f"  [{attempt}/10] Press Enter once IB Gateway is logged in "
             f"(API port {port}), or type 'skip' to fall back to stale "
             f"holdings: ").strip().lower()
         if answer == "skip":
             raise BrokerError("User chose to skip IBKR connection")
-        # TWS needs a few seconds after login before the API socket opens
         for _ in range(10):
             if ibkr_port_open(port):
                 print("  IBKR API port is now reachable")
                 return
             time.sleep(2)
-        print("  Port still closed - is the API enabled in TWS "
-              "(File > Global Configuration > API > Settings)?")
+        print("  Port still closed - is the API enabled in IB Gateway "
+              "(Configure > Settings > API > Settings)?")
     raise BrokerError("IBKR port never became reachable")
 
 
@@ -314,17 +313,17 @@ def fetch_schwab() -> pd.DataFrame:
 def fetch_ibkr(port: int, flex_token: Optional[str] = None,
                flex_query_id: Optional[str] = None) -> pd.DataFrame:
     """
-    Pull IBKR positions: Flex Web Service (primary) or TWS subprocess (fallback).
+    Pull IBKR positions: Flex Web Service (primary) or IB Gateway subprocess (fallback).
 
     Flex is tried first when a token + query ID are provided. If Flex
-    succeeds, TWS is never touched. If Flex env vars are not set, the
-    TWS subprocess is used as before. If Flex is configured but fails
-    (e.g. expired token), we DO NOT fall back to TWS — the token should work,
+    succeeds, Gateway is never touched. If Flex env vars are not set, the
+    Gateway subprocess is used. If Flex is configured but fails
+    (e.g. expired token), we DO NOT fall back to Gateway — the token should work,
     and a single failing path means a stale-fallback per the design rule.
     """
     use_flex = bool(flex_token and flex_query_id)
     if not use_flex:
-        return _fetch_ibkr_tws(port)
+        return _fetch_ibkr_gateway(port)
 
     from ibkr_flex import fetch_positions
     try:
@@ -333,8 +332,8 @@ def fetch_ibkr(port: int, flex_token: Optional[str] = None,
         raise BrokerError(f"IBKR Flex Web Service failed: {e}")
 
 
-def _fetch_ibkr_tws(port: int) -> pd.DataFrame:
-    """Pull all IBKR positions + cash via the 3.12-venv subprocess."""
+def _fetch_ibkr_gateway(port: int) -> pd.DataFrame:
+    """Pull all IBKR positions + cash via the 3.12-venv subprocess (IB Gateway)."""
     py = PATHS["ibkr_python"]
     if not py.exists():
         raise BrokerError(f"IBKR Python interpreter not found: {py}")
@@ -378,7 +377,7 @@ def _fetch_ibkr_tws(port: int) -> pd.DataFrame:
         })
     if not rows:
         raise BrokerError("IBKR returned zero positions")
-    print(f"  IBKR: {len(rows)} rows via TWS subprocess")
+    print(f"  IBKR: {len(rows)} rows via Gateway subprocess")
     return pd.DataFrame(rows)
 
 
@@ -391,7 +390,7 @@ def priceable_symbols(holdings_df: pd.DataFrame) -> list:
     import re
     out = []
     for s in holdings_df["symbol"].astype(str).str.strip().unique():
-        if not s or s in ("CASH", "UNKNOWN", "nan", "None"):
+        if not s or s in ("CASH", "SNSXX", "SNAXX", "UNKNOWN", "nan", "None"):
             continue
         if re.search(r"\.(FUT|OPT|FOP|BOND|WAR|CASH)$", s):
             continue
@@ -481,7 +480,7 @@ def get_holdings(interactive: bool = True) -> Tuple[pd.DataFrame, dict]:
             frames.append(fetch_ibkr(
                 port, flex_token=flex_token, flex_query_id=flex_query_id))
         else:
-            print("  IBKR: Flex not configured, falling back to TWS...")
+            print("  IBKR: Flex not configured, falling back to Gateway...")
             preflight_ibkr(interactive, port)
             frames.append(fetch_ibkr(port))
     except (BrokerError, Exception) as e:

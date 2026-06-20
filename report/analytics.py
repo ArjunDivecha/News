@@ -49,7 +49,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from config import FACTORS, SETTINGS
+from config import FACTORS, SETTINGS, ACCOUNT_NAMES, CASH_EQUIVALENTS
 
 TRADING_DAYS = 252
 
@@ -280,7 +280,7 @@ def aggregate_holdings(raw: pd.DataFrame) -> pd.DataFrame:
     """
     df = raw.copy()
     df["symbol"] = df["symbol"].astype(str).str.strip()
-    df["is_cash"] = df["symbol"].eq("CASH")
+    df["is_cash"] = df["symbol"].isin(CASH_EQUIVALENTS)
 
     def agg(group: pd.DataFrame) -> pd.Series:
         mv = group["market_value"].sum(min_count=1)
@@ -437,6 +437,143 @@ def compute_portfolio(holdings: pd.DataFrame, prices: pd.DataFrame,
         "summary": summary,
         "factor_exposure": factor_exposure,
         "data_quality": data_quality,
+    }
+
+
+# ===========================================================================
+# Sub-portfolio analytics (per-account returns)
+# ===========================================================================
+
+def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
+                          asof: Optional[str] = None,
+                          gmo_holdings: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    """
+    Compute daily and YTD return for each sub-portfolio (broker × account),
+    plus GMO if provided.
+
+    Returns a DataFrame with one row per sub-portfolio:
+        name, broker, account, n_positions, total_value, cash,
+        return_1d (%), return_ytd (%), long_value, short_value
+    """
+    prices = prices.sort_index()
+    asof = asof or str(prices.index[-1])
+    prices = prices.loc[prices.index <= asof]
+    rets = daily_returns(prices)
+    ytd = ytd_return(prices, asof)
+
+    last_close = prices.iloc[-1]
+    prev_price = (prices.iloc[-2] if len(prices) >= 2
+                  else pd.Series(dtype=float))
+
+    results = []
+
+    groups = raw_holdings.groupby(["broker", "account"], sort=False)
+    for (broker, acct), grp in groups:
+        label = ACCOUNT_NAMES.get((broker, str(acct)), f"{broker} {acct}")
+        res = _subportfolio_returns(grp, rets, ytd, prev_price, last_close,
+                                    label, broker, str(acct))
+        results.append(res)
+
+    if gmo_holdings is not None and not gmo_holdings.empty:
+        res = _subportfolio_returns(gmo_holdings, rets, ytd, prev_price, last_close,
+                                    "GMO", "GMO", "GMO")
+        results.append(res)
+
+    out = pd.DataFrame(results)
+
+    # Add a total row (value-weighted returns)
+    if not out.empty:
+        total_val = out["total_value"].sum()
+        total_long = out["long_value"].sum()
+        total_short = out["short_value"].sum()
+        total_cash = out["cash"].sum()
+        total_pos = int(out["n_positions"].sum())
+        # Value-weight the daily and YTD returns across sub-portfolios
+        valid_1d = out.dropna(subset=["return_1d"])
+        if not valid_1d.empty and valid_1d["total_value"].abs().sum() > 0:
+            w = valid_1d["total_value"] / valid_1d["total_value"].sum()
+            total_1d = (w * valid_1d["return_1d"]).sum()
+        else:
+            total_1d = np.nan
+        valid_ytd = out.dropna(subset=["return_ytd"])
+        if not valid_ytd.empty and valid_ytd["total_value"].abs().sum() > 0:
+            w = valid_ytd["total_value"] / valid_ytd["total_value"].sum()
+            total_ytd = (w * valid_ytd["return_ytd"]).sum()
+        else:
+            total_ytd = np.nan
+        total_row = pd.DataFrame([{
+            "name": "TOTAL", "broker": "", "account": "",
+            "n_positions": total_pos, "total_value": total_val,
+            "cash": total_cash, "long_value": total_long,
+            "short_value": total_short,
+            "return_1d": total_1d, "return_ytd": total_ytd,
+        }])
+        out = pd.concat([out, total_row], ignore_index=True)
+
+    return out
+
+
+def _subportfolio_returns(positions: pd.DataFrame, rets: pd.DataFrame,
+                          ytd: pd.Series, prev_price: pd.Series,
+                          last_close: pd.Series,
+                          label: str, broker: str, account: str) -> dict:
+    """Compute return metrics for a single sub-portfolio."""
+    df = positions.copy()
+    df["symbol"] = df["symbol"].astype(str).str.strip()
+    is_cash = df["symbol"].isin(CASH_EQUIVALENTS)
+    cash_val = df.loc[is_cash, "market_value"].sum()
+    pos = df[~is_cash].copy()
+
+    if pos.empty:
+        return {
+            "name": label, "broker": broker, "account": account,
+            "n_positions": 0, "total_value": cash_val, "cash": cash_val,
+            "long_value": 0.0, "short_value": 0.0,
+            "return_1d": 0.0, "return_ytd": 0.0,
+        }
+
+    last_ret = rets.iloc[-1] if not rets.empty else pd.Series(dtype=float)
+    pos["return_1d"] = pos["symbol"].map(last_ret)
+    pos["return_ytd"] = pos["symbol"].map(ytd)
+
+    # Mark-to-market: use price × quantity where available, else broker value
+    pos["price"] = pos["symbol"].map(last_close)
+    pos["mtm"] = np.where(pos["price"].notna(),
+                          pos["quantity"] * pos["price"],
+                          pos["market_value"])
+    mv = pos["mtm"]
+    long_val = mv[mv > 0].sum()
+    short_val = mv[mv < 0].sum()
+    gross = mv.abs().sum()
+
+    prev = pos["symbol"].map(prev_price)
+    pos["value_bod"] = np.where(prev.notna() & pos["return_1d"].notna(),
+                                 pos["quantity"] * prev, np.nan)
+    gross_bod = pos["value_bod"].abs().sum()
+
+    if gross_bod > 0:
+        pos["weight_bod"] = pos["value_bod"] / gross_bod
+        pos["contrib"] = pos["weight_bod"] * pos["return_1d"] * 100.0
+        ret_1d = pos["contrib"].sum() / 100.0
+    else:
+        ret_1d = np.nan
+
+    if gross > 0:
+        pos["weight"] = mv / gross
+        priced_ytd = pos.dropna(subset=["return_ytd"])
+        ret_ytd = (priced_ytd["weight"] * priced_ytd["return_ytd"]).sum()
+    else:
+        ret_ytd = np.nan
+
+    return {
+        "name": label, "broker": broker, "account": account,
+        "n_positions": len(pos),
+        "total_value": long_val + short_val + cash_val,
+        "cash": cash_val,
+        "long_value": long_val,
+        "short_value": short_val,
+        "return_1d": ret_1d,
+        "return_ytd": ret_ytd,
     }
 
 
