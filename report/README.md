@@ -67,8 +67,8 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `run_daily.sh` | launchd wrapper — runs pipeline + emails |
 | `analytics.py` | ALL financial math (pure functions, fully unit-tested) |
 | `prompt.py` | Builds the LLM data package |
-| `llm.py` | Claude Opus call with extended thinking + retries |
-| `pdf.py` | Markdown -> HTML -> PDF (PrinceXML, light mode) |
+| `llm.py` | Claude Opus **streaming** call (adaptive thinking) + truncation guard |
+| `pdf.py` | Markdown -> HTML -> PDF (PrinceXML, light mode) + table validation |
 | `db.py` | SQLite layer (WAL, idempotent upserts) |
 | `prompts/system.md` | The system prompt (the report's "personality") |
 | `build_universe.py` | One-time: builds `data/universe.xlsx` |
@@ -78,14 +78,49 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 ## Tests
 
 ```bash
-python3 -m pytest tests/ -v     # 25 tests on the financial math
+python3 -m pytest tests/ -v     # 35 tests (financial math + report pipeline)
 ```
 
-The tests lock down the exact bugs found in the legacy system review:
+`test_analytics.py` locks down the exact bugs found in the legacy system review:
 short positions contribute positively when prices fall, contributions are
 in bps (no double scaling), missing prices can't poison portfolio totals,
 YTD anchors to the prior year's last close, and the sum of contributions
 ties out EXACTLY to dollar P&L over beginning-of-day gross.
+
+`test_report_pipeline.py` locks down the 2026-06-20 review fixes (below):
+the PDF table validator rejects a truncated report, the data package emits a
+summary table + breadth + proxy/scope labels, `compute_bridge` backfills
+tier-2 (and labels off-universe names "Portfolio-Specific"), and percentiles
+are integer-valued with sparse-data masking.
+
+## Report-writing hardening (2026-06-20 review)
+
+A multi-agent review found the 2026-06-18 report was **silently truncated** —
+the LLM output hit the exact `max_tokens` ceiling (32000) mid-table, dropping
+Risks & Watchlist and Bottom Line, and it was saved + emailed with no error.
+Fixes:
+
+- **Token budget + streaming** (`config.py`, `llm.py`): `max_tokens` raised to
+  64000 (opus-4-8 allows 128000), `thinking_effort` stays `max`. The call now
+  **streams** (`messages.stream` + `get_final_message`) so the multi-minute
+  generation doesn't trip the SDK's non-streaming timeout guard.
+- **Fail-loud truncation guard** (`llm.py`): a `stop_reason == "max_tokens"`
+  raises a non-retryable `ReportTruncatedError` — a partial report is never
+  saved or rendered (FAIL IS FAIL).
+- **PDF table validation** (`pdf.py`): every markdown table's rows are checked
+  against the header before rendering; a malformed/truncated table raises
+  rather than producing a broken PDF. `smarty` dropped (no `--`->en-dash).
+- **Data package** (`prompt.py`): portfolio summary is now a table; YTD is
+  labelled a current-weights proxy; the sub-portfolio total is "HOUSEHOLD
+  TOTAL" (incl. GMO) vs the live-only book; a PORTFOLIO BREADTH block and a
+  factor-overlap caveat were added; prior exec summaries are stripped to prose
+  and tagged with "N days ago".
+- **Analytics** (`analytics.py`): `compute_bridge` backfills tier-2 peer labels
+  from the full universe and reports breadth; percentiles are integer + masked
+  when sparse.
+- **System prompt** (`prompts/system.md`): requires the alpha caveat when the
+  book's tilt diverges from SPY, a verbatim STALE-first-sentence rule, and a
+  completeness rule (all seven sections, never truncate).
 
 ## Conventions (uniform everywhere)
 

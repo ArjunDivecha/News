@@ -128,7 +128,7 @@ def run(no_llm: bool = False, interactive: bool = True,
     market = analytics.compute_market(prices, universe, asof)
     portfolio = analytics.compute_portfolio(
         holdings_df, prices, asof, holdings_stale=holdings_meta["stale"])
-    bridge = analytics.compute_bridge(market, portfolio)
+    bridge = analytics.compute_bridge(market, portfolio, universe=universe)
 
     # Sub-portfolio returns (per-account + GMO)
     gmo_df = _load_gmo()

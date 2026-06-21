@@ -34,6 +34,7 @@ USAGE:
 =============================================================================
 """
 
+import html
 import subprocess
 import sys
 from pathlib import Path
@@ -247,17 +248,75 @@ def _format_date_display(date: str) -> str:
         return date
 
 
-def _post_process_html(html: str) -> str:
+def _validate_report_tables(report_md: str) -> None:
+    """
+    FAIL IS FAIL: catch a truncated/malformed report BEFORE it renders to a
+    broken PDF. Scans every markdown table and asserts each data row has the
+    same column count as its header row. A report truncated mid-table (as on
+    2026-06-18, which ended at the bare cell "| Reg") trips this immediately.
+
+    This is a second safety net behind llm.py's stop_reason check - it also
+    catches malformed tables that arise for any other reason.
+
+    Raises RuntimeError on the first bad table.
+    """
+    def ncols(row: str) -> int:
+        s = row.strip()
+        if s.startswith("|"):
+            s = s[1:]
+        if s.endswith("|"):
+            s = s[:-1]
+        return len(s.split("|"))
+
+    def is_separator(row: str) -> bool:
+        s = row.strip()
+        if "|" not in s or "-" not in s:
+            return False
+        # after dropping table punctuation a separator row is empty
+        return set(s.replace("|", "").replace(":", "")
+                   .replace("-", "").strip()) == set()
+
+    lines = report_md.splitlines()
+    n = len(lines)
+    i = 0
+    while i < n - 1:
+        header = lines[i].strip()
+        nxt = lines[i + 1].strip()
+        if header.startswith("|") and is_separator(nxt):
+            header_cols = ncols(header)
+            j = i + 2
+            while j < n and lines[j].strip().startswith("|"):
+                row = lines[j].strip()
+                if ncols(row) != header_cols:
+                    raise RuntimeError(
+                        f"Malformed report table near line {j + 1}: data row "
+                        f"has {ncols(row)} cells, header has {header_cols}. "
+                        f"The report is likely truncated or corrupted; "
+                        f"refusing to render a broken PDF.\n"
+                        f"  header: {header}\n  row:    {row}")
+                j += 1
+            i = j
+        else:
+            i += 1
+
+
+def _post_process_html(html_str: str) -> str:
     """
     Post-process the rendered HTML to add Tufte-inspired enhancements:
     - Wrap the first paragraph after Executive Summary h2 in a gold callout
+    Warns (does not fail) if the callout anchor is not found, so a silently
+    missing callout is visible in the run log.
     """
     # Find the Executive Summary section and wrap its first <p> in a callout
     import re
     pattern = r'(<h2[^>]*>Executive Summary</h2>\s*)((<p>.*?</p>))'
     replacement = r'\1<div class="exec-callout">\3</div>'
-    html = re.sub(pattern, replacement, html, count=1, flags=re.DOTALL)
-    return html
+    new_html = re.sub(pattern, replacement, html_str, count=1, flags=re.DOTALL)
+    if new_html == html_str:
+        print("  WARNING: exec-callout anchor not found (no '## Executive "
+              "Summary' h2 immediately followed by a <p>); rendering without "
+              "the gold callout box.")
+    return new_html
 
 
 def render_pdf(report_md: str, date: str, generated: str, model: str,
@@ -275,24 +334,29 @@ def render_pdf(report_md: str, date: str, generated: str, model: str,
     html_path = base.with_suffix(".html")
     pdf_path = base.with_suffix(".pdf")
 
-    # 1. markdown (the canonical artifact - never lost)
+    # 1. markdown (the canonical artifact - never lost; written BEFORE any
+    #    validation so a malformed report is still preserved on disk)
     md_path.write_text(report_md)
 
-    # 2. html
-    body = md_lib.markdown(report_md, extensions=["tables", "smarty"])
-    banner = (f'<div class="stale-banner">STALE HOLDINGS &mdash; {stale_msg}</div>'
-              if stale else "")
+    # 1b. FAIL IS FAIL: refuse to render a truncated/malformed report to PDF
+    _validate_report_tables(report_md)
+
+    # 2. html  (no "smarty" extension: it silently rewrites -- to en-dashes,
+    #    which would corrupt any numeric range/value that uses --)
+    body = md_lib.markdown(report_md, extensions=["tables"])
+    banner = (f'<div class="stale-banner">STALE HOLDINGS &mdash; '
+              f'{html.escape(stale_msg)}</div>' if stale else "")
     date_display = _format_date_display(date)
-    html = HTML_TEMPLATE.format(
+    html_doc = HTML_TEMPLATE.format(
         title=f"Daily Market &amp; Portfolio Report &mdash; {date}",
         css=CSS, generated=generated, model=model,
         date_display=date_display,
         stale_banner=banner, body=body)
 
     # Post-process for callout boxes
-    html = _post_process_html(html)
+    html_doc = _post_process_html(html_doc)
 
-    html_path.write_text(html)
+    html_path.write_text(html_doc)
 
     # 3. pdf via Prince
     result = subprocess.run(

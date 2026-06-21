@@ -107,14 +107,19 @@ def annualized_vol(returns: pd.DataFrame, window: int = None) -> pd.Series:
 def return_percentile(returns: pd.DataFrame, window: int = None) -> pd.Series:
     """
     Percentile rank (0-100) of the latest daily return within each ticker's
-    own trailing window. 100 = best day of the window.
+    own trailing window. 100 = best day of the window. Rounded to an integer
+    (a 60-day window has ~1.7% granularity, so decimals are false precision)
+    and masked to NaN when there are too few observations to trust the rank
+    (same rigor annualized_vol already applies).
     """
     window = window or SETTINGS["percentile_window"]
     r = returns.tail(window)
     latest = r.iloc[-1]
-    rank = (r.lt(latest, axis=1).sum() / r.notna().sum().clip(lower=1)) * 100.0
+    counts = r.notna().sum()
+    rank = (r.lt(latest, axis=1).sum() / counts.clip(lower=1)) * 100.0
     rank[latest.isna()] = np.nan
-    return rank
+    rank[counts < window // 2] = np.nan       # not enough data to trust
+    return rank.round(0)
 
 
 def beta_vs(returns: pd.DataFrame, factor_returns: pd.Series,
@@ -581,25 +586,45 @@ def _subportfolio_returns(positions: pd.DataFrame, rets: pd.DataFrame,
 # The bridge: market <-> portfolio connection
 # ===========================================================================
 
-def compute_bridge(market: dict, portfolio: dict) -> dict:
+def compute_bridge(market: dict, portfolio: dict,
+                   universe: Optional[pd.DataFrame] = None) -> dict:
     """
     Connect today's market action to the portfolio:
       - per-position attribution vs its tier-2 peer group
       - which market themes the portfolio is exposed to / missing
+      - portfolio breadth (how many positions rose / beat their peer group)
+
+    tier-2 labels are taken from the priced asset table first, then backfilled
+    from the FULL universe (so a held name that is in the universe but happened
+    to be unpriced today still gets its peer group). Held names that are not in
+    the universe at all are labelled "Portfolio-Specific" - no synthetic peer
+    group is invented for them.
     """
     pos = portfolio["positions"]
     asset = market["asset_table"]
+
+    # Full-universe tier-2 lookup (covers universe names missing from the
+    # priced asset table). asset_table already carries tier2 for priced names.
+    uni_tier2 = {}
+    if universe is not None and not universe.empty \
+            and "yf_ticker" in universe and "tier2" in universe:
+        uni_tier2 = (universe.dropna(subset=["tier2"])
+                     .set_index("yf_ticker")["tier2"].to_dict())
 
     rows = []
     for sym, p in pos.iterrows():
         if not p["has_price"] or pd.isna(p["return_1d"]):
             continue
         tier2 = asset["tier2"].get(sym)
+        if not isinstance(tier2, str):
+            tier2 = uni_tier2.get(sym)
         peer_ret = np.nan
         if isinstance(tier2, str):
             peers = asset[asset["tier2"] == tier2]["return_1d"].dropna()
             if len(peers) >= 3:
                 peer_ret = peers.mean()
+        else:
+            tier2 = "Portfolio-Specific"      # honest label, no fake peers
         rows.append({
             "symbol": sym,
             "weight": p["weight"],
@@ -613,6 +638,28 @@ def compute_bridge(market: dict, portfolio: dict) -> dict:
     if not attribution.empty:
         attribution = attribution.sort_values("contribution_bps")
 
+    # ---- breadth: how broad was the book's day, and stock-selection hit-rate
+    if not attribution.empty:
+        n_priced = len(attribution)
+        n_up = int((attribution["return_1d"] > 0).sum())
+        with_peer = attribution.dropna(subset=["vs_peers"])
+        n_with_peer = int(len(with_peer))
+        n_beating = int((with_peer["vs_peers"] > 0).sum())
+        breadth = {
+            "n_priced": n_priced,
+            "n_up": n_up,
+            "n_down": int((attribution["return_1d"] < 0).sum()),
+            "pct_up": round(100.0 * n_up / n_priced, 1) if n_priced else np.nan,
+            "n_with_peer": n_with_peer,
+            "n_beating_peers": n_beating,
+            "pct_beating_peers": (round(100.0 * n_beating / n_with_peer, 1)
+                                  if n_with_peer else np.nan),
+        }
+    else:
+        breadth = {"n_priced": 0, "n_up": 0, "n_down": 0, "pct_up": np.nan,
+                   "n_with_peer": 0, "n_beating_peers": 0,
+                   "pct_beating_peers": np.nan}
+
     # Themes (tier2 groups) ranked by |move| that the portfolio does NOT hold
     held_tier2 = set(t for t in pos.join(asset[["tier2"]], how="left")["tier2"]
                      if isinstance(t, str))
@@ -623,4 +670,5 @@ def compute_bridge(market: dict, portfolio: dict) -> dict:
                                .sort_values(ascending=False).index)
                       .head(10))
 
-    return {"attribution": attribution, "unheld_themes": biggest_unheld}
+    return {"attribution": attribution, "unheld_themes": biggest_unheld,
+            "breadth": breadth}

@@ -48,6 +48,25 @@ def _md_table(df: pd.DataFrame, float_fmt: str = "{:.2f}") -> str:
     return show.to_markdown(index=True)
 
 
+def _prose_only(text: str) -> str:
+    """
+    Keep only prose from a stored executive summary - drop markdown table rows,
+    separators, and headings. Prior summaries are fed back for continuity; we
+    want the narrative, not embedded tables or any truncation artifacts.
+    """
+    out = []
+    for line in (text or "").splitlines():
+        s = line.strip()
+        if not s:
+            continue
+        if s.startswith("|") or s.startswith("#"):
+            continue                         # table row / heading
+        if set(s) <= set("-|: "):
+            continue                         # separator / rule
+        out.append(s)
+    return " ".join(out).strip()
+
+
 def build_data_package(market: dict, portfolio: dict, bridge: dict,
                        history: pd.DataFrame, prior_summaries: pd.DataFrame,
                        holdings_meta: dict,
@@ -123,21 +142,50 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
         parts.append(_md_table(market["streaks"]))
 
     # ---------------- portfolio ----------------
-    parts.append("\n## PORTFOLIO SUMMARY")
+    parts.append("\n## PORTFOLIO SUMMARY (live Schwab + IBKR book; excludes GMO)")
     stale_tag = "  ** STALE HOLDINGS **" if s.get("holdings_stale") else ""
-    parts.append(f"- As of: {s['asof']}{stale_tag}")
-    parts.append(f"- Total value (incl. cash): ${s['total_value']:,.0f}  "
-                 f"(cash ${s['cash_value']:,.0f})")
-    parts.append(f"- Gross ${s['gross_exposure']:,.0f} | Net ${s['net_exposure']:,.0f} "
-                 f"| Long ${s['long_value']:,.0f} | Short ${s['short_value']:,.0f}")
-    parts.append(f"- Positions: {s['n_positions']} ({s['n_long']} long, "
-                 f"{s['n_short']} short)")
-    parts.append(f"- Return 1d: {s['return_1d']:+.2f}%  |  YTD: {s['return_ytd']:+.2f}%")
-    if pd.notna(s.get("portfolio_beta")):
-        parts.append(f"- Portfolio beta (vs SPY, 60d): {s['portfolio_beta']:.2f}")
-        parts.append(f"- Expected 1d from beta: {s['expected_return_1d']:+.2f}%  "
-                     f"=>  ALPHA today: {s['alpha_1d']:+.2f}%")
-    parts.append(f"- Total open P&L: ${s['total_open_pnl']:,.0f}")
+    beta = s.get("portfolio_beta")
+    exp = s.get("expected_return_1d")
+    alpha = s.get("alpha_1d")
+    summary_rows = [
+        ("As of", f"{s['asof']}{stale_tag}"),
+        ("1d Return", f"{s['return_1d']:+.2f}%"),
+        ("Expected (beta x SPY)", f"{exp:+.2f}%" if pd.notna(exp) else "n/a"),
+        ("Alpha (vs single-factor SPY)",
+         f"{alpha:+.2f}%" if pd.notna(alpha) else "n/a"),
+        ("YTD (current-weights proxy)", f"{s['return_ytd']:+.2f}%"),
+        ("Gross / Net",
+         f"${s['gross_exposure']:,.0f} / ${s['net_exposure']:,.0f}"),
+        ("Long / Short / Cash",
+         f"${s['long_value']:,.0f} / ${s['short_value']:,.0f} / "
+         f"${s['cash_value']:,.0f}"),
+        ("Total value (incl. cash)", f"${s['total_value']:,.0f}"),
+        ("Positions",
+         f"{s['n_positions']} ({s['n_long']} long, {s['n_short']} short)"),
+        ("Portfolio beta (vs SPY, 60d)",
+         f"{beta:.2f}" if pd.notna(beta) else "n/a"),
+        ("Total open P&L", f"${s['total_open_pnl']:,.0f}"),
+    ]
+    parts.append("| Metric | Value |")
+    parts.append("|---|---|")
+    for k, v in summary_rows:
+        parts.append(f"| {k} | {v} |")
+
+    # Denominator clarity: today's return is on the priced book only.
+    if dq_p["unpriced_symbols"]:
+        gross = s["gross_exposure"] or 0
+        upv = dq_p["unpriced_value"]
+        pct = (100.0 * abs(upv) / gross) if gross else 0.0
+        parts.append(
+            f"\n_1d Return is on priced positions only ({dq_p['n_priced']} of "
+            f"{dq_p['n_positions']} holdings; unpriced & excluded: "
+            f"{', '.join(dq_p['unpriced_symbols'])} = ${upv:,.0f}, "
+            f"~{pct:.1f}% of gross). YTD is a current-weights proxy (assumes "
+            f"today's holdings were held all year), not a realized figure._")
+    else:
+        parts.append(
+            "\n_YTD is a current-weights proxy (assumes today's holdings were "
+            "held all year), not a realized figure._")
 
     pos = portfolio["positions"].reset_index()
     pos_cols = ["symbol", "weight", "market_value_mtm", "return_1d",
@@ -164,13 +212,39 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
             lambda v: f"{v:+.2f}%" if pd.notna(v) else "n/a")
         sp["return_ytd"] = sp["return_ytd"].map(
             lambda v: f"{v:+.2f}%" if pd.notna(v) else "n/a")
+        sp["name"] = sp["name"].replace({"TOTAL": "HOUSEHOLD TOTAL"})
         show = sp[["name", "total_value", "return_1d", "pnl_1d", "return_ytd"]]
         show = show.rename(columns={"total_value": "value", "return_1d": "1d %",
                                      "pnl_1d": "1d $", "return_ytd": "YTD %"})
         parts.append(show.set_index("name").to_markdown())
+        parts.append(
+            "_HOUSEHOLD TOTAL spans the live book PLUS the separate GMO sleeve; "
+            "the PORTFOLIO SUMMARY above is the live Schwab+IBKR book only "
+            "(ex-GMO), so the two value and return bases differ - do not conflate "
+            "them._")
 
     parts.append("\n## PORTFOLIO FACTOR EXPOSURE (beta-weighted)")
     parts.append(_md_table(portfolio["factor_exposure"].set_index("factor")))
+    parts.append(
+        "_Betas are to overlapping factors (EM/Nasdaq/SPX/etc. co-move), so the "
+        "implied per-factor contributions do NOT sum to the realized 1d return - "
+        "read them as exposures, not an additive attribution._")
+
+    # ---------------- breadth ----------------
+    br = bridge.get("breadth") or {}
+    if br.get("n_priced"):
+        parts.append("\n## PORTFOLIO BREADTH (priced positions)")
+        parts.append(
+            f"- Up {br['n_up']}/{br['n_priced']} "
+            f"({br['pct_up']:.0f}% of priced names rose), down {br['n_down']}")
+        if br["n_with_peer"]:
+            parts.append(
+                f"- Beat tier-2 peers: {br['n_beating_peers']}/"
+                f"{br['n_with_peer']} ({br['pct_beating_peers']:.0f}% of names "
+                f"that have a >=3-name peer group) - stock-selection hit rate")
+        else:
+            parts.append("- Beat tier-2 peers: n/a "
+                         "(no held name had a >=3-name peer group today)")
 
     # ---------------- bridge ----------------
     att = bridge["attribution"]
@@ -197,8 +271,15 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
 
     if prior_summaries is not None and not prior_summaries.empty:
         parts.append("\n## PRIOR EXECUTIVE SUMMARIES (oldest first)")
+        asof_ts = pd.Timestamp(asof)
         for _, r in prior_summaries.iterrows():
-            parts.append(f"\n### {r['date']}\n{r['executive_summary']}")
+            try:
+                days = (asof_ts - pd.Timestamp(r["date"])).days
+                ago = " (today)" if days <= 0 else f" ({days} days ago)"
+            except Exception:
+                ago = ""
+            parts.append(f"\n### {r['date']}{ago}\n"
+                         f"{_prose_only(r['executive_summary'])}")
 
     parts.append("\n---\nWrite today's report now, following your "
                  "instructions exactly.")

@@ -122,10 +122,17 @@ SETTINGS = {
     "min_beta_obs": 30,              # minimum observations to trust a beta
     # Report
     "model": os.getenv("REPORT_MODEL", "claude-opus-4-8"),
-    "max_tokens": 32000,             # covers both thinking + response on 4.8
-    "thinking_effort": "max",        # adaptive thinking: low/medium/high/max
+    # max_tokens bounds thinking + visible output TOGETHER on a thinking model.
+    # WARNING: 32000 was insufficient with thinking_effort=max — the 2026-06-18
+    # report hit EXACTLY 32000 output tokens and truncated mid-table (Risks &
+    # Watchlist and Bottom Line were silently dropped). opus-4-8 allows up to
+    # 128000; 64000 leaves ample headroom for max-effort thinking plus the full
+    # ~9KB report. High max_tokens REQUIRES streaming (see llm.py) so the
+    # multi-minute generation does not trip the SDK's non-streaming timeout guard.
+    "max_tokens": 64000,
+    "thinking_effort": "max",        # adaptive thinking depth: low/medium/high/max
     "llm_retries": 3,
-    "llm_timeout_s": 600,
+    "llm_timeout_s": 900,            # streaming generation can run several minutes
     "continuity_days": 5,            # prior executive summaries fed back into prompt
     # Brokers
     # IBKR Flex Web Service (primary — no TWS login required, token-based)
