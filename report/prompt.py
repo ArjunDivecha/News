@@ -70,13 +70,23 @@ def _prose_only(text: str) -> str:
 def build_data_package(market: dict, portfolio: dict, bridge: dict,
                        history: pd.DataFrame, prior_summaries: pd.DataFrame,
                        holdings_meta: dict,
-                       subportfolios: pd.DataFrame = None) -> str:
-    """Assemble the full user-message data package for the LLM."""
+                       subportfolios: pd.DataFrame = None,
+                       name_map: dict = None) -> str:
+    """Assemble the full user-message data package for the LLM.
+
+    name_map: {ticker: full security name}. Every asset is shown by NAME, not
+    ticker; an unmapped symbol falls back to itself (the raw ticker/ID).
+    """
     parts = []
     asof = market["asof"]
     dq_m = market["data_quality"]
     dq_p = portfolio["data_quality"]
     s = portfolio["summary"]
+    name_map = name_map or {}
+
+    def nm(sym) -> str:
+        """Ticker -> full name (fallback: the ticker/ID itself)."""
+        return name_map.get(str(sym), str(sym))
 
     # ---------------- header & data quality ----------------
     parts.append(f"# DATA PACKAGE - {asof}\n")
@@ -98,14 +108,17 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
     if dq_p["unpriced_symbols"]:
         parts.append(
             f"- Unpriced portfolio positions (excluded from today's return, "
-            f"included in exposure): {', '.join(dq_p['unpriced_symbols'])} "
+            f"included in exposure): "
+            f"{', '.join(nm(x) for x in dq_p['unpriced_symbols'])} "
             f"(total value ${dq_p['unpriced_value']:,.0f})")
 
     # ---------------- factors ----------------
-    parts.append("\n## FACTOR COMPLEX (15 factor ETFs)")
+    # Factor labels (EM, Nasdaq100, Growth, ...) ARE the names; the underlying
+    # ETF ticker column is dropped so the report shows no symbols.
+    parts.append("\n## FACTOR COMPLEX (15 factors)")
     ft = market["factor_table"].reset_index()
     ft = ft.rename(columns={ft.columns[0]: "etf"})
-    ft = ft[["factor_name", "etf", "return_1d", "return_1w", "return_1m",
+    ft = ft[["factor_name", "return_1d", "return_1w", "return_1m",
              "return_ytd", "vol_60d"]].sort_values("return_1d", ascending=False)
     parts.append(_md_table(ft.set_index("factor_name")))
 
@@ -131,15 +144,29 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
     parts.append(_md_table(t2_show))
 
     # ---------------- movers & streaks ----------------
-    cols = ["name", "tier2", "return_1d", "return_1w", "return_ytd", "pctile_1d"]
+    # Show the full NAME (from name_map), not the ticker index or the polluted
+    # universe "name" column.
+    def _movers_show(df):
+        d = df.copy()
+        d = d.reset_index()
+        sym_col = d.columns[0]
+        d["Name"] = d[sym_col].map(nm)
+        keep = ["Name", "tier2", "return_1d", "return_1w", "return_ytd",
+                "pctile_1d"]
+        return d[keep].set_index("Name")
+
     parts.append("\n## BIGGEST MOVERS - UP (single assets, %)")
-    parts.append(_md_table(market["movers_up"][cols]))
+    parts.append(_md_table(_movers_show(market["movers_up"])))
     parts.append("\n## BIGGEST MOVERS - DOWN (single assets, %)")
-    parts.append(_md_table(market["movers_down"][cols]))
+    parts.append(_md_table(_movers_show(market["movers_down"])))
 
     if not market["streaks"].empty:
+        st = market["streaks"].reset_index()
+        sym_col = st.columns[0]
+        st["Name"] = st[sym_col].map(nm)
+        st = st[["Name", "streak", "return_1d"]].set_index("Name")
         parts.append("\n## STREAKS (>=4 consecutive up(+)/down(-) days)")
-        parts.append(_md_table(market["streaks"]))
+        parts.append(_md_table(st))
 
     # ---------------- portfolio ----------------
     parts.append("\n## PORTFOLIO SUMMARY (live Schwab + IBKR book; excludes GMO)")
@@ -179,7 +206,7 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
         parts.append(
             f"\n_1d Return is on priced positions only ({dq_p['n_priced']} of "
             f"{dq_p['n_positions']} holdings; unpriced & excluded: "
-            f"{', '.join(dq_p['unpriced_symbols'])} = ${upv:,.0f}, "
+            f"{', '.join(nm(x) for x in dq_p['unpriced_symbols'])} = ${upv:,.0f}, "
             f"~{pct:.1f}% of gross). YTD is a current-weights proxy (assumes "
             f"today's holdings were held all year), not a realized figure._")
     else:
@@ -192,10 +219,11 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                 "return_ytd", "contribution_bps", "beta_spx", "open_pnl"]
     pos_show = pos[pos_cols].copy()
     pos_show["weight"] = pos_show["weight"] * 100  # show as %
-    pos_show = pos_show.rename(columns={"weight": "weight_pct",
-                                        "market_value_mtm": "value_usd"})
+    pos_show["Name"] = pos_show["symbol"].map(nm)  # full name, not ticker
+    pos_show = pos_show.drop(columns=["symbol"]).rename(
+        columns={"weight": "weight_pct", "market_value_mtm": "value_usd"})
     parts.append("\n## ALL POSITIONS (weight % of gross; contribution in bps)")
-    parts.append(_md_table(pos_show.set_index("symbol")))
+    parts.append(_md_table(pos_show.set_index("Name")))
 
     # ---------------- sub-portfolios ----------------
     if subportfolios is not None and not subportfolios.empty:
@@ -253,8 +281,11 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                      "(vs_peers = position return minus its theme's mean, %)")
         att_show = att.copy()
         att_show["weight"] = att_show["weight"] * 100
-        att_show = att_show.rename(columns={"weight": "weight_pct"})
-        parts.append(_md_table(att_show.set_index("symbol")))
+        att_show["Name"] = att_show["symbol"].map(nm)   # full name, not ticker
+        att_show = att_show.drop(columns=["symbol"]).rename(
+            columns={"weight": "weight_pct"})
+        cols_order = ["Name"] + [c for c in att_show.columns if c != "Name"]
+        parts.append(_md_table(att_show[cols_order].set_index("Name")))
 
     unheld = bridge["unheld_themes"]
     if unheld is not None and not unheld.empty:

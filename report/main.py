@@ -57,6 +57,7 @@ import data as data_mod
 import db
 import holdings as holdings_mod
 import llm as llm_mod
+import names as names_mod
 import pdf as pdf_mod
 import prompt as prompt_mod
 
@@ -160,9 +161,17 @@ def run(no_llm: bool = False, interactive: bool = True,
     print("\n[4/5] DATA PACKAGE & LLM")
     history = db.get_portfolio_history(30)
     prior = db.get_prior_summaries(asof, SETTINGS["continuity_days"])
+
+    # Resolve full security NAMES (cached) for every ticker the report shows -
+    # held positions plus today's movers - so the report uses names, not symbols.
+    name_syms = (set(portfolio["positions"].index)
+                 | set(market["movers_up"].index)
+                 | set(market["movers_down"].index))
+    name_map = names_mod.resolve_names(name_syms)
+
     package = prompt_mod.build_data_package(
         market, portfolio, bridge, history, prior, holdings_meta,
-        subportfolios=subportfolios)
+        subportfolios=subportfolios, name_map=name_map)
     pkg_path = PATHS["output_dir"] / f"Data_Package_{asof}.md"
     pkg_path.write_text(package)
     print(f"  Data package: {len(package):,} chars -> {pkg_path}")

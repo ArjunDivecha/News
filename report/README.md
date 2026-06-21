@@ -66,6 +66,7 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `ibkr_fetch.py` | IBKR TWS subprocess (fallback, `.venv-ibkr312`) |
 | `run_daily.sh` | launchd wrapper — runs pipeline + emails |
 | `analytics.py` | ALL financial math (pure functions, fully unit-tested) |
+| `names.py` | Ticker -> full security name (Yahoo, cached in report.db) |
 | `prompt.py` | Builds the LLM data package |
 | `llm.py` | Claude Opus **streaming** call (adaptive thinking) + truncation guard |
 | `pdf.py` | Markdown -> HTML -> PDF (PrinceXML, light mode) + table validation |
@@ -121,6 +122,17 @@ Fixes:
 - **System prompt** (`prompts/system.md`): requires the alpha caveat when the
   book's tilt diverges from SPY, a verbatim STALE-first-sentence rule, and a
   completeness rule (all seven sections, never truncate).
+
+## Names, not tickers (2026-06-20)
+
+The report refers to every asset by its full name, not its ticker symbol
+(`EWY` -> "iShares MSCI South Korea ETF", `INTC` -> "Intel Corporation").
+`names.py` resolves tickers via Yahoo `longName`, cached per ticker in the
+`security_names` table so Yahoo is hit once per symbol. The stored universe
+names are unusable (Goldman-basket codenames like "GS Korea L PB H Profit"),
+so Yahoo is the source of truth. The handful of holdings Yahoo can't resolve
+(CUSIP cash lines, a few OTC/GMO funds) keep their raw ticker/ID. The system
+prompt enforces names-only in both tables and prose.
 
 ## Conventions (uniform everywhere)
 

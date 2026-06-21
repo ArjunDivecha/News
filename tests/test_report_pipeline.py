@@ -142,7 +142,7 @@ class TestProseOnly:
 
 
 class TestDataPackage:
-    def test_contains_new_sections_and_labels(self):
+    def _pkg(self, name_map=None):
         prices = _prices()
         universe = _universe()
         market = analytics.compute_market(prices, universe, "2026-06-09")
@@ -151,15 +151,42 @@ class TestDataPackage:
         subs = analytics.compute_subportfolios(_holdings(), prices, "2026-06-09")
         prior = pd.DataFrame([{"date": "2026-06-05",
                                "executive_summary": "Prose.\n| x | y |\n|---|---|\n| 1 | 2 |"}])
-        pkg = prompt_mod.build_data_package(
+        return prompt_mod.build_data_package(
             market, portfolio, bridge, pd.DataFrame(), prior,
             {"stale": False, "as_of": "2026-06-09", "failures": []},
-            subportfolios=subs)
+            subportfolios=subs, name_map=name_map)
+
+    def test_contains_new_sections_and_labels(self):
+        pkg = self._pkg()
         for needle in ["| Metric | Value |", "Alpha (vs single-factor SPY)",
                        "YTD (current-weights proxy)", "PORTFOLIO BREADTH",
                        "HOUSEHOLD TOTAL", "days ago)"]:
             assert needle in pkg, needle
         assert "| x | y |" not in pkg   # prior-summary table stripped
+
+    def test_uses_names_not_tickers(self):
+        # AAA/BBB/SPY get names; XOFF is unmapped -> ticker kept (approved fallback)
+        nmap = {"AAA": "Asset A Corporation", "BBB": "Asset B Corporation",
+                "SPY": "S&P 500 ETF"}
+        pkg = self._pkg(name_map=nmap)
+        assert "Asset A Corporation" in pkg     # name rendered in tables
+        assert "S&P 500 ETF" in pkg
+        assert "XOFF" in pkg                     # unmapped symbol falls back
+        # no bare " AAA " row label leaks into a table cell
+        assert "| AAA " not in pkg and "| BBB " not in pkg
+
+
+class TestNameResolver:
+    def test_unknown_symbol_falls_back_to_itself(self):
+        import names as names_mod
+        out = names_mod.resolve_names(["___NOSUCHTICKER1", "___NOSUCHTICKER2"],
+                                      fetch=False)
+        assert out == {"___NOSUCHTICKER1": "___NOSUCHTICKER1",
+                       "___NOSUCHTICKER2": "___NOSUCHTICKER2"}
+
+    def test_empty_input(self):
+        import names as names_mod
+        assert names_mod.resolve_names([], fetch=False) == {}
 
 
 # ---------------------------------------------------------------------------
@@ -172,14 +199,8 @@ class TestTableValidator:
             "## X\n\n| A | B |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n")
 
     def test_truncated_row_rejected(self):
+        # mirrors the real 2026-06-18 failure: a report that ends mid-table at
+        # a bare "| Reg" cell (header has 4 columns, the row has 1).
         bad = "## X\n\n| Unheld | n | 1d | YTD |\n|---|---|---|---|\n| Reg"
         with pytest.raises(RuntimeError, match="Malformed report table"):
             pdf_mod._validate_report_tables(bad)
-
-    def test_real_truncated_report_rejected_if_present(self):
-        f = (Path(__file__).resolve().parent.parent /
-             "outputs/unified/Unified_Report_2026-06-18.md")
-        if not f.exists():
-            pytest.skip("archived truncated report not present")
-        with pytest.raises(RuntimeError):
-            pdf_mod._validate_report_tables(f.read_text())

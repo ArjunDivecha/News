@@ -22,6 +22,7 @@ Work through these questions in order before composing a single sentence:
 - Returns are in percent; position contributions are in basis points. Keep units explicit.
 - The data package includes a DATA QUALITY section. **If the package contains the marker `** HOLDINGS ARE STALE **`, the FIRST sentence of your Executive Summary must state that holdings are stale, quoting the as-of date** — do not bury it or paraphrase it away. Conversely, if the package says `Holdings: LIVE`, the book is live — never describe a live book as stale (or vice-versa). If material positions are unpriced, name them and state that their P&L is excluded from today's portfolio return.
 - Labels carry meaning — preserve them. "YTD (current-weights proxy)" is a proxy that assumes today's holdings were held all year; call it YTD but never imply it is realized full-year performance. "Alpha (vs single-factor SPY)" is measured against SPY beta only; see The Portfolio for how to caveat it. "HOUSEHOLD TOTAL" (in Sub-Portfolio Review) includes the GMO sleeve and is a different base from the live-book PORTFOLIO SUMMARY — never conflate the two.
+- **Names, not tickers.** The data package gives every asset its full name; refer to each asset by its NAME in every table and throughout the prose — never by ticker symbol (no "EWY", "INTC", "BCHI"; write "iShares MSCI South Korea ETF", "Intel Corporation", "GMO Beyond China ETF"). The few holdings with no available name appear by their ID in the package — use that ID verbatim. Factor labels (EM, Nasdaq100, Growth, SPX, HY Credit, …) ARE the factor names — keep them as given.
 - News context: you have no news feed. You may characterize *what the cross-asset tape implies* but must not assert specific news events occurred. Phrases like "consistent with" / "the tape behaves as if" are correct; "the Fed announced X" is not, unless it appears in the package.
 
 # Required structure
@@ -40,7 +41,7 @@ Lead with the biggest cross-asset story, not an asset-class-by-asset-class recit
 
 **Theme Highlights table** — the 5-8 most informative tier-2 themes (biggest moves, extremes, streaks): theme, n, 1d %, 1w %, YTD %. Follow with 2-3 sentences on what generalizes.
 
-**Top Movers table** — top 5 up and top 5 down: ticker, name, 1d %, YTD %, percentile. One sentence if a pattern emerges.
+**Top Movers table** — top 5 up and top 5 down by name: name, 1d %, YTD %, percentile. One sentence if a pattern emerges.
 
 Keep prose between tables to 2-4 sentences max. The tables ARE the section; narrative connects them.
 
@@ -61,7 +62,7 @@ This is the **live Schwab + IBKR book only (ex-GMO)** — see Sub-Portfolio Revi
 - **Alpha is single-factor (vs SPY beta).** When the book's factor tilt materially diverges from SPY (e.g. it is long EM and EM beat SPY meaningfully today), a one-line caveat on the Alpha row is REQUIRED — a fair multi-factor expectation sits above the SPY-implied one, so a small or negative single-factor alpha may overstate underperformance. Do not invent a multi-factor alpha number; caveat the one you have.
 - Label YTD as a current-weights proxy (per the package), not realized full-year performance.
 
-Then an **attribution table** — the 8-10 largest contributors (positive and negative): symbol, weight %, 1d return %, contribution bps, tier-2 peer return %, vs peers %. Use the PORTFOLIO BREADTH stats (up-count, % beating peers) to characterize how broad the day was and the stock-selection hit rate. Follow with 2-3 sentences on what drove alpha — shorts mechanics, outliers vs theme.
+Then an **attribution table** — the 8-10 largest contributors (positive and negative): name, weight %, 1d return %, contribution bps, tier-2 peer return %, vs peers %. Use the PORTFOLIO BREADTH stats (up-count, % beating peers) to characterize how broad the day was and the stock-selection hit rate. Follow with 2-3 sentences on what drove alpha — shorts mechanics, outliers vs theme.
 
 ## Sub-Portfolio Review
 **Sub-portfolio table** — one row per account (skip near-zero value), plus the **HOUSEHOLD TOTAL** row: name, value, 1d %, 1d $, YTD %. The HOUSEHOLD TOTAL spans the live book PLUS the separate GMO sleeve, so its value/return base differs from The Portfolio above (live-only) — note this once, do not conflate the two.

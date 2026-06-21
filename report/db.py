@@ -113,6 +113,15 @@ CREATE TABLE IF NOT EXISTS reports (
     generation_time_ms INTEGER,
     pdf_path          TEXT
 );
+
+-- Human-readable security names (Yahoo longName), cached per ticker so the
+-- report can show names instead of ticker symbols. name='' means we tried and
+-- Yahoo had nothing (fall back to the ticker/ID at render time).
+CREATE TABLE IF NOT EXISTS security_names (
+    yf_ticker  TEXT PRIMARY KEY,
+    name       TEXT,
+    fetched_at TEXT DEFAULT (datetime('now'))
+);
 """
 
 
@@ -272,6 +281,47 @@ def save_report(date: str, executive_summary: str, content_md: str,
                 pdf_path=excluded.pdf_path, generated_at=datetime('now')
         """, (date, executive_summary, content_md, model, tokens_input,
               tokens_output, generation_time_ms, pdf_path))
+
+
+def get_cached_names(symbols) -> dict:
+    """Return {yf_ticker: name} for symbols already in the names cache.
+
+    Includes rows whose name is '' (we tried Yahoo and it had nothing) so the
+    caller can skip re-fetching them. Missing symbols are simply absent.
+    """
+    syms = [str(s).strip() for s in symbols if str(s).strip()]
+    if not syms:
+        return {}
+    out = {}
+    with connect() as conn:
+        # tolerate a not-yet-created table (first run before init_schema)
+        try:
+            # chunk to stay well under SQLite's parameter limit
+            for i in range(0, len(syms), 500):
+                chunk = syms[i:i + 500]
+                q = ("SELECT yf_ticker, name FROM security_names "
+                     "WHERE yf_ticker IN (%s)" % ",".join("?" * len(chunk)))
+                for r in conn.execute(q, chunk).fetchall():
+                    out[r["yf_ticker"]] = r["name"] or ""
+        except sqlite3.OperationalError:
+            return {}
+    return out
+
+
+def upsert_names(mapping: dict) -> int:
+    """Cache {yf_ticker: name} (name may be '' for an unresolved ticker)."""
+    recs = [(str(k).strip(), (v or "")) for k, v in mapping.items()
+            if str(k).strip()]
+    if not recs:
+        return 0
+    with connect() as conn:
+        conn.executemany("""
+            INSERT INTO security_names (yf_ticker, name, fetched_at)
+            VALUES (?, ?, datetime('now'))
+            ON CONFLICT(yf_ticker) DO UPDATE SET
+                name=excluded.name, fetched_at=datetime('now')
+        """, recs)
+    return len(recs)
 
 
 def get_prior_summaries(before_date: str, n: int = 5) -> pd.DataFrame:
