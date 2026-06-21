@@ -122,9 +122,12 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
              "return_ytd", "vol_60d"]].sort_values("return_1d", ascending=False)
     parts.append(_md_table(ft.set_index("factor_name")))
 
-    # factor correlation extremes (informative pairs only)
+    # factor correlation extremes (informative pairs only) - label by factor
+    # NAME, not the underlying ETF ticker (no symbols in the package).
     corr = market["factor_corr"]
     if not corr.empty:
+        fac_name = market["factor_table"]["factor_name"].to_dict()
+        fn = lambda t: fac_name.get(t, str(t))
         pairs = corr.stack()
         pairs = pairs[pairs.index.get_level_values(0)
                       < pairs.index.get_level_values(1)]
@@ -132,7 +135,7 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
         parts.append("\nLowest 60d factor correlations (diversification "
                      "currently working):")
         for (a, b), v in lo.items():
-            parts.append(f"- {a} / {b}: {v:.2f}")
+            parts.append(f"- {fn(a)} / {fn(b)}: {v:.2f}")
 
     # ---------------- market tiers ----------------
     parts.append("\n## ASSET CLASS SUMMARY (tier-1, equal-weighted %, n = assets)")

@@ -174,6 +174,9 @@ class TestDataPackage:
         assert "XOFF" in pkg                     # unmapped symbol falls back
         # no bare " AAA " row label leaks into a table cell
         assert "| AAA " not in pkg and "| BBB " not in pkg
+        # factor correlations use factor NAMES, not the underlying ETF tickers
+        assert "EM / SPX" in pkg
+        assert "EEM /" not in pkg and "/ SPY:" not in pkg
 
 
 class TestNameResolver:
