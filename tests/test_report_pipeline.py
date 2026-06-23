@@ -158,10 +158,12 @@ class TestDataPackage:
 
     def test_contains_new_sections_and_labels(self):
         pkg = self._pkg()
-        for needle in ["| Metric | Value |", "Alpha (vs single-factor SPY)",
+        for needle in ["| Metric | Value |", "Alpha (vs single-factor S&P 500)",
                        "YTD (current-weights proxy)", "PORTFOLIO BREADTH",
                        "HOUSEHOLD TOTAL", "days ago)"]:
             assert needle in pkg, needle
+        # factor-exposure ETF ticker column is dropped (no "| SPY " etc.)
+        assert "| SPY " not in pkg and " IWF " not in pkg
         assert "| x | y |" not in pkg   # prior-summary table stripped
 
     def test_uses_names_not_tickers(self):

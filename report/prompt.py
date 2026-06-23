@@ -180,8 +180,9 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
     summary_rows = [
         ("As of", f"{s['asof']}{stale_tag}"),
         ("1d Return", f"{s['return_1d']:+.2f}%"),
-        ("Expected (beta x SPY)", f"{exp:+.2f}%" if pd.notna(exp) else "n/a"),
-        ("Alpha (vs single-factor SPY)",
+        ("Expected (beta x S&P 500)",
+         f"{exp:+.2f}%" if pd.notna(exp) else "n/a"),
+        ("Alpha (vs single-factor S&P 500)",
          f"{alpha:+.2f}%" if pd.notna(alpha) else "n/a"),
         ("YTD (current-weights proxy)", f"{s['return_ytd']:+.2f}%"),
         ("Gross / Net",
@@ -192,7 +193,7 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
         ("Total value (incl. cash)", f"${s['total_value']:,.0f}"),
         ("Positions",
          f"{s['n_positions']} ({s['n_long']} long, {s['n_short']} short)"),
-        ("Portfolio beta (vs SPY, 60d)",
+        ("Portfolio beta (vs S&P 500, 60d)",
          f"{beta:.2f}" if pd.notna(beta) else "n/a"),
         ("Total open P&L", f"${s['total_open_pnl']:,.0f}"),
     ]
@@ -255,7 +256,9 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
             "them._")
 
     parts.append("\n## PORTFOLIO FACTOR EXPOSURE (beta-weighted)")
-    parts.append(_md_table(portfolio["factor_exposure"].set_index("factor")))
+    # drop the underlying ETF ticker column - factor names only, no symbols
+    fe = portfolio["factor_exposure"].drop(columns=["etf"], errors="ignore")
+    parts.append(_md_table(fe.set_index("factor")))
     parts.append(
         "_Betas are to overlapping factors (EM/Nasdaq/SPX/etc. co-move), so the "
         "implied per-factor contributions do NOT sum to the realized 1d return - "
