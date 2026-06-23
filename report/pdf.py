@@ -261,7 +261,8 @@ def _validate_report_tables(report_md: str) -> None:
     Raises RuntimeError on the first bad table.
     """
     def ncols(row: str) -> int:
-        s = row.strip()
+        # escaped pipes (\|) are literal | inside a cell, NOT column separators
+        s = row.strip().replace(r"\|", "\x00")
         if s.startswith("|"):
             s = s[1:]
         if s.endswith("|"):
@@ -269,7 +270,7 @@ def _validate_report_tables(report_md: str) -> None:
         return len(s.split("|"))
 
     def is_separator(row: str) -> bool:
-        s = row.strip()
+        s = row.strip().replace(r"\|", "")
         if "|" not in s or "-" not in s:
             return False
         # after dropping table punctuation a separator row is empty

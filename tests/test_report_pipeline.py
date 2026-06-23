@@ -213,3 +213,10 @@ class TestTableValidator:
         bad = "## X\n\n| Unheld | n | 1d | YTD |\n|---|---|---|---|\n| Reg"
         with pytest.raises(RuntimeError, match="Malformed report table"):
             pdf_mod._validate_report_tables(bad)
+
+    def test_escaped_pipe_in_cell_is_valid(self):
+        # a cell may legitimately contain an escaped pipe (\|); it must NOT be
+        # counted as a column separator (the 2026-06-22 false-positive).
+        good = ("## X\n\n| Theme | n | 1d % | YTD % |\n|---|---|---|---|\n"
+                "| Sovereign Bonds \\| Corporate Credit (FI) | 1 | -0.34 | 0.08 |\n")
+        pdf_mod._validate_report_tables(good)   # must not raise
