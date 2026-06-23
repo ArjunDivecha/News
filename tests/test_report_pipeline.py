@@ -164,6 +164,12 @@ class TestDataPackage:
             assert needle in pkg, needle
         assert "| x | y |" not in pkg   # prior-summary table stripped
 
+    def test_no_literal_na_anywhere(self):
+        # the project's NO-NA rule: the package must never contain "n/a"/"N/A"
+        pkg = self._pkg(name_map={"AAA": "Asset A Corporation"})
+        low = pkg.lower()
+        assert "n/a" not in low and "n / a" not in low
+
     def test_uses_names_not_tickers(self):
         # AAA/BBB/SPY get names; XOFF is unmapped -> ticker kept (approved fallback)
         nmap = {"AAA": "Asset A Corporation", "BBB": "Asset B Corporation",

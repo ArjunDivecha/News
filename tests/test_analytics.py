@@ -275,6 +275,60 @@ class TestMarket:
         assert "SPY" in self.m["factor_table"].index
 
 
+class TestSparseHolidayRows:
+    """The Juneteenth/holiday sparse-row bug: a near-empty row (US closed)
+    between two full sessions must be dropped, or pct_change poisons the next
+    session's returns to NaN for every US ticker."""
+
+    def _matrix_with_holiday(self):
+        idx = ["2026-06-18", "2026-06-19", "2026-06-22"]
+        # 06-19 = Juneteenth: only AAA (a name that trades through) prints;
+        # SPY / BBB are NaN (US markets closed).
+        return pd.DataFrame({
+            "SPY": [500.0, np.nan, 510.0],
+            "AAA": [100.0, 100.5, 102.0],
+            "BBB": [50.0, np.nan, 49.0],
+        }, index=idx)
+
+    def test_filter_drops_sparse_row(self):
+        import data as data_mod
+        clean = data_mod.filter_sparse_rows(self._matrix_with_holiday())
+        assert list(clean.index) == ["2026-06-18", "2026-06-22"]
+
+    def test_filter_keeps_all_full_rows(self):
+        import data as data_mod
+        p = make_prices()                    # continuous, no sparse row
+        assert len(data_mod.filter_sparse_rows(p)) == len(p)
+
+    def test_post_holiday_1d_spans_last_real_session(self):
+        import data as data_mod
+        clean = data_mod.filter_sparse_rows(self._matrix_with_holiday())
+        rets = daily_returns(clean)
+        # SPY's 06-22 return is now vs 06-18 (510/500-1), NOT NaN-vs-holiday
+        assert rets["SPY"].iloc[-1] == pytest.approx((510 / 500 - 1) * 100)
+        assert rets[["SPY", "BBB"]].iloc[-1].notna().all()
+
+    def test_latest_trading_date_skips_holiday(self):
+        import data as data_mod
+        # append a trailing sparse holiday row; as-of must NOT be the holiday
+        p = make_prices()
+        p2 = pd.concat([p, pd.DataFrame(
+            {c: [np.nan] for c in p.columns}, index=["2026-06-19"])])
+        assert data_mod.latest_trading_date(p2) != "2026-06-19"
+
+
+class TestSpyMandatory:
+    def test_missing_spy_raises(self):
+        prices = make_prices().drop(columns=["SPY"])
+        uni = pd.DataFrame({
+            "yf_ticker": ["AAA", "BBB"], "name": ["A", "B"],
+            "tier1": ["Equities", "Fixed Income"],
+            "tier2": ["US Large Cap", "Credit"], "tags": ["", ""],
+            "is_factor": [0, 0], "factor_name": [None, None]})
+        with pytest.raises(RuntimeError, match="SPY absent"):
+            compute_market(prices, uni)
+
+
 class TestBridge:
     def test_attribution_and_unheld(self):
         prices = make_prices()

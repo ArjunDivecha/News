@@ -123,6 +123,27 @@ Fixes:
   book's tilt diverges from SPY, a verbatim STALE-first-sentence rule, and a
   completeness rule (all seven sections, never truncate).
 
+## No n/a + market-holiday fix (2026-06-22)
+
+The 2026-06-22 report came out ~84% "n/a". Root cause: **2026-06-19 was
+Juneteenth** (US markets closed) — only ~125/808 tickers printed, leaving a
+sparse row in the price matrix. `daily_returns` uses `pct_change`, which
+compares each row to the immediately-prior one, so every US ticker's 06-22
+return was computed against 06-19's blanks → NaN, and the book "return" was a
+garbage -8.33% from a single $5.50 stub.
+
+- **Core fix** (`data.py` `filter_sparse_rows`, applied in `main.py` right after
+  `load_prices`): drop date rows below 50% of peak coverage. On the real DB this
+  drops exactly the 7 US market holidays (~125 tickers each); the thinnest real
+  session is 790, so there's no false-positive risk. The "1d" return on a
+  post-holiday day then correctly spans the last two *real* sessions (06-22 vs
+  06-18). Verified: factor returns 15/15 real, book 1d -0.18% (sane).
+- **NO-NA rule** (project rule in `AAA Backup/CLAUDE.md`): the report never shows
+  "n/a". `_md_table` renders an undefined cell as `—`; a position that didn't
+  print on the as-of date shows its **last-available value with a `*`** (stale),
+  with a footnote. `analytics.py` carries forward last-available 1d/factor
+  returns; `compute_market` fails loud if SPY (the benchmark) is ever absent.
+
 ## Names, not tickers (2026-06-20)
 
 The report refers to every asset by its full name, not its ticker symbol

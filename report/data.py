@@ -47,6 +47,31 @@ class DataCoverageError(RuntimeError):
     """Raised when the price fetch returns insufficient coverage."""
 
 
+def filter_sparse_rows(prices_wide: pd.DataFrame,
+                       min_coverage: float = 0.5) -> pd.DataFrame:
+    """
+    Drop date rows whose ticker coverage is below `min_coverage` of the
+    matrix's best-covered day. These are US market-HOLIDAY rows (e.g.
+    2026-06-19 Juneteenth: only ~125/808 tickers print - the Canadian/intl
+    names that trade through US closures) sitting between two full US
+    sessions. Left in place, pct_change computes each US ticker's next-session
+    return against the holiday row's NaN -> NaN, poisoning the entire day
+    (this is the bug that filled the 2026-06-22 report with n/a).
+
+    Empirically (report.db, 2026): this drops exactly the US holidays at
+    ~125 tickers; the thinnest REAL trading day has 790, so 0.5*max never
+    drops a genuine session. Dropping (not forward-filling) is correct -
+    forward-fill would fabricate 0% holiday returns; dropping makes the "1d"
+    return on a post-holiday day correctly span the last two REAL sessions
+    (e.g. 2026-06-22 vs 2026-06-18 across the Juneteenth long weekend).
+    """
+    if prices_wide is None or prices_wide.empty:
+        return prices_wide
+    counts = prices_wide.notna().sum(axis=1)
+    keep = counts >= counts.max() * min_coverage
+    return prices_wide[keep]
+
+
 def load_universe() -> pd.DataFrame:
     """Load the universe file (fails if missing - run build_universe.py)."""
     path = PATHS["universe"]
@@ -134,7 +159,8 @@ def store_prices(long_df: pd.DataFrame) -> int:
 
 
 def latest_trading_date(prices_wide: pd.DataFrame) -> str:
-    """Most recent date with data for at least half the universe."""
-    counts = prices_wide.notna().sum(axis=1)
+    """Most recent REAL trading date (sparse US-holiday rows excluded)."""
+    clean = filter_sparse_rows(prices_wide)
+    counts = clean.notna().sum(axis=1)
     valid = counts[counts >= counts.max() * 0.5]
     return str(valid.index[-1])

@@ -121,6 +121,10 @@ def run(no_llm: bool = False, interactive: bool = True,
     long_df = data_mod.fetch_prices(all_tickers)
     data_mod.store_prices(long_df)
     prices = db.load_prices()
+    # Drop US market-holiday rows (e.g. Juneteenth) BEFORE any analytics, so
+    # returns are computed against the last REAL session, never a holiday's
+    # NaNs. This is the single chokepoint - every compute_* sees clean prices.
+    prices = data_mod.filter_sparse_rows(prices)
     asof = asof or data_mod.latest_trading_date(prices)
     print(f"  Analytics as-of: {asof}")
 

@@ -43,8 +43,10 @@ def _md_table(df: pd.DataFrame, float_fmt: str = "{:.2f}") -> str:
     show = df.copy()
     for col in show.columns:
         if pd.api.types.is_float_dtype(show[col]):
+            # NEVER print "n/a" - an em dash marks a genuinely-undefined cell
+            # (the project's NO-NA rule); stale values are marked with * upstream
             show[col] = show[col].map(
-                lambda v: float_fmt.format(v) if pd.notna(v) else "n/a")
+                lambda v: float_fmt.format(v) if pd.notna(v) else "—")
     return show.to_markdown(index=True)
 
 
@@ -181,9 +183,9 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
         ("As of", f"{s['asof']}{stale_tag}"),
         ("1d Return", f"{s['return_1d']:+.2f}%"),
         ("Expected (beta x S&P 500)",
-         f"{exp:+.2f}%" if pd.notna(exp) else "n/a"),
+         f"{exp:+.2f}%" if pd.notna(exp) else "—"),
         ("Alpha (vs single-factor S&P 500)",
-         f"{alpha:+.2f}%" if pd.notna(alpha) else "n/a"),
+         f"{alpha:+.2f}%" if pd.notna(alpha) else "—"),
         ("YTD (current-weights proxy)", f"{s['return_ytd']:+.2f}%"),
         ("Gross / Net",
          f"${s['gross_exposure']:,.0f} / ${s['net_exposure']:,.0f}"),
@@ -194,7 +196,7 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
         ("Positions",
          f"{s['n_positions']} ({s['n_long']} long, {s['n_short']} short)"),
         ("Portfolio beta (vs S&P 500, 60d)",
-         f"{beta:.2f}" if pd.notna(beta) else "n/a"),
+         f"{beta:.2f}" if pd.notna(beta) else "—"),
         ("Total open P&L", f"${s['total_open_pnl']:,.0f}"),
     ]
     parts.append("| Metric | Value |")
@@ -223,11 +225,20 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                 "return_ytd", "contribution_bps", "beta_spx", "open_pnl"]
     pos_show = pos[pos_cols].copy()
     pos_show["weight"] = pos_show["weight"] * 100  # show as %
-    pos_show["Name"] = pos_show["symbol"].map(nm)  # full name, not ticker
+    # full name, with a trailing * when the name's price is STALE (it did not
+    # print on the as-of date - its 1d/return columns are last-available values)
+    stale_map = (pos.set_index("symbol")["price_stale"].to_dict()
+                 if "price_stale" in pos.columns else {})
+    pos_show["Name"] = [nm(sym) + ("*" if stale_map.get(sym) else "")
+                        for sym in pos_show["symbol"]]
     pos_show = pos_show.drop(columns=["symbol"]).rename(
         columns={"weight": "weight_pct", "market_value_mtm": "value_usd"})
     parts.append("\n## ALL POSITIONS (weight % of gross; contribution in bps)")
     parts.append(_md_table(pos_show.set_index("Name")))
+    if any(stale_map.values()):
+        parts.append(
+            f"_* = STALE price: this name did not print on {asof}; its values "
+            f"are the last available (it is excluded from today's book return)._")
 
     # ---------------- sub-portfolios ----------------
     if subportfolios is not None and not subportfolios.empty:
@@ -238,12 +249,12 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
             lambda r: r["total_value"] * r["return_1d"] / 100.0
             if pd.notna(r["return_1d"]) else float("nan"), axis=1)
         sp["pnl_1d"] = sp["pnl_1d"].map(
-            lambda v: f"${v:+,.0f}" if pd.notna(v) else "n/a")
+            lambda v: f"${v:+,.0f}" if pd.notna(v) else "—")
         sp["total_value"] = sp["total_value"].map(lambda v: f"${v:,.0f}")
         sp["return_1d"] = sp["return_1d"].map(
-            lambda v: f"{v:+.2f}%" if pd.notna(v) else "n/a")
+            lambda v: f"{v:+.2f}%" if pd.notna(v) else "—")
         sp["return_ytd"] = sp["return_ytd"].map(
-            lambda v: f"{v:+.2f}%" if pd.notna(v) else "n/a")
+            lambda v: f"{v:+.2f}%" if pd.notna(v) else "—")
         sp["name"] = sp["name"].replace({"TOTAL": "HOUSEHOLD TOTAL"})
         show = sp[["name", "total_value", "return_1d", "pnl_1d", "return_ytd"]]
         show = show.rename(columns={"total_value": "value", "return_1d": "1d %",
@@ -277,8 +288,8 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                 f"{br['n_with_peer']} ({br['pct_beating_peers']:.0f}% of names "
                 f"that have a >=3-name peer group) - stock-selection hit rate")
         else:
-            parts.append("- Beat tier-2 peers: n/a "
-                         "(no held name had a >=3-name peer group today)")
+            parts.append("- Beat tier-2 peers: not applicable today "
+                         "(no held name had a >=3-name peer group)")
 
     # ---------------- bridge ----------------
     att = bridge["attribution"]

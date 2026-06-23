@@ -177,6 +177,12 @@ def compute_market(prices: pd.DataFrame, universe: pd.DataFrame,
     # keep SPY available for beta even if it were not in the universe
     keep = sorted(set(uni_tickers) | ({"SPY"} & set(prices.columns)))
     prices = prices[keep]
+    # SPY is the benchmark for every beta/alpha; if it is ever absent the whole
+    # report degrades to n/a silently. Fail loud instead (FAIL IS FAIL).
+    if "SPY" not in prices.columns:
+        raise RuntimeError(
+            "SPY absent from price matrix - cannot compute betas/alpha. "
+            "Fix data acquisition; do not emit a benchmark-less report.")
     rets = daily_returns(prices)
 
     # ---- per-asset table ----
@@ -335,10 +341,31 @@ def compute_portfolio(holdings: pd.DataFrame, prices: pd.DataFrame,
 
     # --- price-based metrics where available ---
     last_close = prices.iloc[-1]
+    asof_str = str(prices.index[-1])
     pos["price"] = last_close.reindex(pos.index)
-    pos["return_1d"] = rets.iloc[-1].reindex(pos.index)
+
+    # last-available 1d return per symbol (STALE > n/a): use each symbol's own
+    # most recent non-NaN daily return, not just the as-of row, so a name that
+    # did not print on the as-of date still shows its last REAL move (marked
+    # stale downstream) instead of n/a.
+    def _last_avail(sym):
+        if sym not in rets.columns:
+            return np.nan
+        s = rets[sym].dropna()
+        return s.iloc[-1] if not s.empty else np.nan
+    pos["return_1d"] = pd.Series({sym: _last_avail(sym) for sym in pos.index})
     pos["return_ytd"] = ytd_return(prices, asof).reindex(pos.index)
     pos["has_price"] = pos["price"].notna()
+
+    # stale = has SOME price history but did NOT print on the as-of date
+    def _last_price_date(sym):
+        if sym not in prices.columns:
+            return None
+        s = prices[sym].dropna()
+        return str(s.index[-1]) if not s.empty else None
+    pos["price_stale"] = pos.index.map(
+        lambda sym: (_last_price_date(sym) is not None)
+        and (_last_price_date(sym) < asof_str))
 
     # Mark-to-market where we have a price; broker value otherwise
     pos["market_value_mtm"] = np.where(
@@ -404,9 +431,11 @@ def compute_portfolio(holdings: pd.DataFrame, prices: pd.DataFrame,
             continue
         fbetas = beta_vs(rets[priced.index.tolist()], rets[fticker])
         wb = (priced["weight"] * fbetas.reindex(priced.index)).sum()
+        fr = rets[fticker].dropna()          # last-available factor return
         factor_rows.append({"factor": fname, "etf": fticker,
                             "portfolio_beta": wb,
-                            "factor_return_1d": rets[fticker].iloc[-1]})
+                            "factor_return_1d": (fr.iloc[-1] if not fr.empty
+                                                 else np.nan)})
     factor_exposure = pd.DataFrame(factor_rows)
 
     unpriced = pos[~pos["has_price"]]
