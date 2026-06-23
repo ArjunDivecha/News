@@ -162,8 +162,6 @@ class TestDataPackage:
                        "YTD (current-weights proxy)", "PORTFOLIO BREADTH",
                        "HOUSEHOLD TOTAL", "days ago)"]:
             assert needle in pkg, needle
-        # factor-exposure ETF ticker column is dropped (no "| SPY " etc.)
-        assert "| SPY " not in pkg and " IWF " not in pkg
         assert "| x | y |" not in pkg   # prior-summary table stripped
 
     def test_uses_names_not_tickers(self):
@@ -179,6 +177,12 @@ class TestDataPackage:
         # factor correlations use factor NAMES, not the underlying ETF tickers
         assert "EM / SPX" in pkg
         assert "EEM /" not in pkg and "/ SPY:" not in pkg
+        # factor-exposure ETF ticker column is dropped, and SPY (held short,
+        # in the name_map) renders as its name -> no bare "| SPY " row anywhere
+        assert "S&P 500 ETF" in pkg
+        assert "| SPY " not in pkg
+        # the benchmark label uses S&P 500, not the SPY ticker
+        assert "vs S&P 500, 60d" in pkg and "beta x S&P 500" in pkg
 
 
 class TestNameResolver:
