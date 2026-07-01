@@ -174,6 +174,50 @@ def _render_tag_views(tv: dict) -> list:
                    "underweight a tag that lagged)")
         out.append(_md_table(show.set_index("Tag")))
 
+    # ---- market: EM dispersion (country vs style) ----
+    emd = tv.get("em_dispersion") or {}
+    if emd.get("verdict") and emd["verdict"] not in ("insufficient data",
+                                                      "no groupings"):
+        out.append("\n### MARKET — EM DISPERSION (was today's EM spread country- "
+                   "or style-driven?)")
+        out.append(f"- **{emd['verdict']}** across n={emd.get('n')} EM funds "
+                   f"(η² country {emd.get('eta2_region')} vs η² style "
+                   f"{emd.get('eta2_style')}; dispersion "
+                   f"{_num(emd.get('dispersion'), 2, signed=False)}pp)")
+
+    # ---- portfolio: tag P&L attribution (per axis) ----
+    pnl = tv.get("tag_pnl")
+    if pnl is not None and not pnl.empty:
+        out.append("\n### PORTFOLIO — TAG P&L ATTRIBUTION (contribution bps, split "
+                   "equally within each axis; within an axis these SUM to the "
+                   "day's attributed P&L — never sum across axes)")
+        for ax in ["Region", "Sector", "Style"]:
+            sub = pnl[pnl["axis"] == ax]
+            if sub.empty:
+                continue
+            top = pd.concat([sub.head(3), sub.tail(3)]).drop_duplicates()
+            show = top[["tag", "contribution_bps", "n"]].copy()
+            show["contribution_bps"] = show["contribution_bps"].map(
+                lambda v: _num(v, 1))
+            show = show.rename(columns={"tag": f"{ax} tag",
+                                        "contribution_bps": "bps", "n": "n"})
+            out.append(f"\n**{ax}**")
+            out.append(_md_table(show.set_index(f"{ax} tag")))
+
+    # ---- portfolio: exposure vs realized beta ----
+    evb = tv.get("exposure_vs_beta")
+    if evb is not None and not evb.empty:
+        show = evb.copy()
+        show["beta"] = show["beta"].map(lambda v: _num(v, 2))
+        show["tag_wt"] = show["tag_wt"].map(lambda v: _pct(v))
+        show = show.rename(columns={"factor": "Factor", "tag": "Tag",
+                                    "beta": "Realized beta",
+                                    "tag_wt": "Tag wt %", "note": "Read"})
+        out.append("\n### PORTFOLIO — TAG EXPOSURE vs REALIZED BETA (does the "
+                   "book move with what it says it holds? 'beta without tag' = "
+                   "hidden co-movement; 'tag without beta' = inert theme)")
+        out.append(_md_table(show.set_index("Factor")))
+
     # ---- portfolio: concentration ----
     conc = tv.get("concentration")
     if conc:

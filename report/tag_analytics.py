@@ -327,6 +327,127 @@ def compute_tag_bridge(port_tilts: pd.DataFrame,
     return pd.DataFrame(rows)
 
 
+# factor (regression) -> the tag it should show up as, for the
+# exposure-vs-realized-beta reconciliation
+FACTOR_TAG = {
+    "SPX": "US", "Russell2000": "Small-Cap", "Nasdaq100": "Tech",
+    "Value": "Value", "Growth": "Growth", "EAFE": "Developed", "EM": "EM",
+    "HY_Credit": "HY Credit", "Treasuries": "Treasury", "TIPS": "Treasury",
+    "Commodities": "Commodity", "Agriculture": "Commodity", "Crypto": "Alternative",
+    "REIT_US": "Real Estate", "REIT_Global": "Real Estate",
+}
+# EM-ish region tags for the dispersion decomposition
+EM_TAGS = {"EM", "China", "India"}
+
+
+def compute_tag_pnl(positions: pd.DataFrame, tag_map: dict,
+                    axes=("Region", "Sector", "Style")) -> pd.DataFrame:
+    """Per-axis P&L attribution. Each position's contribution_bps is split
+    EQUALLY among the tags it carries WITHIN an axis, so within any one axis the
+    tag contributions sum to the day's attributed P&L (no double-counting across
+    a position's multiple same-axis tags). Never summed ACROSS axes."""
+    if "contribution_bps" not in positions.columns:
+        return pd.DataFrame()
+    rows = []
+    for sym, r in positions.iterrows():
+        c = r.get("contribution_bps")
+        if c is None or not np.isfinite(c):
+            continue
+        by_axis = {}
+        for t in _tags(tag_map.get(sym, "")):
+            ax = TAG_AXIS.get(t, "Other")
+            by_axis.setdefault(ax, []).append(t)
+        for ax, ts in by_axis.items():
+            if ax not in axes:
+                continue
+            share = c / len(ts)          # split equally within the axis
+            for t in ts:
+                rows.append({"axis": ax, "tag": t,
+                             "contribution_bps": share, "sym": sym})
+    if not rows:
+        return pd.DataFrame()
+    df = pd.DataFrame(rows)
+    g = df.groupby(["axis", "tag"]).agg(
+        contribution_bps=("contribution_bps", "sum"),
+        n=("sym", "nunique")).reset_index()
+    return g.sort_values(["axis", "contribution_bps"],
+                         ascending=[True, False]).reset_index(drop=True)
+
+
+def compute_exposure_vs_beta(factor_exposure: pd.DataFrame,
+                             tag_weights: dict) -> pd.DataFrame:
+    """Reconcile the book's INTENDED exposure (tag gross weight) against its
+    REALIZED exposure (regression beta to the matching factor). Flags hidden
+    betas (moves with a factor it does not tag as holding) and inert tags (tags
+    a theme but shows little beta to it)."""
+    if factor_exposure is None or factor_exposure.empty:
+        return pd.DataFrame()
+    rows = []
+    for _, r in factor_exposure.iterrows():
+        tag = FACTOR_TAG.get(r["factor"])
+        if not tag:
+            continue
+        beta = r.get("portfolio_beta")
+        w = tag_weights.get(tag, 0.0)
+        if beta is not None and np.isfinite(beta) and abs(beta) >= 0.4 and w < 0.05:
+            note = "beta without tag (hidden co-movement)"
+        elif w >= 0.15 and (beta is None or not np.isfinite(beta) or abs(beta) < 0.2):
+            note = "tag without beta (inert)"
+        else:
+            note = "consistent"
+        rows.append({"factor": r["factor"], "tag": tag,
+                     "beta": beta, "tag_wt": w, "note": note})
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    # keep the interesting rows first (divergences), then by |beta|
+    df["_rank"] = (df["note"] != "consistent").astype(int)
+    return df.sort_values(["_rank", "beta"], key=lambda s: s if s.name == "_rank"
+                          else s.abs(), ascending=[False, False]).drop(
+                          columns="_rank").reset_index(drop=True)
+
+
+def compute_em_dispersion(asset_table: pd.DataFrame, min_n: int = 6) -> dict:
+    """Decompose today's EM cross-section: was the spread driven by COUNTRY
+    selection or by STYLE? Reports eta-squared (between-group SS / total SS) for
+    the Region grouping vs the Style grouping over EM-tagged funds."""
+    long = explode_tags(asset_table)
+    if long.empty:
+        return {"n": 0, "verdict": "insufficient data"}
+    em_tickers = sorted(set(long[long["tag"].isin(EM_TAGS)]["yf_ticker"]))
+    if len(em_tickers) < min_n:
+        return {"n": len(em_tickers), "verdict": "insufficient data"}
+    sub = long[long["yf_ticker"].isin(em_tickers)]
+    rets = sub.drop_duplicates("yf_ticker").set_index("yf_ticker")["return_1d"]
+    allv = rets.values.astype(float)
+    grand = allv.mean()
+    ss_tot = float(((allv - grand) ** 2).sum())
+
+    def eta2(axis):
+        grp = {}
+        for tkr in em_tickers:
+            tags_ax = sub[(sub["yf_ticker"] == tkr)
+                          & (sub["axis"] == axis)]["tag"].tolist()
+            if tags_ax:
+                grp.setdefault(tags_ax[0], []).append(float(rets[tkr]))
+        if len(grp) < 2 or ss_tot <= 0:
+            return None
+        ss_bet = sum(len(v) * (np.mean(v) - grand) ** 2 for v in grp.values())
+        return round(float(ss_bet / ss_tot), 2)
+
+    er, es = eta2("Region"), eta2("Style")
+    if er is None and es is None:
+        verdict = "no groupings"
+    elif (er or 0) > (es or 0):
+        verdict = "country-driven"
+    elif (es or 0) > (er or 0):
+        verdict = "style-driven"
+    else:
+        verdict = "mixed"
+    return {"n": len(em_tickers), "eta2_region": er, "eta2_style": es,
+            "dispersion": round(float(allv.std()), 2), "verdict": verdict}
+
+
 def build_tag_views(market: dict, portfolio: dict, tag_map: dict,
                     bench_specs, vix_level=None, index_move=None) -> dict:
     """Orchestrate all tier-3 views into one dict for prompt.py.
@@ -338,16 +459,21 @@ def build_tag_views(market: dict, portfolio: dict, tag_map: dict,
     disp = compute_dispersion(at)
     ptilts = compute_portfolio_tag_tilts(
         portfolio["positions"], tag_map, benchmark_tag_weights(bench_specs))
+    book_tag_wt = dict(zip(ptilts["tag"], ptilts["book_wt"])) if not ptilts.empty else {}
     return {
         "market_tilts": tilts,
         "spreads": compute_style_spreads(at),
         "dispersion": disp,
         "breadth": breadth,
         "grid": compute_region_sector_grid(at),
+        "em_dispersion": compute_em_dispersion(at),
         "noise_gate": noise_gate(index_move if index_move is not None else 0.0,
                                  vix_level, breadth, disp),
         "port_tilts": ptilts,
         "bridge": compute_tag_bridge(ptilts, tilts),
+        "tag_pnl": compute_tag_pnl(portfolio["positions"], tag_map),
+        "exposure_vs_beta": compute_exposure_vs_beta(
+            portfolio.get("factor_exposure"), book_tag_wt),
         "concentration": compute_tag_concentration(portfolio["positions"], tag_map),
     }
 

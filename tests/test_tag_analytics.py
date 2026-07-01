@@ -186,6 +186,67 @@ class TestPortfolioTilts:
         assert c["top_tag_gross_pct"] == 100.0
 
 
+class TestTagPnl:
+    def _pos(self):
+        return pd.DataFrame({
+            "weight": [0.4, 0.3, 0.3],
+            "contribution_bps": [10.0, -4.0, 8.0],
+        }, index=["AAA", "BBB", "CCC"])
+
+    def test_split_equally_within_axis(self):
+        tmap = {"AAA": "Equity, US, Value", "BBB": "Equity, EM",
+                "CCC": "EM, Asia"}   # CCC carries TWO region tags
+        pnl = ta.compute_tag_pnl(self._pos(), tmap)
+        region = pnl[pnl["axis"] == "Region"].set_index("tag")["contribution_bps"]
+        # CCC's +8 splits 4/4 across EM and Asia; BBB's -4 all to EM
+        assert abs(region["Asia"] - 4.0) < 1e-9
+        assert abs(region["EM"] - (-4.0 + 4.0)) < 1e-9
+        assert abs(region["US"] - 10.0) < 1e-9
+        # within Region, the tag bps sum to the contribs of region-tagged names
+        assert abs(region.sum() - (10.0 - 4.0 + 8.0)) < 1e-9
+
+    def test_no_contribution_column_is_empty(self):
+        assert ta.compute_tag_pnl(_positions(), {"AAA": "US"}).empty
+
+
+class TestExposureVsBeta:
+    def test_flags_divergences(self):
+        fe = pd.DataFrame({
+            "factor": ["EM", "Value", "SPX"],
+            "portfolio_beta": [0.8, 0.1, 1.0],
+        })
+        tw = {"EM": 0.0, "Value": 0.30, "US": 0.5}
+        out = ta.compute_exposure_vs_beta(fe, tw).set_index("factor")
+        assert out.loc["EM", "note"] == "beta without tag (hidden co-movement)"
+        assert out.loc["Value", "note"] == "tag without beta (inert)"
+        assert out.loc["SPX", "note"] == "consistent"
+
+    def test_empty_exposure(self):
+        assert ta.compute_exposure_vs_beta(pd.DataFrame(), {}).empty
+
+
+class TestEmDispersion:
+    def _em_table(self):
+        rows = []
+        # 4 China funds (tight), 4 India funds (tight but different level)
+        for i, r in enumerate([0.1, 0.2, 0.15, 0.12]):
+            rows.append((f"CN{i}", "Equity, China", r, r, 0))
+        for i, r in enumerate([-0.9, -1.0, -0.95, -0.92]):
+            rows.append((f"IN{i}", "Equity, India", r, r, 0))
+        return pd.DataFrame(rows, columns=["yf_ticker", "tags", "return_1d",
+                                           "return_1w", "is_factor"]).set_index("yf_ticker")
+
+    def test_country_driven(self):
+        d = ta.compute_em_dispersion(self._em_table(), min_n=6)
+        assert d["n"] == 8
+        # China vs India are cleanly separated by country -> high region eta^2
+        assert d["eta2_region"] is not None and d["eta2_region"] > 0.8
+        assert d["verdict"] == "country-driven"
+
+    def test_insufficient(self):
+        assert ta.compute_em_dispersion(_asset_table())["verdict"] == "insufficient data"
+
+
 # ---------------------------------------------------------------------------
 # wiring: flag off = identical package; flag on = no n/a
 # ---------------------------------------------------------------------------
@@ -237,6 +298,17 @@ class TestPackageWiring:
                 ta.benchmark_tag_weights([(0.6, ["Equity", "Global"]),
                                           (0.4, ["Treasury"])])),
             "bridge": pd.DataFrame(),
+            "em_dispersion": {"n": 8, "eta2_region": 0.9, "eta2_style": 0.1,
+                              "dispersion": 0.5, "verdict": "country-driven"},
+            "tag_pnl": ta.compute_tag_pnl(
+                pd.DataFrame({"weight": [0.5, 0.5],
+                              "contribution_bps": [3.0, -2.0]},
+                             index=["AAA", "BBB"]),
+                {"AAA": "Equity, US, Value", "BBB": "Equity, EM"}),
+            "exposure_vs_beta": ta.compute_exposure_vs_beta(
+                pd.DataFrame({"factor": ["EM", "Value"],
+                              "portfolio_beta": [0.8, 0.1]}),
+                {"EM": 0.0, "Value": 0.3}),
             "concentration": ta.compute_tag_concentration(
                 _positions(), {"AAA": "Equity, US", "BBB": "Equity, EM"}),
         }
