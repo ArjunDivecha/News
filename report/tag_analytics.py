@@ -448,6 +448,114 @@ def compute_em_dispersion(asset_table: pd.DataFrame, min_n: int = 6) -> dict:
             "dispersion": round(float(allv.std()), 2), "verdict": verdict}
 
 
+# ---- asset-allocation classification (mutually-exclusive primary buckets) ----
+_BOND_TAGS = {"Credit", "Treasury", "Municipal", "IG Credit", "HY Credit",
+              "Investment Grade", "High Yield"}
+_EM_TAGS = {"EM", "China", "India", "UAE"}
+_DEV_INTL_TAGS = {"Japan", "Developed", "Canada", "Australia", "Europe",
+                  "APAC", "International"}
+
+
+def classify_holding(tags, is_cash=False):
+    """Assign a holding to ONE asset class and ONE region for the allocation
+    report (buckets are mutually exclusive so they sum to 100%). Tag-driven;
+    genuinely mis-tagged funds are corrected at source in tags.py."""
+    if is_cash:
+        return ("Cash", "Cash")
+    ts = set(tags)
+    if "Equity" in ts:
+        cls = "Equities"
+    elif ts & _BOND_TAGS:
+        cls = "Bonds"
+    elif "Commodity" in ts:
+        cls = "Commodities"
+    elif ts & {"Multi-Asset", "Alternative"}:
+        cls = "Alternatives"
+    else:
+        cls = "Other"
+    if ts & _EM_TAGS:
+        reg = "EM"
+    elif ts & {"US", "Domestic"}:
+        reg = "US"
+    elif ts & _DEV_INTL_TAGS:
+        reg = "International"
+    elif "Asia" in ts:                 # generic Asia (developed Asia is tagged
+        reg = "EM"                     # Japan/Developed) -> EM-leaning
+    elif "Global" in ts:
+        reg = "Global"
+    else:
+        reg = "Unclassified"
+    return (cls, reg)
+
+
+def _vw(sub, col):
+    """Bucket return = P&L direction over GROSS exposure: Σ(signed mtm × ret) /
+    Σ|mtm|. Signed numerator keeps a short's sign correct; the gross denominator
+    avoids the blow-up that a signed (net) denominator causes when longs and
+    shorts nearly offset and one outlier then dominates a tiny net base."""
+    s = sub.dropna(subset=[col])
+    denom = s["mtm"].abs().sum()
+    return float((s["mtm"] * s[col]).sum() / denom) if denom else np.nan
+
+
+def compute_asset_allocation(positions: pd.DataFrame, tag_map: dict,
+                             cash_value: float = 0.0) -> dict:
+    """Household asset allocation. Returns:
+        by_class          - Equities/Bonds/Commodities/Alternatives/Cash/Other,
+                            weight % of total (incl. cash), value, 1d, YTD, n
+        equity_by_region  - US/International/EM/Global for the equity sleeve
+        unclassified      - equity tickers whose region could not be derived
+    Weights are % of total net value; bucket returns are value-weighted."""
+    rows = []
+    for sym, r in positions.iterrows():
+        mtm = r.get("market_value_mtm")
+        if mtm is None or not np.isfinite(mtm):
+            continue
+        cls, reg = classify_holding(_tags(tag_map.get(sym, "")))
+        rows.append({"sym": sym, "mtm": mtm, "ret_1d": r.get("return_1d"),
+                     "ret_ytd": r.get("return_ytd"), "cls": cls, "reg": reg})
+    if not rows:
+        return {"by_class": pd.DataFrame(), "equity_by_region": pd.DataFrame(),
+                "unclassified": [], "total_value": cash_value}
+    df = pd.DataFrame(rows)
+    total = float(df["mtm"].sum() + cash_value)
+
+    class_rows = []
+    for cls in ["Equities", "Bonds", "Commodities", "Alternatives", "Other"]:
+        sub = df[df["cls"] == cls]
+        if sub.empty:
+            continue
+        val = float(sub["mtm"].sum())
+        class_rows.append({"bucket": cls,
+                           "weight_pct": 100 * val / total if total else np.nan,
+                           "value": val, "return_1d": _vw(sub, "ret_1d"),
+                           "return_ytd": _vw(sub, "ret_ytd"), "n": len(sub)})
+    if cash_value:
+        class_rows.append({"bucket": "Cash",
+                           "weight_pct": 100 * cash_value / total if total else np.nan,
+                           "value": float(cash_value), "return_1d": 0.0,
+                           "return_ytd": 0.0, "n": 0})
+    by_class = pd.DataFrame(class_rows)
+
+    eq = df[df["cls"] == "Equities"]
+    eq_total = float(eq["mtm"].sum())
+    reg_rows = []
+    for reg in ["US", "International", "EM", "Global", "Unclassified"]:
+        sub = eq[eq["reg"] == reg]
+        if sub.empty:
+            continue
+        val = float(sub["mtm"].sum())
+        reg_rows.append({"region": reg,
+                         "weight_pct": 100 * val / eq_total if eq_total else np.nan,
+                         "pct_of_total": 100 * val / total if total else np.nan,
+                         "return_1d": _vw(sub, "ret_1d"),
+                         "return_ytd": _vw(sub, "ret_ytd"), "n": len(sub)})
+    equity_by_region = pd.DataFrame(reg_rows)
+    return {"by_class": by_class, "equity_by_region": equity_by_region,
+            "unclassified": sorted(eq[eq["reg"] == "Unclassified"]["sym"]),
+            "total_value": total}
+
+
 def build_tag_views(market: dict, portfolio: dict, tag_map: dict,
                     bench_specs, vix_level=None, index_move=None) -> dict:
     """Orchestrate all tier-3 views into one dict for prompt.py.

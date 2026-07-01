@@ -114,15 +114,25 @@ Duration). `tag_analytics.py` computes, as pure functions:
   or AGAINST today's tape), and **concentration** (1/HHI effective positions and
   effective tags per axis).
 
-Tags are correlated, so tilts are **never summed across axes** — each is an
-independent excess-vs-benchmark or excess-vs-universe reading. The block is fed
-to the LLM as a `TIER-3 TAG VIEWS` package section and woven into The Tape
-(day-type read) and The Bridge (tag posture); `system.md` gates both on the
-section's presence. Locked down by `tests/test_tag_analytics.py` (15 tests,
-including a flag-OFF byte-identity guarantee and the NO-n/a rule).
+- **Portfolio — P&L & reconciliation:** per-axis tag P&L attribution (each
+  position's contribution split equally within an axis, so tags sum to the day's
+  P&L per axis), exposure-vs-realized-beta (flags hidden co-movement / inert
+  themes), and an EM country-vs-style η² decomposition.
+- **Household asset allocation** (`compute_asset_allocation`): top-level
+  Equities / Bonds / Commodities / Alternatives / Cash (live book + GMO), then
+  the equity sleeve by region (US / International / EM / Global). Weights are net
+  exposure; bucket returns are P&L over gross so a short signs correctly.
+  Holdings are classified from tags (`classify_holding`); a few single-country
+  EM ETFs the tagger under-specifies are pinned in `tags.py`.
 
-*Not yet built (deferred — genuine design ambiguity with multi-label tags):
-per-axis tag P&L attribution, exposure-vs-realized-beta, EM dispersion ANOVA.*
+Tags are correlated, so tilts are **never summed across axes** — each is an
+independent excess-vs-benchmark or excess-vs-universe reading. The blocks are fed
+to the LLM as `TIER-3 TAG VIEWS` and `HOUSEHOLD ASSET ALLOCATION` package
+sections; `system.md` makes them **required, table-first** sections (Asset
+Allocation; day-type & leadership tables in The Tape; tag-tilt / bridge / tag-P&L
+tables in The Bridge & Positioning) whenever the package carries their data.
+Locked down by `tests/test_tag_analytics.py` (25 tests, including a flag-OFF
+byte-identity guarantee and the NO-n/a rule).
 
 ## Report-writing hardening (2026-06-20 review)
 

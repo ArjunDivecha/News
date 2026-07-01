@@ -46,7 +46,14 @@ Lead with the biggest cross-asset story, not an asset-class-by-asset-class recit
 
 Keep prose between tables to 2-4 sentences max. The tables ARE the section; narrative connects them.
 
-**Day-type read (only if the package has a `TIER-3 TAG VIEWS` section).** Open The Tape with ONE sentence classifying the day using the MARKET — DAY TYPE and TAG TILTS blocks: was it a broad macro/factor day (high dispersion, narrow breadth, one axis dominating) or an idiosyncratic/stock-picker's day (low dispersion, mixed breadth)? If the noise-gate verdict is "noise" (sub-1σ, mixed breadth), say plainly that today carried little signal. Then use the TAG TILTS / STYLE-REGION SPREADS / REGION×SECTOR GRID to name the day's real leadership by theme (e.g. "Materials and Healthcare led; Momentum and EM lagged") instead of only listing individual movers. These tilts are excess-vs-universe means — never sum them, and never present them as if a single fund returned that number. If the package includes EM DISPERSION and EM was a mover, add one clause on whether the EM spread was country-driven or style-driven (per its η² read).
+**Day-Type & Leadership (REQUIRED whenever the package has a `TIER-3 TAG VIEWS` section — do NOT reduce this to a single sentence).** Add this as a labelled block inside The Tape with its OWN tables:
+
+- One sentence classifying the day from MARKET — DAY TYPE: macro/factor day (high dispersion, narrow breadth) vs stock-picker's day (low dispersion, mixed breadth); if the noise-gate verdict is "noise", say plainly today carried little index-level signal.
+- **Tag Leadership table** — render the MARKET — TAG TILTS block as a table (Tag, Axis, 1d excess %, 1w excess %) for the ~8 biggest tilts. These are excess-vs-universe means; never sum them, never present one as if a single fund returned it.
+- **Style/Region Spreads table** — render the STYLE / REGION SPREADS block (Value−Growth, Defensive−Cyclical, EM−Developed, etc.).
+- If EM was a mover, one clause from EM DISPERSION on whether the spread was country- or style-driven (η²).
+
+Follow the tables with 2-3 sentences naming the day's real leadership by THEME (e.g. "Materials and Healthcare led; Momentum and EM lagged"), not just individual movers.
 
 ## The Portfolio
 This is the **live Schwab + IBKR book only (ex-GMO)** — see Sub-Portfolio Review for the household incl. GMO. Start with a **summary table**:
@@ -72,16 +79,29 @@ Then an **attribution table** — the 8-10 largest contributors (positive and ne
 
 Then 1-2 sentences per non-trivial sub-portfolio: what drove its day, how it diverged from the aggregate. Highlight the best and worst performer.
 
-## The Bridge
-**Factor exposure table** — portfolio beta to each factor, factor 1d return, implied contribution. Bold the dominant exposures.
+## Asset Allocation
+**(REQUIRED whenever the package has a `HOUSEHOLD ASSET ALLOCATION` section.)** This is the household (live book + GMO), tables-first:
+
+**Asset-class table** — reproduce HOUSEHOLD ASSET ALLOCATION: Asset Class (Equities/Bonds/Commodities/Alternatives/Cash), Weight %, Value, 1d %, YTD %. Bold the largest bucket. One sentence on the top-level shape (e.g. how much of the household is GMO alternatives/multi-asset vs directional equities).
+
+**Equity-by-region table** — reproduce EQUITY SLEEVE BY REGION: Region (US / International / EM / Global), % of Equities, % of Total, 1d %, YTD %. Follow with 2-3 sentences on the regional tilt (where the equity money actually is — e.g. EM-heavy vs US) and how each region did today and YTD. If any equity holding is flagged region-unclassified, name it once. Weights are net exposure; bucket returns are P&L over gross (so a short reads with the correct sign).
+
+## The Bridge & Positioning
+Connect the market to the book. Tables first.
+
+**Factor exposure table** — portfolio beta to each factor, factor 1d return, implied contribution. Bold the dominant exposures. One line: any statistically-large beta that is an artifact rather than a real position.
 
 **Unheld themes table** — the 5 biggest-moving themes the portfolio does NOT hold: theme, n, 1d %, YTD %.
 
-Then 3-4 sentences connecting the two: where the portfolio leans WITH vs AGAINST the market, and whether gaps are deliberate or accidental.
+**(The following are REQUIRED whenever the package has a `TIER-3 TAG VIEWS` section — render them as TABLES, not prose asides.)**
 
-**Tag posture (only if the package has a `TIER-3 TAG VIEWS` section).** After the factor-exposure discussion, add a short **tag-tilt table** drawn from PORTFOLIO — TAG TILTS vs 60/40 ACWI/TLT: show the 4-6 most meaningful *active bets* — lead with Region/Sector/Style tilts (the deliberate views), and mention AssetClass/Strategy/Size tilts only as one line of structural posture ("the book is ~all-equity, active, and country-specific vs a passive global 60/40" — that is by design, not a bet). Then use THE BRIDGE (WITH/AGAINST) to say, in 2-3 sentences, which of today's biggest book tilts paid off (overweight a tag that led / underweight a tag that lagged = WITH the tape) versus which fought it. Close with one line on CONCENTRATION (effective number of positions and the largest single tag exposure) — is the book making a few big bets or many small ones? Tilts are percentage-point differences vs the benchmark; never sum them across axes.
+**Tag-tilt table** — reproduce PORTFOLIO — TAG TILTS vs 60/40 ACWI/TLT for the 6-8 most meaningful tilts: Tag, Axis, Book %, Bench %, Tilt pp. Lead with Region/Sector/Style (the deliberate active bets); AssetClass/Strategy/Size tilts are structural posture — cover them in one line ("the book is ~all-equity, active, country-specific vs a passive global 60/40, by design").
 
-If the package includes TAG P&L ATTRIBUTION, use it to say which THEMES (not just names) drove today's contribution — e.g. "the day's gain was Region: Asia +Xbps offset by Sector: Energy −Ybps." These are contribution bps split within each axis, so they sum to the day's P&L within an axis but must NOT be summed across axes. If it includes TAG EXPOSURE vs REALIZED BETA, flag any "beta without tag" (a hidden co-movement the book didn't intend) or "tag without beta" (a theme it tags but barely moves with) in one sentence.
+**The Bridge (WITH/AGAINST) table** — reproduce PORTFOLIO — THE BRIDGE: Tag, Book tilt pp, Mkt 1d excess %, Stance. Then 2-3 sentences: which of today's biggest book tilts paid off (overweight a tag that led / underweight a tag that lagged = WITH the tape) vs which fought it.
+
+**Tag P&L attribution** — from PORTFOLIO — TAG P&L ATTRIBUTION, state which THEMES drove today's contribution per axis (e.g. "Region: Asia +X bps vs Sector: Tech −Y bps"). Contributions sum within an axis, never across axes.
+
+Then: one line on CONCENTRATION (effective # of positions, largest single tag exposure); and if TAG EXPOSURE vs REALIZED BETA is present, one line flagging any "beta without tag" (hidden co-movement) or "tag without beta" (inert theme). Tilts are percentage-point differences vs the benchmark; never sum them across axes.
 
 ## Risks & Watchlist
 Two to four items in a **table**: risk, trigger/signpost, portfolio exposure affected. Each must be falsifiable and tied to an observable. No generic platitudes.
@@ -106,5 +126,5 @@ You receive the last several executive summaries. Use them:
 
 # Completeness (do not truncate)
 
-- The report MUST contain all seven sections through **Bottom Line**. Never stop early. Write the Executive Summary as a complete, self-contained note (it is stored and fed back for continuity) and make sure the final two sections — Risks & Watchlist and Bottom Line — are always present and complete.
+- The report MUST contain every section through **Bottom Line**, in order: Executive Summary, The Tape, The Portfolio, Sub-Portfolio Review, Asset Allocation, The Bridge & Positioning, Risks & Watchlist, Bottom Line. (Asset Allocation and the tag-view tables appear only when the package carries their data; when it does, they are REQUIRED, not optional.) Never stop early. Write the Executive Summary as a complete, self-contained note (it is stored and fed back for continuity) and make sure the final two sections — Risks & Watchlist and Bottom Line — are always present and complete.
 - You have ample output budget; tables take what they need. But spend it on signal: prefer trimming a table to the rows the package flags as informative (extremes, streaks, the biggest movers) over padding prose. If — and only if — you ever cannot fit everything, shorten the lowest-value tables rather than dropping a whole section, and write the literal token `[TRUNCATED]` where you cut, so the omission is visible rather than silent. Under normal conditions nothing should be truncated.

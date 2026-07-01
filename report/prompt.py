@@ -80,6 +80,47 @@ def _num(x, dp=2, signed=True):
     return f"{x:+.{dp}f}" if signed else f"{x:.{dp}f}"
 
 
+def _money(v):
+    if pd.isna(v):
+        return "—"
+    return f"${v/1e6:.1f}M" if abs(v) >= 1e6 else f"${v:,.0f}"
+
+
+def _render_allocation(alloc: dict) -> list:
+    """Household asset-allocation section: top-level asset class, then the
+    equity sleeve zoomed into US / International / EM / Global."""
+    if not alloc:
+        return []
+    out = []
+    bc = alloc.get("by_class")
+    if bc is not None and not bc.empty:
+        show = bc.copy()
+        show["Weight %"] = show["weight_pct"].map(lambda v: _num(v, 1, signed=False))
+        show["Value"] = show["value"].map(_money)
+        show["1d %"] = show["return_1d"].map(lambda v: _num(v, 2))
+        show["YTD %"] = show["return_ytd"].map(lambda v: _num(v, 1))
+        show = show.rename(columns={"bucket": "Asset Class", "n": "n"})[
+            ["Asset Class", "Weight %", "Value", "1d %", "YTD %", "n"]]
+        out.append("\n## HOUSEHOLD ASSET ALLOCATION (live book + GMO; weight = % "
+                   "of total net value incl. cash; bucket return = P&L over gross)")
+        out.append(_md_table(show.set_index("Asset Class")))
+    reg = alloc.get("equity_by_region")
+    if reg is not None and not reg.empty:
+        show = reg.copy()
+        show["% of Equities"] = show["weight_pct"].map(lambda v: _num(v, 1, signed=False))
+        show["% of Total"] = show["pct_of_total"].map(lambda v: _num(v, 1, signed=False))
+        show["1d %"] = show["return_1d"].map(lambda v: _num(v, 2))
+        show["YTD %"] = show["return_ytd"].map(lambda v: _num(v, 1))
+        show = show.rename(columns={"region": "Region"})[
+            ["Region", "% of Equities", "% of Total", "1d %", "YTD %", "n"]]
+        out.append("\n### EQUITY SLEEVE BY REGION (US / International / EM / Global)")
+        out.append(_md_table(show.set_index("Region")))
+    if alloc.get("unclassified"):
+        out.append(f"\n(Region unclassified for equity holdings: "
+                   f"{', '.join(alloc['unclassified'])} — add a region tag.)")
+    return out
+
+
 def _render_tag_views(tv: dict) -> list:
     """Render the tier-3 tag views as report-package sections. Every section is
     additive; missing/empty pieces are simply omitted (never 'n/a')."""
@@ -241,7 +282,8 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                        holdings_meta: dict,
                        subportfolios: pd.DataFrame = None,
                        name_map: dict = None,
-                       tag_views: dict = None) -> str:
+                       tag_views: dict = None,
+                       allocation: dict = None) -> str:
     """Assemble the full user-message data package for the LLM.
 
     name_map: {ticker: full security name}. Every asset is shown by NAME, not
@@ -498,6 +540,8 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                 ago = ""
             parts.append(f"\n### {r['date']}{ago}\n"
                          f"{_prose_only(r['executive_summary'])}")
+
+    parts.extend(_render_allocation(allocation))
 
     parts.extend(_render_tag_views(tag_views))
 

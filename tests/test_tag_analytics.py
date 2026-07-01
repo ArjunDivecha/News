@@ -247,6 +247,42 @@ class TestEmDispersion:
         assert ta.compute_em_dispersion(_asset_table())["verdict"] == "insufficient data"
 
 
+class TestAssetAllocation:
+    def test_classify(self):
+        assert ta.classify_holding(["Equity", "US"]) == ("Equities", "US")
+        assert ta.classify_holding(["Credit", "EM"]) == ("Bonds", "EM")
+        assert ta.classify_holding(["Equity", "Asia"]) == ("Equities", "EM")
+        assert ta.classify_holding(["Multi-Asset", "Global"]) == ("Alternatives", "Global")
+        assert ta.classify_holding(["Equity", "Japan"]) == ("Equities", "International")
+        assert ta.classify_holding([], is_cash=True) == ("Cash", "Cash")
+
+    def _pos(self):
+        return pd.DataFrame({
+            "market_value_mtm": [100.0, 100.0, -50.0, 40.0],
+            "return_1d": [1.0, 2.0, 3.0, 0.5],
+            "return_ytd": [10.0, 20.0, 5.0, 4.0],
+        }, index=["A", "B", "C", "BND"])
+
+    def _tmap(self):
+        return {"A": "Equity, US", "B": "Equity, Asia",   # Asia -> EM
+                "C": "Equity, US", "BND": "Credit, US"}
+
+    def test_weights_sum_to_100(self):
+        a = ta.compute_asset_allocation(self._pos(), self._tmap(), cash_value=60.0)
+        bc = a["by_class"].set_index("bucket")
+        assert abs(bc["weight_pct"].sum() - 100.0) < 1e-6
+        assert abs(bc.loc["Equities", "weight_pct"] - 60.0) < 1e-6   # (100+100-50)/250
+        assert abs(bc.loc["Cash", "weight_pct"] - 24.0) < 1e-6
+
+    def test_short_signs_correctly_via_gross_weighting(self):
+        a = ta.compute_asset_allocation(self._pos(), self._tmap(), cash_value=60.0)
+        # US equities = A(+100 @ +1%) and C(-50 short @ +3%): P&L = 100 - 150 = -50
+        # over gross 150 -> -0.333 (short's price gain is a LOSS, correct sign)
+        reg = a["equity_by_region"].set_index("region")
+        assert abs(reg.loc["US", "return_1d"] - (-50.0 / 150.0)) < 1e-9
+        assert abs(reg.loc["EM", "weight_pct"] - (100.0 / 150.0 * 100)) < 1e-6
+
+
 # ---------------------------------------------------------------------------
 # wiring: flag off = identical package; flag on = no n/a
 # ---------------------------------------------------------------------------

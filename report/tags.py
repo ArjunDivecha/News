@@ -80,6 +80,11 @@ MANUAL_OVERRIDES = {
         "name": "GMO Emerging Country Debt Fund",
         "tags": "Credit, EM, Active, High Yield",
     },
+    # Single-country EM equity ETFs the tagger under-/mis-classified (needed for
+    # a correct household asset-allocation report):
+    "EWZ": {"name": "iShares MSCI Brazil ETF", "tags": "Equity, EM"},
+    "EZA": {"name": "iShares MSCI South Africa ETF", "tags": "Equity, EM"},
+    "ECH": {"name": "iShares MSCI Chile ETF", "tags": "Equity, EM"},
     # Benchmark components (60/40 ACWI/TLT) - must be exactly right:
     "TLT": {  # iShares 20+ Year Treasury - NOT credit, NOT Europe
         "name": "iShares 20+ Year Treasury Bond ETF",

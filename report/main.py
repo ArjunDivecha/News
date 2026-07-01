@@ -51,7 +51,8 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from config import PATHS, SETTINGS, BENCHMARK, TAG_VIEW_EXTRA_TICKERS, ensure_dirs
+from config import (PATHS, SETTINGS, BENCHMARK, TAG_VIEW_EXTRA_TICKERS,
+                    CASH_EQUIVALENTS, ensure_dirs)
 import analytics
 import data as data_mod
 import db
@@ -187,6 +188,30 @@ def run(no_llm: bool = False, interactive: bool = True,
             print(f"  ⚠️  Tag views SKIPPED (report continues without them): {e}")
             tag_views = None
 
+    # Household asset allocation (live book + GMO), classified from tags.
+    allocation = None
+    if SETTINGS.get("enable_tag_views"):
+        try:
+            hh = pd.concat([holdings_df, gmo_df], ignore_index=True)
+            hh_port = analytics.compute_portfolio(hh, prices, asof)
+            hh_syms = list(hh_port["positions"].index)
+            hh_tmap = {s: v["tags"]
+                       for s, v in tags_mod.resolve_tags(hh_syms, fetch=True).items()}
+            hh_cash = float(hh.loc[hh["symbol"].astype(str).str.strip().isin(
+                CASH_EQUIVALENTS), "market_value"].sum())
+            allocation = tag_analytics.compute_asset_allocation(
+                hh_port["positions"], hh_tmap, hh_cash)
+            bc = allocation["by_class"]
+            print(f"  Asset allocation: {len(bc)} classes, "
+                  f"household ${allocation['total_value']:,.0f}"
+                  + (f", UNCLASSIFIED equities: {allocation['unclassified']}"
+                     if allocation["unclassified"] else ""))
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"  ⚠️  Asset allocation SKIPPED: {e}")
+            allocation = None
+
     s = portfolio["summary"]
     print(f"  Market: {market['data_quality']['n_priced_today']} assets priced "
           f"({market['data_quality']['coverage_pct']}%)")
@@ -220,7 +245,8 @@ def run(no_llm: bool = False, interactive: bool = True,
 
     package = prompt_mod.build_data_package(
         market, portfolio, bridge, history, prior, holdings_meta,
-        subportfolios=subportfolios, name_map=name_map, tag_views=tag_views)
+        subportfolios=subportfolios, name_map=name_map, tag_views=tag_views,
+        allocation=allocation)
     pkg_path = PATHS["output_dir"] / f"Data_Package_{asof}.md"
     pkg_path.write_text(package)
     print(f"  Data package: {len(package):,} chars -> {pkg_path}")
