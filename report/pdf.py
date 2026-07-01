@@ -341,6 +341,14 @@ def render_pdf(report_md: str, date: str, generated: str, model: str,
 
     # 1b. FAIL IS FAIL: refuse to render a truncated/malformed report to PDF
     _validate_report_tables(report_md)
+    # completeness backstop: a truncation can slip past the per-row cell-count
+    # check if the partial last row happens to match the header's pipe count, so
+    # also require the final required section to be present (the report must end
+    # with "## Bottom Line" per the system prompt).
+    if "bottom line" not in report_md.lower():
+        raise RuntimeError(
+            "Report INCOMPLETE: missing the 'Bottom Line' section — the LLM "
+            "output was truncated before the end. Refusing to render.")
 
     # 2. html  (no "smarty" extension: it silently rewrites -- to en-dashes,
     #    which would corrupt any numeric range/value that uses --)

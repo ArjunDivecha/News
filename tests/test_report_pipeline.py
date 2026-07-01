@@ -192,6 +192,23 @@ class TestDataPackage:
         assert "vs S&P 500, 60d" in pkg and "beta x S&P 500" in pkg
 
 
+class TestTagCache:
+    def test_empty_cache_is_not_a_hit(self):
+        # a previously-cached EMPTY tag must NOT count as a cache hit, else the
+        # symbol is never retried (cache poisoning). Fugu-found bug.
+        import tags as tags_mod
+        import db
+        sym = "__EMPTYCACHETEST__"
+        tags_mod.upsert_tags([{"yf_ticker": sym, "tags": "", "tier1": None,
+                               "tier2": None, "name": "x", "source": "deepseek"}])
+        try:
+            r = tags_mod.resolve_tags([sym], fetch=False)
+            assert r[sym]["source"] != "cache", "empty cache treated as a hit"
+        finally:
+            with db.connect() as c:
+                c.execute("DELETE FROM security_tags WHERE yf_ticker=?", (sym,))
+
+
 class TestNameResolver:
     def test_unknown_symbol_falls_back_to_itself(self):
         import names as names_mod
@@ -241,6 +258,15 @@ class TestTableValidator:
         bad = "## X\n\n| Unheld | n | 1d | YTD |\n|---|---|---|---|\n| Reg"
         with pytest.raises(RuntimeError, match="Malformed report table"):
             pdf_mod._validate_report_tables(bad)
+
+    def test_render_requires_bottom_line(self, tmp_path):
+        # completeness backstop: a report missing the final section (truncated
+        # before the end) must be refused even if its tables are well-formed.
+        md = ("## Executive Summary\n\nQuiet day.\n\n## The Tape\n\n"
+              "| Factor | 1d % |\n|---|---|\n| EM | +1.0 |\n")
+        with pytest.raises(RuntimeError, match="INCOMPLETE"):
+            pdf_mod.render_pdf(md, "2026-06-09", "2026-06-09 12:00",
+                               "claude-opus-4-8", tmp_path)
 
     def test_escaped_pipe_in_cell_is_valid(self):
         # a cell may legitimately contain an escaped pipe (\|); it must NOT be

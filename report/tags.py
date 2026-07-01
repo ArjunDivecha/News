@@ -314,8 +314,8 @@ def resolve_tags(symbols, name_hints=None, force=None, fetch=True) -> dict:
         elif s not in force and uni.get(s):
             out[s] = {"tags": uni[s], "source": "universe",
                       "name": name_hints.get(s, s)}
-        elif s not in force and s in cached:
-            out[s] = {"tags": cached[s], "source": "cache",
+        elif s not in force and cached.get(s):   # non-empty cache hit only;
+            out[s] = {"tags": cached[s], "source": "cache",  # empty -> re-tag
                       "name": name_hints.get(s, s)}
         else:
             to_tag.append(s)
@@ -361,10 +361,13 @@ def resolve_tags(symbols, name_hints=None, force=None, fetch=True) -> dict:
                     break
             tags = best_tags
             out[s] = {"tags": tags, "source": src, "name": name}
-            new_rows.append({"yf_ticker": s, "tags": tags,
-                             "tier1": best_p["tier1"] if best_p else None,
-                             "tier2": best_p["tier2"] if best_p else None,
-                             "name": name, "source": src})
+            # only cache a NON-empty result - caching "" would be a cache-hit
+            # next run and the symbol would never be retried (cache poisoning)
+            if tags:
+                new_rows.append({"yf_ticker": s, "tags": tags,
+                                 "tier1": best_p["tier1"] if best_p else None,
+                                 "tier2": best_p["tier2"] if best_p else None,
+                                 "name": name, "source": src})
             flag = " [web]" if src.endswith("websearch") else ""
             print(f"  {src.split('+')[0]:8s}{flag} {s:13s} {name[:40]:40s} -> {tags or '(empty!)'}")
         except Exception as e:
