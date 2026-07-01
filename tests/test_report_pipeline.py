@@ -38,6 +38,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "report"))
 
 import analytics
+import data as data_mod
 import prompt as prompt_mod
 import pdf as pdf_mod
 
@@ -202,6 +203,27 @@ class TestNameResolver:
     def test_empty_input(self):
         import names as names_mod
         assert names_mod.resolve_names([], fetch=False) == {}
+
+
+class TestHoldingPriceAliases:
+    def test_alias_scaled_to_broker_unit_price(self):
+        prices = pd.DataFrame([
+            {"date": "2026-06-29", "yf_ticker": "VEIL.L",
+             "close": 10.0, "volume": 1000},
+            {"date": "2026-06-30", "yf_ticker": "VEIL.L",
+             "close": 11.0, "volume": 1200},
+        ])
+        holdings = pd.DataFrame([
+            ["A1", "VTMEF", 100.0, 15.0, 2200.0, 700.0, "Schwab", "t"],
+        ], columns=["account", "symbol", "quantity", "avg_price",
+                    "market_value", "open_pnl", "broker", "fetched_at"])
+
+        out = data_mod.apply_holding_price_aliases(
+            prices, holdings, aliases={"VTMEF": "VEIL.L"})
+        alias = out[out["yf_ticker"] == "VTMEF"].sort_values("date")
+
+        assert alias["close"].round(6).tolist() == [20.0, 22.0]
+        assert set(out["yf_ticker"]) == {"VEIL.L", "VTMEF"}
 
 
 # ---------------------------------------------------------------------------

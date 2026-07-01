@@ -117,8 +117,17 @@ def run(no_llm: bool = False, interactive: bool = True,
     holding_syms = holdings_mod.priceable_symbols(holdings_df)
     gmo_df = _load_gmo()
     gmo_syms = holdings_mod.priceable_symbols(gmo_df) if not gmo_df.empty else []
-    all_tickers = sorted(set(universe["yf_ticker"]) | set(holding_syms) | set(gmo_syms))
+    aliases = SETTINGS.get("holding_price_aliases", {})
+    alias_targets = set(aliases)
+    alias_sources = {aliases[s] for s in holding_syms if s in aliases}
+    universe_tickers = set(universe["yf_ticker"])
+    all_tickers = ((universe_tickers | set(holding_syms) | set(gmo_syms)
+                    | alias_sources)
+                   - (alias_targets - universe_tickers))
+    all_tickers = sorted(all_tickers)
     long_df = data_mod.fetch_prices(all_tickers)
+    long_df = data_mod.apply_holding_price_aliases(
+        long_df, holdings_df, aliases=aliases)
     data_mod.store_prices(long_df)
     prices = db.load_prices()
     # Drop US market-holiday rows (e.g. Juneteenth) BEFORE any analytics, so

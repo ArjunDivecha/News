@@ -122,6 +122,11 @@ SETTINGS = {
     "min_beta_obs": 30,              # minimum observations to trust a beta
     # Report
     "model": os.getenv("REPORT_MODEL", "claude-opus-4-8"),
+    # LLM backend: Claude CLI uses the local Claude Code subscription path.
+    # The direct Anthropic API remains available only as a fallback.
+    "llm_backend": os.getenv("REPORT_LLM_BACKEND", "claude_cli"),
+    "cli_model": os.getenv("REPORT_CLI_MODEL", "opus"),
+    "llm_api_fallback": os.getenv("REPORT_LLM_API_FALLBACK", "1") != "0",
     # max_tokens bounds thinking + visible output TOGETHER on a thinking model.
     # WARNING: 32000 was insufficient with thinking_effort=max — the 2026-06-18
     # report hit EXACTLY 32000 output tokens and truncated mid-table (Risks &
@@ -134,6 +139,12 @@ SETTINGS = {
     "llm_retries": 3,
     "llm_timeout_s": 900,            # streaming generation can run several minutes
     "continuity_days": 5,            # prior executive summaries fed back into prompt
+    "holding_price_aliases": {
+        # Schwab reports Vietnam Enterprise Investments as the OTC line VTMEF,
+        # which Yahoo no longer prices reliably. Use the London line for
+        # returns, then anchor the synthetic VTMEF price series to broker value.
+        "VTMEF": "VEIL.L",
+    },
     # Brokers
     # IBKR Flex Web Service (primary — no TWS login required, token-based)
     # Set both in .env to skip TWS entirely:

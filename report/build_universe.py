@@ -17,8 +17,8 @@ OUTPUT FILES:
       yf_ticker, name, description, tier1, tier2, tags, source,
       tracking_score, is_factor, factor_name, proxied_tickers.
 
-VERSION: 1.0
-LAST UPDATED: 2026-06-09
+VERSION: 1.2
+LAST UPDATED: 2026-06-30
 AUTHOR: Arjun Divecha
 
 DESCRIPTION:
@@ -28,6 +28,31 @@ DESCRIPTION:
     they collapse into ONE row (the ETF is the asset now); the original
     Bloomberg tickers are preserved in 'proxied_tickers' for audit.
     The 15 factor ETFs are guaranteed present and flagged.
+
+    v1.1 (superseded): filtered out all source != 'ETF' rows entirely.
+    This was too blunt -- audit found that 60 Goldman/Bloomberg-sourced
+    rows had ALREADY been proxy-mapped by etf_map.py onto real, liquid,
+    Yahoo-viable ETFs (SPY, VTI, the full SPDR sector suite, MTUM, VLUE,
+    IWF, VNQ, HYG, IEF, GDX, DBMF, DBV, etc.) with NO duplicate row
+    elsewhere in the source file. Dropping by source would have silently
+    removed all of them from the universe -- real breadth loss, not
+    cleanup.
+
+    v1.2: keep-and-relabel instead of drop. ETF_OVERRIDES below supplies
+    corrected name/tier1/tier2/tags for each of these 59 tickers, hand-
+    verified against what the real fund actually is (not the old GS-
+    basket/Bloomberg-index concept it used to be proxied from). A few
+    tier1 corrections ride along: GDX/CRAK/OIH/XME/XOP move from
+    Commodities to Equities (they hold mining/energy COMPANY stocks, not
+    the physical commodity/futures -- same error pattern already found
+    in the direct-ETF rows for COPX/SILJ/GUNR). BITW/ETHA/IBIT are kept
+    under Commodities/"Digital Assets / Alternative Commodities", matching
+    the tier2 value the original IBIT row already used, consistent with
+    how physical-metal trust ETFs (AAAU, PALL) are classified.
+    Two tickers are dropped outright, both unrelated to source quality:
+    TBT (2x inverse Treasury, per the leveraged/inverse exclusion policy)
+    and GFOF (Grayscale Future of Finance, which stopped trading in 2024
+    and has no viable yfinance data).
 
 DEPENDENCIES:
     - pandas, openpyxl
@@ -49,6 +74,76 @@ from etf_map import get_yf_ticker, get_tracking_score
 
 FINAL_1000 = ROOT_DIR / "Step 2 Data Processing - Final1000" / "Final 1000 Asset Master List.xlsx"
 
+# Corrected classification for tickers that were only present via a Goldman/
+# Bloomberg proxy row. yf_ticker is real and Yahoo-viable in every case.
+# tier1/tier2/tags reflect what the real fund actually is, hand-verified.
+ETF_OVERRIDES = {
+    "AAXJ": ("Equities", "Country/Regional", "Equity, Asia, EM, Passive, Broad-Based"),
+    "AIQ":  ("Equities", "Thematic/Factor", "Equity, Global, Tech, Thematic, Passive"),
+    "ASEA": ("Equities", "Country/Regional", "Equity, Asia, EM, APAC, Passive"),
+    "BITW": ("Commodities", "Digital Assets / Alternative Commodities", "Commodity, Global, Cryptocurrency, Passive"),
+    "BLOK": ("Equities", "Thematic/Factor", "Equity, Global, Tech, Thematic, Active"),
+    "COWZ": ("Equities", "Thematic/Factor", "Equity, US, Quality, Factor-Based, Passive"),
+    "CRAK": ("Equities", "Sector Indices", "Equity, Global, Energy, Passive"),
+    "DBMF": ("Alternative / Synthetic", "Quant/Style Baskets", "Multi-Asset, Global, Active, Quantitative, Trend-Following"),
+    "DBV":  ("Currencies (FX)", "Majors", "FX, Global, Carry/Value Factors, Passive"),
+    "DVY":  ("Equities", "Thematic/Factor", "Equity, US, Dividend, Value, Passive"),
+    "DXJ":  ("Equities", "Country/Regional", "Equity, Japan, Passive, Dividend-Weighted"),
+    "EMSH": ("Fixed Income", "Sovereign Bonds", "Credit, EM, Short (<2Y), Passive"),
+    "EPP":  ("Equities", "Country/Regional", "Equity, APAC, Developed, Passive"),
+    "ETHA": ("Commodities", "Digital Assets / Alternative Commodities", "Commodity, Global, Cryptocurrency, Passive"),
+    "EUFN": ("Equities", "Sector Indices", "Equity, Europe, Financials, Passive"),
+    "EWG":  ("Equities", "Country/Regional", "Equity, Europe, Germany, Passive"),
+    "EWH":  ("Equities", "Country/Regional", "Equity, Asia, Hong Kong, Passive"),
+    "EZU":  ("Equities", "Country/Regional", "Equity, Europe, Developed, Passive"),
+    "FDN":  ("Equities", "Sector Indices", "Equity, US, Tech, Passive"),
+    "GDX":  ("Equities", "Sector Indices", "Equity, Global, Materials, Passive"),
+    "HYDR": ("Equities", "Thematic/Factor", "Equity, Global, Energy, Thematic, Passive"),
+    "HYG":  ("Fixed Income", "Corporate Credit", "Credit, US, High Yield, Passive"),
+    "IBIT": ("Commodities", "Digital Assets / Alternative Commodities", "Commodity, Global, Cryptocurrency, Passive"),
+    "IEF":  ("Fixed Income", "Sovereign Bonds", "Credit, US, Medium (2-10Y), Passive"),
+    "IGLB": ("Fixed Income", "Corporate Credit", "Credit, US, Long (>10Y), Passive"),
+    "IGV":  ("Equities", "Sector Indices", "Equity, US, Tech, Passive"),
+    "IHI":  ("Equities", "Sector Indices", "Equity, US, Healthcare, Passive"),
+    "INDA": ("Equities", "Country/Regional", "Equity, EM, India, Passive"),
+    "INFL": ("Equities", "Thematic/Factor", "Equity, Global, Active, Inflation-Sensitive, Thematic"),
+    "ISHG": ("Fixed Income", "Sovereign Bonds", "Credit, Global, Developed, Short (<2Y), Passive"),
+    "ITB":  ("Equities", "Sector Indices", "Equity, US, Industrials, Passive"),
+    "IWF":  ("Equities", "Thematic/Factor", "Equity, US, Growth, Large-cap, Passive"),
+    "MCHI": ("Equities", "Country/Regional", "Equity, EM, China, Passive"),
+    "MTUM": ("Equities", "Thematic/Factor", "Equity, US, Momentum, Factor-Based, Passive"),
+    "MUB":  ("Fixed Income", "Sovereign Bonds", "Credit, US, Municipal, Medium (2-10Y), Passive"),
+    "OIH":  ("Equities", "Sector Indices", "Equity, Global, Energy, Passive"),
+    "PHO":  ("Equities", "Thematic/Factor", "Equity, US, Infrastructure, Thematic, Passive"),
+    "SPY":  ("Equities", "Global Indices", "Equity, US, Large-cap, Passive, Broad Market"),
+    "SVXY": ("Volatility / Risk Premia", "Vol Indices", "Volatility, US, Short, Quantitative"),
+    "VCIT": ("Fixed Income", "Corporate Credit", "Credit, US, Medium (2-10Y), Passive"),
+    "VGK":  ("Equities", "Country/Regional", "Equity, Europe, Developed, Passive"),
+    "VHT":  ("Equities", "Sector Indices", "Equity, US, Healthcare, Passive"),
+    "VIXY": ("Volatility / Risk Premia", "Vol Indices", "Volatility, US, Long, Quantitative"),
+    "VLUE": ("Equities", "Thematic/Factor", "Equity, US, Value, Factor-Based, Passive"),
+    "VNQ":  ("Equities", "Real Estate / REITs", "Equity, US, Real Estate, Passive"),
+    "VNQI": ("Equities", "Real Estate / REITs", "Equity, Global, Real Estate, Passive"),
+    "VPL":  ("Equities", "Country/Regional", "Equity, APAC, Developed, Passive"),
+    "VTI":  ("Equities", "Global Indices", "Equity, US, Broad Market, Passive"),
+    "VTV":  ("Equities", "Thematic/Factor", "Equity, US, Value, Factor-Based, Passive"),
+    "XLC":  ("Equities", "Sector Indices", "Equity, US, Communication Services, Passive"),
+    "XLE":  ("Equities", "Sector Indices", "Equity, US, Energy, Passive"),
+    "XLI":  ("Equities", "Sector Indices", "Equity, US, Industrials, Passive"),
+    "XLP":  ("Equities", "Sector Indices", "Equity, US, Consumer, Defensive, Passive"),
+    "XLU":  ("Equities", "Sector Indices", "Equity, US, Utilities, Defensive, Passive"),
+    "XLV":  ("Equities", "Sector Indices", "Equity, US, Healthcare, Passive"),
+    "XLY":  ("Equities", "Sector Indices", "Equity, US, Consumer, Passive"),
+    "XME":  ("Equities", "Sector Indices", "Equity, US, Materials, Passive"),
+    "XOP":  ("Equities", "Sector Indices", "Equity, US, Energy, Passive"),
+}
+# Dropped outright:
+#   TBT  -- 2x inverse Treasury, per leveraged/inverse exclusion policy.
+#   GFOF -- Grayscale Future of Finance: stopped trading in 2024, no viable
+#           yfinance data. (Both yf_tickers are/were real; exclusion is by
+#           policy / delisting, not source quality.)
+DROP_TICKERS = {"TBT", "GFOF"}
+
 
 def build_universe() -> pd.DataFrame:
     print("=" * 70)
@@ -65,26 +160,52 @@ def build_universe() -> pd.DataFrame:
     # Map every Bloomberg ticker to a yfinance ticker (None = dropped)
     rows = []
     dropped = []
+    relabeled = []
     for _, r in df.iterrows():
         bt = str(r["Bloomberg_Ticker"]).strip()
         yf = get_yf_ticker(bt)
         if yf is None:
             dropped.append(bt)
             continue
+
+        source = r["source"]
+        name = r["Name"]
+        description = r.get("Long_Description")
+        tier1 = r["category_tier1"]
+        tier2 = r["category_tier2"]
+        tags = r.get("category_tags")
+
+        if source != "ETF":
+            if yf in DROP_TICKERS:
+                dropped.append(bt)
+                continue
+            override = ETF_OVERRIDES.get(yf)
+            if override is not None:
+                tier1, tier2, tags = override
+                source = "ETF"  # now correctly reflects a real, direct ETF
+                description = (f"{description} [relabeled from Goldman/"
+                                f"Bloomberg-proxy source -- see ETF_OVERRIDES]"
+                                if isinstance(description, str) else description)
+                relabeled.append(yf)
+            # else: non-ETF source with no override on file -- keep as-is,
+            # flagged via 'source' column for manual review later.
+
         rows.append({
             "yf_ticker": yf,
             "bloomberg_ticker": bt,
-            "name": r["Name"],
-            "description": r.get("Long_Description"),
-            "tier1": r["category_tier1"],
-            "tier2": r["category_tier2"],
-            "tags": r.get("category_tags"),
-            "source": r["source"],
+            "name": name,
+            "description": description,
+            "tier1": tier1,
+            "tier2": tier2,
+            "tags": tags,
+            "source": source,
             "tracking_score": get_tracking_score(bt) if "Equity" not in bt else 5,
         })
     mapped = pd.DataFrame(rows)
     print(f"[2/4] Mapped to yfinance: {len(mapped)} rows, dropped {len(dropped)} "
-          f"(no ETF replacement)")
+          f"(no ETF replacement or explicit exclusion)")
+    print(f"      Relabeled {len(relabeled)} Goldman/Bloomberg-proxy rows to their "
+          f"real ETF identity: {sorted(relabeled)}")
 
     # Collapse duplicates: the ETF is the asset. Direct ETF rows (source=='ETF')
     # win over proxy rows; among proxies keep the highest tracking score.

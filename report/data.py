@@ -151,6 +151,55 @@ def fetch_prices(tickers: Iterable[str], period: str = None) -> pd.DataFrame:
     return long_df
 
 
+def apply_holding_price_aliases(long_df: pd.DataFrame,
+                                holdings_df: pd.DataFrame,
+                                aliases: dict = None) -> pd.DataFrame:
+    """
+    Add synthetic price series for held symbols that Yahoo does not price.
+
+    The source ticker supplies returns. The synthetic target series is scaled so
+    its latest close equals the broker's current market_value / quantity. That
+    preserves exposure sizing in compute_portfolio while making daily/YTD
+    returns available for the originally held symbol.
+    """
+    aliases = aliases if aliases is not None else SETTINGS.get("holding_price_aliases", {})
+    if not aliases:
+        return long_df
+
+    out = long_df.copy()
+    held = holdings_df.copy()
+    held["symbol"] = held["symbol"].astype(str).str.strip()
+
+    for target, source in aliases.items():
+        source_rows = out[out["yf_ticker"] == source].copy()
+        target_rows = held[held["symbol"] == target].copy()
+        if source_rows.empty or target_rows.empty:
+            continue
+
+        qty = pd.to_numeric(target_rows["quantity"], errors="coerce").sum()
+        mv = pd.to_numeric(target_rows["market_value"], errors="coerce").sum()
+        if not qty or pd.isna(qty) or pd.isna(mv):
+            print(f"  Price alias skipped for {target}: missing broker anchor")
+            continue
+
+        latest_close = source_rows.sort_values("date")["close"].dropna().iloc[-1]
+        if not latest_close or pd.isna(latest_close):
+            print(f"  Price alias skipped for {target}: missing {source} close")
+            continue
+
+        broker_unit_price = mv / qty
+        scale = broker_unit_price / latest_close
+        alias_rows = source_rows.copy()
+        alias_rows["yf_ticker"] = target
+        alias_rows["close"] = alias_rows["close"] * scale
+        out = out[out["yf_ticker"] != target]
+        out = pd.concat([out, alias_rows], ignore_index=True)
+        print(f"  Price alias: {target} <- {source} "
+              f"(scaled to broker unit price {broker_unit_price:.4f})")
+
+    return out
+
+
 def store_prices(long_df: pd.DataFrame) -> int:
     """Upsert fetched prices into report.db."""
     n = db.upsert_prices(long_df)
