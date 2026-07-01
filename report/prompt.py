@@ -87,37 +87,41 @@ def _money(v):
 
 
 def _render_allocation(alloc: dict) -> list:
-    """Household asset-allocation section: top-level asset class, then the
-    equity sleeve zoomed into US / International / EM / Global."""
+    """Household asset allocation as ONE hierarchical table: Equities (with
+    US / International / EM sub-rows), then Bonds / Alternatives / Cash.
+    Multi-asset and global funds are looked through to their underlying mix."""
     if not alloc:
         return []
-    out = []
-    bc = alloc.get("by_class")
-    if bc is not None and not bc.empty:
-        show = bc.copy()
-        show["Weight %"] = show["weight_pct"].map(lambda v: _num(v, 1, signed=False))
-        show["Value"] = show["value"].map(_money)
-        show["1d %"] = show["return_1d"].map(lambda v: _num(v, 2))
-        show["YTD %"] = show["return_ytd"].map(lambda v: _num(v, 1))
-        show = show.rename(columns={"bucket": "Asset Class", "n": "n"})[
-            ["Asset Class", "Weight %", "Value", "1d %", "YTD %", "n"]]
-        out.append("\n## HOUSEHOLD ASSET ALLOCATION (live book + GMO; weight = % "
-                   "of total net value incl. cash; bucket return = P&L over gross)")
-        out.append(_md_table(show.set_index("Asset Class")))
-    reg = alloc.get("equity_by_region")
-    if reg is not None and not reg.empty:
-        show = reg.copy()
-        show["% of Equities"] = show["weight_pct"].map(lambda v: _num(v, 1, signed=False))
-        show["% of Total"] = show["pct_of_total"].map(lambda v: _num(v, 1, signed=False))
-        show["1d %"] = show["return_1d"].map(lambda v: _num(v, 2))
-        show["YTD %"] = show["return_ytd"].map(lambda v: _num(v, 1))
-        show = show.rename(columns={"region": "Region"})[
-            ["Region", "% of Equities", "% of Total", "1d %", "YTD %", "n"]]
-        out.append("\n### EQUITY SLEEVE BY REGION (US / International / EM / Global)")
-        out.append(_md_table(show.set_index("Region")))
+    table = alloc.get("table")
+    if table is None or table.empty:
+        return []
+    show = table.copy()
+    parents = set(show.loc[show["level"] == 1, "parent"]) if "parent" in show else set()
+    # indent sub-rows and bold any parent bucket that has region children
+    def _label(r):
+        if r["level"] == 1:
+            return f"— {r['label']}"
+        if r["label"] in parents:
+            return f"**{r['label']}**"
+        return r["label"]
+    show["Bucket"] = show.apply(_label, axis=1)
+    show["Weight %"] = show["weight_pct"].map(lambda v: _num(v, 1, signed=False))
+    show["Value"] = show["value"].map(_money)
+    show["1d %"] = show["return_1d"].map(lambda v: _num(v, 2))
+    show["YTD %"] = show["return_ytd"].map(lambda v: _num(v, 1))
+    show = show[["Bucket", "Weight %", "Value", "1d %", "YTD %"]]
+    out = ["\n## HOUSEHOLD ASSET ALLOCATION (live book + GMO; multi-asset & global "
+           "funds looked through to their underlying mix; weight = % of total net "
+           "value incl. cash; region sub-rows sum to Equities; bucket return = "
+           "P&L over gross exposure)"]
+    out.append(_md_table(show.set_index("Bucket")))
     if alloc.get("unclassified"):
-        out.append(f"\n(Region unclassified for equity holdings: "
-                   f"{', '.join(alloc['unclassified'])} — add a region tag.)")
+        out.append(f"\n(Global/region-unclassified equity holdings needing "
+                   f"look-through data: {', '.join(alloc['unclassified'])}.)")
+    if alloc.get("sources"):
+        src = "; ".join(f"{s} ({asof})" for s, asof, _ in alloc["sources"] if asof)
+        if src:
+            out.append(f"\nLook-through sources (as-of): {src}")
     return out
 
 

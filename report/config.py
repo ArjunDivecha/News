@@ -118,6 +118,83 @@ CASH_EQUIVALENTS = {"CASH", "SNSXX", "SNAXX"}
 # pinned in report/tags.py MANUAL_OVERRIDES so the benchmark is exact.
 # ---------------------------------------------------------------------------
 BENCHMARK = [("ACWI", 0.60), ("TLT", 0.40)]
+
+# ---------------------------------------------------------------------------
+# Fund look-through for the asset-allocation report. Multi-asset funds (GMO
+# Benchmark-Free etc.) and global-equity funds are distributed into their
+# underlying asset classes and equity regions instead of one wholesale bucket.
+#   ticker -> {"asof": "YYYY-MM-DD", "source": "<url>",
+#              "class": {"Equities":f, "Bonds":f, "Cash":f, "Alternatives":f},
+#              "equity_region": {"US":f, "International":f, "EM":f}}
+# `class` fractions sum to 1.0 (of the fund); `equity_region` fractions sum to
+# 1.0 (of the fund's EQUITY sleeve). Numbers are from published fact sheets with
+# the as-of date recorded — refresh them when GMO/the issuers publish new sheets.
+# NEVER put a fabricated figure here; leave a fund out and it stays wholesale.
+# ---------------------------------------------------------------------------
+FUND_LOOKTHROUGH = {
+    # GMO Benchmark-Free Allocation Fund — from GMO's Portfolio Composition
+    # workbook (user-provided), as of 2026-05-31.
+    #   Asset class (Portfolio Allocation tab): Equity strategies 44.1%,
+    #   Fixed Income 27.8% (US Treasuries 25.9 + ABS 1.9), Alternative
+    #   strategies 28.3% (Equity Dislocation 14.3 + Emerging FX 1.9 + Alt
+    #   Allocation 12.1).
+    #   Equity regions (Equity-Regions tab): US 14.2, EM 25.0, International
+    #   60.8 (Japan 22.9 + Europe ex-UK 20.4 + Other Intl 12.0 + UK 5.5).
+    "GBMBX": {
+        "asof": "2026-05-31",
+        "source": "GMO Benchmark-Free Allocation Fund — Portfolio Composition",
+        "class": {"Equities": 0.440, "Bonds": 0.277, "Alternatives": 0.283},
+        "equity_region": {"US": 0.142, "International": 0.608, "EM": 0.250},
+        "bond_region": {"US": 1.0},   # US Treasury Notes 25.9 + ABS 1.9
+    },
+    # GMO Equity Dislocation — market-neutral long/short (104% long / 100%
+    # short; net regional exposures all within ±3pp => ~0 net equity beta).
+    # Its NAV is an ALTERNATIVE strategy, not directional equity, so the whole
+    # position is Alternatives (looking through the 100% long book would
+    # overstate directional equity by ~30pp of the household). Sourced from the
+    # GMO Equity Dislocation Portfolio Composition file.
+    "IE00BF199475": {
+        "asof": "2026-05-31",
+        "source": "GMO Equity Dislocation — Portfolio Composition (market-neutral)",
+        "class": {"Alternatives": 1.0},
+        "equity_region": {},
+    },
+    # GMO Emerging Country Debt — EM sovereign/quasi-sovereign USD debt (97%
+    # USD, sovereign 72% / quasi 28%). All Fixed Income.
+    "GMOQX": {
+        "asof": "2026-05-31",
+        "source": "GMO Emerging Country Debt — Portfolio Composition",
+        "class": {"Bonds": 1.0},
+        "equity_region": {},
+        "bond_region": {"EM": 1.0},
+    },
+    # Global-equity funds (100% equity) — regional splits from composition/fact
+    # sheets, ex-cash normalized so US+International+EM = 1.0.
+    "GCCHX": {  # GMO Climate Change Fund
+        "asof": "2026-05-31",
+        "source": "GMO Climate Change — Portfolio Composition",
+        "class": {"Equities": 1.0},
+        "equity_region": {"US": 0.509, "International": 0.306, "EM": 0.185},
+    },
+    "BCHI": {  # GMO Beyond China ETF — 100% emerging markets (ex-China)
+        "asof": "2026-05-31",
+        "source": "GMO Beyond China ETF — Portfolio Composition",
+        "class": {"Equities": 1.0},
+        "equity_region": {"US": 0.0, "International": 0.0, "EM": 1.0},
+    },
+    "COPX": {  # Global X Copper Miners ETF (miner-heavy: Canada/Australia dev)
+        "asof": "2026-05-31",
+        "source": "Global X COPX country breakdown",
+        "class": {"Equities": 1.0},
+        "equity_region": {"US": 0.093, "International": 0.745, "EM": 0.162},
+    },
+    "ICLN": {  # iShares Global Clean Energy ETF
+        "asof": "2026-03-31",
+        "source": "iShares ICLN fact sheet",
+        "class": {"Equities": 1.0},
+        "equity_region": {"US": 0.448, "International": 0.211, "EM": 0.342},
+    },
+}
 # Extra series pulled purely for the tag views (never held): the benchmark legs
 # plus the VIX for the Rule-of-16 noise gate.
 TAG_VIEW_EXTRA_TICKERS = ["ACWI", "TLT", "^VIX"]

@@ -52,7 +52,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from config import (PATHS, SETTINGS, BENCHMARK, TAG_VIEW_EXTRA_TICKERS,
-                    CASH_EQUIVALENTS, ensure_dirs)
+                    CASH_EQUIVALENTS, FUND_LOOKTHROUGH, ensure_dirs)
 import analytics
 import data as data_mod
 import db
@@ -200,11 +200,11 @@ def run(no_llm: bool = False, interactive: bool = True,
             hh_cash = float(hh.loc[hh["symbol"].astype(str).str.strip().isin(
                 CASH_EQUIVALENTS), "market_value"].sum())
             allocation = tag_analytics.compute_asset_allocation(
-                hh_port["positions"], hh_tmap, hh_cash)
-            bc = allocation["by_class"]
-            print(f"  Asset allocation: {len(bc)} classes, "
-                  f"household ${allocation['total_value']:,.0f}"
-                  + (f", UNCLASSIFIED equities: {allocation['unclassified']}"
+                hh_port["positions"], hh_tmap, hh_cash,
+                lookthrough=FUND_LOOKTHROUGH)
+            print(f"  Asset allocation: household ${allocation['total_value']:,.0f}"
+                  f", look-through: {allocation['lookthrough_applied'] or 'none'}"
+                  + (f", UNCLASSIFIED: {allocation['unclassified']}"
                      if allocation["unclassified"] else ""))
         except Exception as e:
             import traceback

@@ -498,62 +498,103 @@ def _vw(sub, col):
     return float((s["mtm"] * s[col]).sum() / denom) if denom else np.nan
 
 
+def _acc(store: dict, key: str, mtm: float, ret1d, retytd):
+    """Accumulate a (possibly fractional) slice into a bucket: dollar value,
+    P&L numerators (signed mtm x ret) and the gross denominator (|mtm|)."""
+    e = store.setdefault(key, {"val": 0.0, "num1": 0.0, "numy": 0.0,
+                               "den": 0.0, "n": 0})
+    e["val"] += mtm
+    if pd.notna(ret1d):
+        e["num1"] += mtm * ret1d
+    if pd.notna(retytd):
+        e["numy"] += mtm * retytd
+    e["den"] += abs(mtm)
+    e["n"] += 1
+
+
 def compute_asset_allocation(positions: pd.DataFrame, tag_map: dict,
-                             cash_value: float = 0.0) -> dict:
-    """Household asset allocation. Returns:
-        by_class          - Equities/Bonds/Commodities/Alternatives/Cash/Other,
-                            weight % of total (incl. cash), value, 1d, YTD, n
-        equity_by_region  - US/International/EM/Global for the equity sleeve
-        unclassified      - equity tickers whose region could not be derived
-    Weights are % of total net value; bucket returns are value-weighted."""
-    rows = []
+                             cash_value: float = 0.0,
+                             lookthrough: dict = None) -> dict:
+    """Household asset allocation as ONE hierarchical table: Equities (with
+    US / International / EM sub-rows), Bonds, Commodities, Alternatives, Cash.
+
+    lookthrough: {ticker: {"asof","source","class":{bucket:frac...},
+                           "equity_region":{"US":f,"International":f,"EM":f}}}
+    A looked-through fund's value is distributed across asset classes per
+    `class`, and its Equities slice across regions per `equity_region`; the
+    fund's own return is applied to every slice (allocation is the point).
+    There is NO 'Global' bucket: a global-equity fund WITHOUT look-through data
+    is surfaced as 'Unclassified' (never silently bucketed or fabricated).
+
+    Weights are % of total net value (incl. cash); a bucket's return is P&L over
+    gross exposure so a short signs correctly.
+    """
+    lookthrough = lookthrough or {}
+    class_acc, region_acc = {}, {}      # region_acc keyed by (class, region)
+    lt_used, unclassified = [], []
+    ORDER_REG = ["US", "International", "EM", "Unclassified"]
+    SPLIT = ("Equities", "Bonds")       # asset classes shown with region sub-rows
+    LT_REGION = {"Equities": "equity_region", "Bonds": "bond_region"}
+
     for sym, r in positions.iterrows():
         mtm = r.get("market_value_mtm")
         if mtm is None or not np.isfinite(mtm):
             continue
-        cls, reg = classify_holding(_tags(tag_map.get(sym, "")))
-        rows.append({"sym": sym, "mtm": mtm, "ret_1d": r.get("return_1d"),
-                     "ret_ytd": r.get("return_ytd"), "cls": cls, "reg": reg})
-    if not rows:
-        return {"by_class": pd.DataFrame(), "equity_by_region": pd.DataFrame(),
-                "unclassified": [], "total_value": cash_value}
-    df = pd.DataFrame(rows)
-    total = float(df["mtm"].sum() + cash_value)
+        ret1, rety = r.get("return_1d"), r.get("return_ytd")
+        lt = lookthrough.get(sym)
+        if lt:
+            lt_used.append(sym)
+            for cls, frac in lt.get("class", {}).items():
+                if not frac:
+                    continue
+                _acc(class_acc, cls, mtm * frac, ret1, rety)
+                if cls in SPLIT:
+                    regmap = lt.get(LT_REGION[cls], {})
+                    if regmap:
+                        for reg, rf in regmap.items():
+                            if rf:
+                                _acc(region_acc, (cls, reg), mtm * frac * rf,
+                                     ret1, rety)
+                    else:                # looked-through but no region given
+                        unclassified.append(sym)
+                        _acc(region_acc, (cls, "Unclassified"), mtm * frac,
+                             ret1, rety)
+        else:
+            cls, reg = classify_holding(_tags(tag_map.get(sym, "")))
+            _acc(class_acc, cls, mtm, ret1, rety)
+            if cls in SPLIT:
+                if reg in ("Global", "Unclassified"):
+                    reg = "Unclassified"
+                    unclassified.append(sym)
+                _acc(region_acc, (cls, reg), mtm, ret1, rety)
+    _acc(class_acc, "Cash", cash_value, 0.0, 0.0)
 
-    class_rows = []
-    for cls in ["Equities", "Bonds", "Commodities", "Alternatives", "Other"]:
-        sub = df[df["cls"] == cls]
-        if sub.empty:
-            continue
-        val = float(sub["mtm"].sum())
-        class_rows.append({"bucket": cls,
-                           "weight_pct": 100 * val / total if total else np.nan,
-                           "value": val, "return_1d": _vw(sub, "ret_1d"),
-                           "return_ytd": _vw(sub, "ret_ytd"), "n": len(sub)})
-    if cash_value:
-        class_rows.append({"bucket": "Cash",
-                           "weight_pct": 100 * cash_value / total if total else np.nan,
-                           "value": float(cash_value), "return_1d": 0.0,
-                           "return_ytd": 0.0, "n": 0})
-    by_class = pd.DataFrame(class_rows)
+    total = float(sum(e["val"] for e in class_acc.values())) or np.nan
 
-    eq = df[df["cls"] == "Equities"]
-    eq_total = float(eq["mtm"].sum())
-    reg_rows = []
-    for reg in ["US", "International", "EM", "Global", "Unclassified"]:
-        sub = eq[eq["reg"] == reg]
-        if sub.empty:
+    def _row(label, e, level, parent=""):
+        return {"label": label, "level": level, "parent": parent,
+                "weight_pct": 100 * e["val"] / total if np.isfinite(total) else np.nan,
+                "value": e["val"],
+                "return_1d": e["num1"] / e["den"] if e["den"] else np.nan,
+                "return_ytd": e["numy"] / e["den"] if e["den"] else np.nan,
+                "n": e["n"]}
+
+    rows = []
+    for cls in ["Equities", "Bonds", "Commodities", "Alternatives", "Other", "Cash"]:
+        if cls not in class_acc or class_acc[cls]["val"] == 0:
             continue
-        val = float(sub["mtm"].sum())
-        reg_rows.append({"region": reg,
-                         "weight_pct": 100 * val / eq_total if eq_total else np.nan,
-                         "pct_of_total": 100 * val / total if total else np.nan,
-                         "return_1d": _vw(sub, "ret_1d"),
-                         "return_ytd": _vw(sub, "ret_ytd"), "n": len(sub)})
-    equity_by_region = pd.DataFrame(reg_rows)
-    return {"by_class": by_class, "equity_by_region": equity_by_region,
-            "unclassified": sorted(eq[eq["reg"] == "Unclassified"]["sym"]),
-            "total_value": total}
+        rows.append(_row(cls, class_acc[cls], 0))
+        if cls in SPLIT:
+            for reg in ORDER_REG:
+                if (cls, reg) in region_acc:
+                    rows.append(_row(reg, region_acc[(cls, reg)], 1, parent=cls))
+    table = pd.DataFrame(rows)
+
+    sources = sorted({(s, lookthrough[s].get("asof"), lookthrough[s].get("source"))
+                      for s in lt_used})
+    return {"table": table, "total_value": total,
+            "unclassified": sorted(set(unclassified)),
+            "lookthrough_applied": sorted(set(lt_used)), "sources": sources}
 
 
 def build_tag_views(market: dict, portfolio: dict, tag_map: dict,

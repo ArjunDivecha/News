@@ -118,12 +118,18 @@ Duration). `tag_analytics.py` computes, as pure functions:
   position's contribution split equally within an axis, so tags sum to the day's
   P&L per axis), exposure-vs-realized-beta (flags hidden co-movement / inert
   themes), and an EM country-vs-style η² decomposition.
-- **Household asset allocation** (`compute_asset_allocation`): top-level
-  Equities / Bonds / Commodities / Alternatives / Cash (live book + GMO), then
-  the equity sleeve by region (US / International / EM / Global). Weights are net
-  exposure; bucket returns are P&L over gross so a short signs correctly.
-  Holdings are classified from tags (`classify_holding`); a few single-country
-  EM ETFs the tagger under-specifies are pinned in `tags.py`.
+- **Household asset allocation** (`compute_asset_allocation`): ONE hierarchical
+  table (live book + GMO) — **Equities** and **Bonds** each split into US /
+  International / EM sub-rows, then **Alternatives** and **Cash**. Weights are
+  net exposure; bucket returns are P&L over gross so a short signs correctly
+  (IBKR shorts show as negative equity, its cash incl. short proceeds stays
+  positive). Multi-asset and global funds are **looked through** to their
+  underlying mix via `config.FUND_LOOKTHROUGH` (GMO Benchmark-Free → equity/
+  bond/alt; the market-neutral GMO Equity Dislocation → Alternatives, not
+  equity; global-equity funds → US/Int/EM), sourced from published composition
+  files with an as-of date and cited in a footnote. There is no "Global"
+  bucket; a global fund lacking look-through data is surfaced as Unclassified,
+  never fabricated. Everything else is classified from tags (`classify_holding`).
 
 Tags are correlated, so tilts are **never summed across axes** — each is an
 independent excess-vs-benchmark or excess-vs-universe reading. The blocks are fed

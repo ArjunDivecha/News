@@ -82,6 +82,7 @@ MANUAL_OVERRIDES = {
     },
     # Single-country EM equity ETFs the tagger under-/mis-classified (needed for
     # a correct household asset-allocation report):
+    "EWU": {"name": "iShares MSCI United Kingdom ETF", "tags": "Equity, Europe"},
     "EWZ": {"name": "iShares MSCI Brazil ETF", "tags": "Equity, EM"},
     "EZA": {"name": "iShares MSCI South Africa ETF", "tags": "Equity, EM"},
     "ECH": {"name": "iShares MSCI Chile ETF", "tags": "Equity, EM"},

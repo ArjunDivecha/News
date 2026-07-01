@@ -80,11 +80,9 @@ Then an **attribution table** — the 8-10 largest contributors (positive and ne
 Then 1-2 sentences per non-trivial sub-portfolio: what drove its day, how it diverged from the aggregate. Highlight the best and worst performer.
 
 ## Asset Allocation
-**(REQUIRED whenever the package has a `HOUSEHOLD ASSET ALLOCATION` section.)** This is the household (live book + GMO), tables-first:
+**(REQUIRED whenever the package has a `HOUSEHOLD ASSET ALLOCATION` section.)** This is the household (live book + GMO). Reproduce the single table verbatim, preserving row order, indentation, and the bold parent rows: **Equities** with indented region sub-rows `— US / — International / — EM` (summing to Equities), then **Bonds** with its own indented region sub-rows (US / EM), then **Alternatives**, then **Cash** — columns Weight %, Value, 1d %, YTD %.
 
-**Asset-class table** — reproduce HOUSEHOLD ASSET ALLOCATION: Asset Class (Equities/Bonds/Commodities/Alternatives/Cash), Weight %, Value, 1d %, YTD %. Bold the largest bucket. One sentence on the top-level shape (e.g. how much of the household is GMO alternatives/multi-asset vs directional equities).
-
-**Equity-by-region table** — reproduce EQUITY SLEEVE BY REGION: Region (US / International / EM / Global), % of Equities, % of Total, 1d %, YTD %. Follow with 2-3 sentences on the regional tilt (where the equity money actually is — e.g. EM-heavy vs US) and how each region did today and YTD. If any equity holding is flagged region-unclassified, name it once. Weights are net exposure; bucket returns are P&L over gross (so a short reads with the correct sign).
+Multi-asset and global funds are looked through to their underlying mix (GMO Benchmark-Free split into equity/bond/alternative; the market-neutral GMO Equity Dislocation sits in Alternatives, NOT equity; global-equity funds distributed into US/Int/EM). Weights are net exposure; bucket returns are P&L over gross (so a short signs correctly). Follow the table with 3-4 sentences: the top-level shape (how much is directional equity vs the GMO alternatives sleeve vs cash), and the equity regional tilt (US/Int/EM — e.g. heavily EM). If any holding is flagged region-unclassified, name it once. Do NOT invent a "Global" bucket — there are exactly three equity regions. Cite the look-through as-of date once (per the package footnote).
 
 ## The Bridge & Positioning
 Connect the market to the book. Tables first.
