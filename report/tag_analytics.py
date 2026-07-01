@@ -499,32 +499,87 @@ def _vw(sub, col):
 
 
 def _acc(store: dict, key: str, mtm: float, ret1d, retytd):
-    """Accumulate a (possibly fractional) slice into a bucket: dollar value,
-    P&L numerators (signed mtm x ret) and the gross denominator (|mtm|)."""
+    """Accumulate a (possibly fractional) slice into a bucket: dollar value plus,
+    per return metric, the P&L numerator (signed mtm x ret) and its GROSS
+    denominator (|mtm|). The denominator is per-metric so a holding without a
+    return (e.g. an illiquid LP with no daily mark) contributes VALUE but does
+    NOT dilute the bucket's return toward zero."""
     e = store.setdefault(key, {"val": 0.0, "num1": 0.0, "numy": 0.0,
-                               "den": 0.0, "n": 0})
+                               "den1": 0.0, "deny": 0.0, "n": 0})
     e["val"] += mtm
     if pd.notna(ret1d):
         e["num1"] += mtm * ret1d
+        e["den1"] += abs(mtm)
     if pd.notna(retytd):
         e["numy"] += mtm * retytd
-    e["den"] += abs(mtm)
+        e["deny"] += abs(mtm)
     e["n"] += 1
+
+
+def _slice_return(cls, reg, own1, owny, generic):
+    """Return (1d, ytd) for a look-through slice: the fund's OWN return when it
+    has one; otherwise a GENERIC asset-class proxy return (for no-daily-mark
+    holdings like the Baupost LP). Cash slices with no own return earn 0."""
+    r1, ry = own1, owny
+    if pd.isna(r1) or pd.isna(ry):
+        if cls == "Cash":
+            r1 = 0.0 if pd.isna(r1) else r1
+            ry = 0.0 if pd.isna(ry) else ry
+        elif generic and (cls, reg) in generic:
+            g = generic[(cls, reg)]
+            if pd.isna(r1):
+                r1 = g[0]
+            if pd.isna(ry):
+                ry = g[1]
+    return r1, ry
+
+
+def blended_lookthrough_return(lt: dict, generic: dict):
+    """Value-weighted (1d, ytd) return for a look-through fund with no own mark,
+    from its class/region distribution x generic asset-class proxy returns.
+    Cash earns 0. Returns (nan, nan) if nothing could be priced."""
+    LT_REGION = {"Equities": "equity_region", "Bonds": "bond_region"}
+    n1 = ny = d1 = dy = 0.0
+    for cls, frac in lt.get("class", {}).items():
+        if not frac:
+            continue
+        if cls == "Cash":
+            d1 += frac
+            dy += frac       # cash earns 0 -> numerator unchanged
+            continue
+        regmap = lt.get(LT_REGION.get(cls, ""), {})
+        for reg, rf in (regmap.items() if regmap else [(None, 1.0)]):
+            g = (generic or {}).get((cls, reg))
+            if not g:
+                continue
+            w = frac * rf
+            if pd.notna(g[0]):
+                n1 += w * g[0]
+                d1 += w
+            if pd.notna(g[1]):
+                ny += w * g[1]
+                dy += w
+    return (n1 / d1 if d1 else np.nan, ny / dy if dy else np.nan)
 
 
 def compute_asset_allocation(positions: pd.DataFrame, tag_map: dict,
                              cash_value: float = 0.0,
-                             lookthrough: dict = None) -> dict:
+                             lookthrough: dict = None,
+                             generic_returns: dict = None) -> dict:
     """Household asset allocation as ONE hierarchical table: Equities (with
     US / International / EM sub-rows), Bonds, Commodities, Alternatives, Cash.
 
     lookthrough: {ticker: {"asof","source","class":{bucket:frac...},
-                           "equity_region":{"US":f,"International":f,"EM":f}}}
+                           "equity_region":{...}, "bond_region":{...}}}
+    generic_returns: {(class, region): (ret1d, retytd)} proxy returns used for a
+    looked-through fund that has NO daily mark of its own (e.g. an LP), so it
+    still contributes a sensible return per its asset-class distribution.
+
     A looked-through fund's value is distributed across asset classes per
-    `class`, and its Equities slice across regions per `equity_region`; the
-    fund's own return is applied to every slice (allocation is the point).
-    There is NO 'Global' bucket: a global-equity fund WITHOUT look-through data
-    is surfaced as 'Unclassified' (never silently bucketed or fabricated).
+    `class`, its Equities/Bonds slices across regions; each slice earns the
+    fund's own return, or the generic proxy when it has none. There is NO
+    'Global' bucket: a global-equity fund WITHOUT look-through data is surfaced
+    as 'Unclassified' (never silently bucketed or fabricated).
 
     Weights are % of total net value (incl. cash); a bucket's return is P&L over
     gross exposure so a short signs correctly.
@@ -547,18 +602,26 @@ def compute_asset_allocation(positions: pd.DataFrame, tag_map: dict,
             for cls, frac in lt.get("class", {}).items():
                 if not frac:
                     continue
-                _acc(class_acc, cls, mtm * frac, ret1, rety)
+                cval = mtm * frac
                 if cls in SPLIT:
                     regmap = lt.get(LT_REGION[cls], {})
                     if regmap:
                         for reg, rf in regmap.items():
-                            if rf:
-                                _acc(region_acc, (cls, reg), mtm * frac * rf,
-                                     ret1, rety)
+                            if not rf:
+                                continue
+                            sr1, sry = _slice_return(cls, reg, ret1, rety,
+                                                     generic_returns)
+                            _acc(class_acc, cls, cval * rf, sr1, sry)
+                            _acc(region_acc, (cls, reg), cval * rf, sr1, sry)
                     else:                # looked-through but no region given
                         unclassified.append(sym)
-                        _acc(region_acc, (cls, "Unclassified"), mtm * frac,
-                             ret1, rety)
+                        sr1, sry = _slice_return(cls, None, ret1, rety,
+                                                 generic_returns)
+                        _acc(class_acc, cls, cval, sr1, sry)
+                        _acc(region_acc, (cls, "Unclassified"), cval, sr1, sry)
+                else:
+                    sr1, sry = _slice_return(cls, None, ret1, rety, generic_returns)
+                    _acc(class_acc, cls, cval, sr1, sry)
         else:
             cls, reg = classify_holding(_tags(tag_map.get(sym, "")))
             _acc(class_acc, cls, mtm, ret1, rety)
@@ -575,8 +638,8 @@ def compute_asset_allocation(positions: pd.DataFrame, tag_map: dict,
         return {"label": label, "level": level, "parent": parent,
                 "weight_pct": 100 * e["val"] / total if np.isfinite(total) else np.nan,
                 "value": e["val"],
-                "return_1d": e["num1"] / e["den"] if e["den"] else np.nan,
-                "return_ytd": e["numy"] / e["den"] if e["den"] else np.nan,
+                "return_1d": e["num1"] / e["den1"] if e["den1"] else np.nan,
+                "return_ytd": e["numy"] / e["deny"] if e["deny"] else np.nan,
                 "n": e["n"]}
 
     rows = []

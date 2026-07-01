@@ -130,6 +130,12 @@ Duration). `tag_analytics.py` computes, as pure functions:
   files with an as-of date and cited in a footnote. There is no "Global"
   bucket; a global fund lacking look-through data is surfaced as Unclassified,
   never fabricated. Everything else is classified from tags (`classify_holding`).
+  Off-broker holdings with no daily mark (e.g. the Baupost LP in
+  `config.MANUAL_HOLDINGS`) are carried at a fixed value, appear as their own
+  sub-portfolio sleeve, and — since they have no price — earn a **generic
+  asset-class proxy return** (US eq=SPX, Intl=EAFE, EM=EM, US bonds=AGG, cash=0)
+  applied to their policy distribution, so they still contribute a sensible
+  return to the sleeve, the household total, and the allocation buckets.
 
 Tags are correlated, so tilts are **never summed across axes** — each is an
 independent excess-vs-benchmark or excess-vs-universe reading. The blocks are fed

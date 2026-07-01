@@ -488,7 +488,9 @@ def compute_portfolio(holdings: pd.DataFrame, prices: pd.DataFrame,
 
 def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
                           asof: Optional[str] = None,
-                          gmo_holdings: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+                          gmo_holdings: Optional[pd.DataFrame] = None,
+                          extra_holdings: Optional[pd.DataFrame] = None,
+                          sleeve_return_override: Optional[dict] = None) -> pd.DataFrame:
     """
     Compute daily and YTD return for each sub-portfolio (broker × account),
     plus GMO if provided.
@@ -536,6 +538,22 @@ def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
         res = _subportfolio_returns(gmo_holdings, last_ret, ytd, bod_price,
                                     last_close, "GMO", "GMO", "GMO")
         results.append(res)
+
+    # Manual off-broker sleeves (e.g. Baupost) — grouped by their own
+    # broker/account so each becomes its own row. No daily mark -> returns are
+    # NaN (shown as an em dash), value carried at the supplied market value.
+    if extra_holdings is not None and not extra_holdings.empty:
+        for (broker, acct), grp in extra_holdings.groupby(["broker", "account"],
+                                                          sort=False):
+            label = ACCOUNT_NAMES.get((broker, str(acct)), f"{broker} {acct}")
+            res = _subportfolio_returns(grp, last_ret, ytd, bod_price,
+                                        last_close, label, broker, str(acct))
+            # No daily mark for a manual sleeve (e.g. an LP): fill its return
+            # with a supplied proxy (generic asset-class returns x its policy mix)
+            ov = (sleeve_return_override or {}).get((broker, str(acct)))
+            if ov is not None:
+                res["return_1d"], res["return_ytd"] = ov
+            results.append(res)
 
     out = pd.DataFrame(results)
 

@@ -104,6 +104,7 @@ ACCOUNT_NAMES = {
     ("IBKR", "U1399611"): "IBKR Main",
     ("IBKR", "U14983106"): "IBKR Experiment",
     ("IBKR", "U24887919"): "IBKR Trading",
+    ("Baupost", "Baupost"): "Baupost (LP)",
 }
 
 # ---------------------------------------------------------------------------
@@ -194,10 +195,37 @@ FUND_LOOKTHROUGH = {
         "class": {"Equities": 1.0},
         "equity_region": {"US": 0.448, "International": 0.211, "EM": 0.342},
     },
+    # Baupost Value Partners LP II — off-broker hedge fund, no daily mark.
+    # Policy allocation supplied by the owner (Equity 30% split US 15 / Intl 10 /
+    # EM 5 of TOTAL -> 50/33.3/16.7 of the equity sleeve; Bonds/credit 35%;
+    # Cash/opportunistic reserve 35%).
+    "BAUPOST": {
+        "asof": "policy",
+        "source": "Owner policy allocation (Baupost Value Partners LP II)",
+        "class": {"Equities": 0.30, "Bonds": 0.35, "Cash": 0.35},
+        "equity_region": {"US": 0.5, "International": 1 / 3, "EM": 1 / 6},
+        "bond_region": {"US": 1.0},   # owner: treat the credit sleeve as US
+    },
 }
+
+# ---------------------------------------------------------------------------
+# Manual off-broker holdings — assets not in any broker/GMO feed, carried at a
+# fixed value (no daily price). Included in the HOUSEHOLD total and the asset
+# allocation (looked through via FUND_LOOKTHROUGH), NOT in the live "Portfolio"
+# section. Update market_value when a new statement arrives.
+# ---------------------------------------------------------------------------
+MANUAL_HOLDINGS = [
+    {"account": "Baupost", "broker": "Baupost", "symbol": "BAUPOST",
+     "quantity": float("nan"), "avg_price": float("nan"),
+     "market_value": 13_806_000.0, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "Baupost Value Partners LP II"},
+]
 # Extra series pulled purely for the tag views (never held): the benchmark legs
 # plus the VIX for the Rule-of-16 noise gate.
-TAG_VIEW_EXTRA_TICKERS = ["ACWI", "TLT", "^VIX"]
+# ACWI/TLT = benchmark legs; ^VIX = noise gate; SPY/EFA/EEM/AGG = generic
+# asset-class return proxies for looking through no-daily-mark holdings
+# (e.g. the Baupost LP): US eq/Intl eq/EM eq/US bonds respectively.
+TAG_VIEW_EXTRA_TICKERS = ["ACWI", "TLT", "^VIX", "SPY", "EFA", "EEM", "AGG"]
 
 SETTINGS = {
     # Price fetch

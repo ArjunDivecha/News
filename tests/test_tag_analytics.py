@@ -324,11 +324,56 @@ class TestAssetAllocation:
         assert abs(cell(1, "EM", "Bonds") - 60.0) < 1e-9       # bonds -> EM
         assert "MULTI" in a["lookthrough_applied"]
 
+    def test_no_return_holding_adds_value_not_return(self):
+        # an illiquid holding (NaN returns, e.g. an LP with no daily mark) must
+        # add VALUE to the bucket but NOT dilute the bucket's return toward zero
+        pos = pd.DataFrame({"market_value_mtm": [100.0, 900.0],
+                            "return_1d": [2.0, float("nan")],
+                            "return_ytd": [10.0, float("nan")]},
+                           index=["A", "ILLIQ"])
+        a = ta.compute_asset_allocation(pos, {"A": "Equity, US",
+                                              "ILLIQ": "Equity, US"})
+        t = a["table"]
+        us = t[(t["level"] == 1) & (t["parent"] == "Equities")
+               & (t["label"] == "US")].iloc[0]
+        assert abs(us["return_1d"] - 2.0) < 1e-9      # A only, ILLIQ excluded
+        assert abs(us["value"] - 1000.0) < 1e-9       # value includes both
+
     def test_global_without_lookthrough_is_unclassified(self):
         pos = pd.DataFrame({"market_value_mtm": [100.0], "return_1d": [1.0],
                             "return_ytd": [2.0]}, index=["GLB"])
         a = ta.compute_asset_allocation(pos, {"GLB": "Equity, Global"})
         assert "GLB" in a["unclassified"]        # never silently bucketed
+
+    def test_generic_returns_impute_no_mark_fund(self):
+        # a look-through fund with NO own return earns the generic asset-class
+        # proxy per slice (the Baupost case)
+        lt = {"LP": {"class": {"Equities": 0.5, "Bonds": 0.5},
+                     "equity_region": {"US": 1.0}, "bond_region": {"US": 1.0}}}
+        generic = {("Equities", "US"): (2.0, 20.0), ("Bonds", "US"): (1.0, 5.0)}
+        pos = pd.DataFrame({"market_value_mtm": [100.0],
+                            "return_1d": [float("nan")],
+                            "return_ytd": [float("nan")]}, index=["LP"])
+        a = ta.compute_asset_allocation(pos, {"LP": ""}, 0.0, lookthrough=lt,
+                                        generic_returns=generic)
+        t = a["table"]
+        eq_us = t[(t["level"] == 1) & (t["parent"] == "Equities")
+                  & (t["label"] == "US")].iloc[0]
+        bd_us = t[(t["level"] == 1) & (t["parent"] == "Bonds")
+                  & (t["label"] == "US")].iloc[0]
+        assert abs(eq_us["return_1d"] - 2.0) < 1e-9
+        assert abs(bd_us["return_ytd"] - 5.0) < 1e-9
+
+    def test_blended_lookthrough_return(self):
+        lt = {"class": {"Equities": 0.30, "Bonds": 0.35, "Cash": 0.35},
+              "equity_region": {"US": 0.5, "International": 1 / 3, "EM": 1 / 6},
+              "bond_region": {"US": 1.0}}
+        generic = {("Equities", "US"): (2.0, 0.0),
+                   ("Equities", "International"): (1.0, 0.0),
+                   ("Equities", "EM"): (-1.0, 0.0), ("Bonds", "US"): (0.5, 0.0)}
+        r1, _ = ta.blended_lookthrough_return(lt, generic)
+        # .15*2 + .10*1 + .05*(-1) + .35*.5 + .35*0(cash) over covered=1.0
+        assert abs(r1 - 0.525) < 1e-9
 
 
 # ---------------------------------------------------------------------------

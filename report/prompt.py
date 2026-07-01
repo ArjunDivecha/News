@@ -116,8 +116,8 @@ def _render_allocation(alloc: dict) -> list:
            "P&L over gross exposure)"]
     out.append(_md_table(show.set_index("Bucket")))
     if alloc.get("unclassified"):
-        out.append(f"\n(Global/region-unclassified equity holdings needing "
-                   f"look-through data: {', '.join(alloc['unclassified'])}.)")
+        out.append(f"\n(Region not specified for: {', '.join(alloc['unclassified'])}"
+                   f" — shown under an Unclassified sub-row.)")
     if alloc.get("sources"):
         src = "; ".join(f"{s} ({asof})" for s, asof, _ in alloc["sources"] if asof)
         if src:

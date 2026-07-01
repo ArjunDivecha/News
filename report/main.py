@@ -52,7 +52,8 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from config import (PATHS, SETTINGS, BENCHMARK, TAG_VIEW_EXTRA_TICKERS,
-                    CASH_EQUIVALENTS, FUND_LOOKTHROUGH, ensure_dirs)
+                    CASH_EQUIVALENTS, FUND_LOOKTHROUGH, MANUAL_HOLDINGS,
+                    ensure_dirs)
 import analytics
 import data as data_mod
 import db
@@ -150,10 +151,44 @@ def run(no_llm: bool = False, interactive: bool = True,
         holdings_df, prices, asof, holdings_stale=holdings_meta["stale"])
     bridge = analytics.compute_bridge(market, portfolio, universe=universe)
 
-    # Sub-portfolio returns (per-account + GMO)
+    # Generic asset-class proxy returns (for looking through no-daily-mark
+    # holdings like the Baupost LP): US eq=SPX, Intl eq=EAFE, EM eq=EM, US
+    # bonds=AGG. From the factor complex + the AGG series pulled for this.
+    generic_returns = {}
+    ft = market.get("factor_table")
+    if ft is not None and not ft.empty:
+        fi = ft.set_index("factor_name")
+
+        def _fr(name):
+            if name not in fi.index:
+                return (float("nan"), float("nan"))
+            return (float(fi.loc[name, "return_1d"]),
+                    float(fi.loc[name, "return_ytd"]))
+        generic_returns[("Equities", "US")] = _fr("SPX")
+        generic_returns[("Equities", "International")] = _fr("EAFE")
+        generic_returns[("Equities", "EM")] = _fr("EM")
+    if "AGG" in prices.columns:
+        agg_1d = analytics.daily_returns(prices)["AGG"].dropna()
+        agg_ytd = analytics.ytd_return(prices, asof).get("AGG", float("nan"))
+        generic_returns[("Bonds", "US")] = (
+            float(agg_1d.iloc[-1]) if len(agg_1d) else float("nan"),
+            float(agg_ytd))
+
+    # Sub-portfolio returns (per-account + GMO + manual off-broker sleeves).
+    # Manual sleeves have no daily mark -> synthesize a return from generic
+    # asset-class returns x the sleeve's policy allocation.
     gmo_df = _load_gmo()
+    manual_df = (pd.DataFrame(MANUAL_HOLDINGS) if MANUAL_HOLDINGS
+                 else pd.DataFrame())
+    sleeve_override = {}
+    for h in MANUAL_HOLDINGS:
+        lt = FUND_LOOKTHROUGH.get(h["symbol"])
+        if lt:
+            sleeve_override[(h["broker"], str(h["account"]))] = \
+                tag_analytics.blended_lookthrough_return(lt, generic_returns)
     subportfolios = analytics.compute_subportfolios(
-        holdings_df, prices, asof, gmo_holdings=gmo_df)
+        holdings_df, prices, asof, gmo_holdings=gmo_df, extra_holdings=manual_df,
+        sleeve_return_override=sleeve_override)
     n_subs = len(subportfolios)
     print(f"  Sub-portfolios: {n_subs} accounts computed")
 
@@ -192,7 +227,7 @@ def run(no_llm: bool = False, interactive: bool = True,
     allocation = None
     if SETTINGS.get("enable_tag_views"):
         try:
-            hh = pd.concat([holdings_df, gmo_df], ignore_index=True)
+            hh = pd.concat([holdings_df, gmo_df, manual_df], ignore_index=True)
             hh_port = analytics.compute_portfolio(hh, prices, asof)
             hh_syms = list(hh_port["positions"].index)
             hh_tmap = {s: v["tags"]
@@ -201,7 +236,7 @@ def run(no_llm: bool = False, interactive: bool = True,
                 CASH_EQUIVALENTS), "market_value"].sum())
             allocation = tag_analytics.compute_asset_allocation(
                 hh_port["positions"], hh_tmap, hh_cash,
-                lookthrough=FUND_LOOKTHROUGH)
+                lookthrough=FUND_LOOKTHROUGH, generic_returns=generic_returns)
             print(f"  Asset allocation: household ${allocation['total_value']:,.0f}"
                   f", look-through: {allocation['lookthrough_applied'] or 'none'}"
                   + (f", UNCLASSIFIED: {allocation['unclassified']}"
