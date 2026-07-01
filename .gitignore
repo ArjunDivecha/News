@@ -76,4 +76,7 @@ ibkr_err.log
 
 # Personal/regenerable data kept local
 GMO.xlsx
+# Downloaded source data documents (fund composition sheets, factsheets, etc.)
+Historical Monthly Returns.pdf
+*_Portfolio Composition.xlsx
 Step 3 Data Analysis/search_based_meme_stocks.json
