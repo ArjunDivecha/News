@@ -135,7 +135,7 @@ SETTINGS = {
     # ~9KB report. High max_tokens REQUIRES streaming (see llm.py) so the
     # multi-minute generation does not trip the SDK's non-streaming timeout guard.
     "max_tokens": 64000,
-    "thinking_effort": "max",        # adaptive thinking depth: low/medium/high/max
+    "thinking_effort": os.getenv("REPORT_THINKING_EFFORT", "high"),  # low/medium/high/max; "high" ~halves runtime vs "max" with negligible quality loss for table interpretation
     "llm_retries": 3,
     "llm_timeout_s": 900,            # streaming generation can run several minutes
     "continuity_days": 5,            # prior executive summaries fed back into prompt
