@@ -87,8 +87,13 @@ def ytd_return(prices: pd.DataFrame, asof: Optional[str] = None) -> pd.Series:
     prior = p.loc[p.index < f"{year}-01-01"]
     if prior.empty:
         return pd.Series(np.nan, index=p.columns)
-    base = prior.iloc[-1]
-    end = p.loc[p.index <= asof].iloc[-1]
+    # Last-available close (STALE > n/a, per the project rule): a fund that has
+    # not posted its as-of NAV yet — e.g. a GMO mutual fund lagging the equity
+    # trading calendar — still shows YTD to its most recent REAL print, marked
+    # stale downstream, instead of collapsing to NaN. ffill is a no-op for a
+    # continuous series, so this never changes a normally-priced ticker.
+    base = prior.ffill().iloc[-1]
+    end = p.loc[p.index <= asof].ffill().iloc[-1]
     out = (end / base - 1.0) * 100.0
     out[base.isna()] = np.nan
     return out
@@ -406,8 +411,11 @@ def compute_portfolio(holdings: pd.DataFrame, prices: pd.DataFrame,
     priced = pos[pos["has_price"]]
     port_ret_1d = priced["contribution_bps"].sum() / 100.0   # back to %
     priced_w_ytd = priced.dropna(subset=["return_ytd"])
-    # Approximation: assumes current holdings were held all year
-    port_ret_ytd = (priced_w_ytd["weight"] * priced_w_ytd["return_ytd"]).sum()
+    # Approximation: assumes current holdings were held all year. Renormalize by
+    # the measured weight so names without a YTD don't dilute the total toward 0.
+    _denom_ytd = priced_w_ytd["weight"].abs().sum()
+    port_ret_ytd = ((priced_w_ytd["weight"] * priced_w_ytd["return_ytd"]).sum()
+                    / _denom_ytd if _denom_ytd > 0 else np.nan)
 
     # --- factor-implied expected return & naive alpha ---
     expected_1d = np.nan
@@ -595,7 +603,12 @@ def _subportfolio_returns(positions: pd.DataFrame, rets: pd.DataFrame,
     if gross > 0:
         pos["weight"] = mv / gross
         priced_ytd = pos.dropna(subset=["return_ytd"])
-        ret_ytd = (priced_ytd["weight"] * priced_ytd["return_ytd"]).sum()
+        # Renormalize by the measured weight, NOT the full gross — otherwise a
+        # position that lacks a YTD (e.g. a name with no prior-year close) leaves
+        # its weight in the denominator and dilutes the sleeve's YTD toward zero.
+        denom = priced_ytd["weight"].abs().sum()
+        ret_ytd = ((priced_ytd["weight"] * priced_ytd["return_ytd"]).sum() / denom
+                   if denom > 0 else np.nan)
     else:
         ret_ytd = np.nan
 

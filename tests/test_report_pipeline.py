@@ -117,6 +117,45 @@ class TestBridgeBreadthAndBackfill:
         assert "attribution" in b and "breadth" in b
 
 
+class TestStaleYtd:
+    """A fund that has not posted its as-of NAV yet (e.g. a GMO mutual fund
+    lagging the equity calendar) must still show YTD to its last real print,
+    and must NOT dilute its sub-portfolio's YTD toward zero (the 2026-07-01
+    GMO bug: GMO YTD read 0.24% instead of ~10%)."""
+
+    def _prices(self):
+        idx = pd.bdate_range(end="2026-07-01", periods=380).strftime("%Y-%m-%d")
+        eq = pd.Series(range(380), index=idx, dtype=float).map(lambda i: 100 * 1.0005 ** i)
+        mf = pd.Series(range(380), index=idx, dtype=float).map(lambda i: 50 * 1.0004 ** i)
+        df = pd.DataFrame({"EQ": eq, "MF": mf})
+        # MF stops printing on the last (as-of) day — NaN on 2026-07-01
+        df.loc[df.index[-1], "MF"] = np.nan
+        return df
+
+    def test_ytd_uses_last_available(self):
+        p = self._prices()
+        ytd = analytics.ytd_return(p, "2026-07-01")
+        assert pd.notna(ytd["MF"]), "stale fund must get last-available YTD"
+        assert pd.notna(ytd["EQ"])
+
+    def test_subportfolio_ytd_not_diluted(self):
+        p = self._prices()
+        # a sleeve that is 90% MF (stale) and 10% EQ
+        holds = pd.DataFrame([
+            ["GMO", "MF", 1800., 1., 90000., 0., "GMO", "t"],
+            ["GMO", "EQ", 100., 1., 10000., 0., "GMO", "t"],
+        ], columns=["account", "symbol", "quantity", "avg_price", "market_value",
+                    "open_pnl", "broker", "fetched_at"])
+        subs = analytics.compute_subportfolios(
+            pd.DataFrame(columns=holds.columns), p, "2026-07-01",
+            gmo_holdings=holds)
+        gmo = subs[subs["name"] == "GMO"].iloc[0]
+        ytd = analytics.ytd_return(p, "2026-07-01")
+        # value-weighted YTD of BOTH names (MF dominates); must be near it, not ~0
+        assert gmo["return_ytd"] > 5.0
+        assert abs(gmo["return_ytd"] - ytd["MF"]) < abs(ytd["EQ"] - ytd["MF"])
+
+
 class TestPercentile:
     def test_integer_valued(self):
         rets = analytics.daily_returns(_prices())
