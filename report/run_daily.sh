@@ -22,13 +22,29 @@ echo "========================================="
 
 cd "$REPO_ROOT"
 
+# launchd starts with a minimal PATH (/usr/bin:/bin) that cannot find
+# Homebrew Python, the Claude CLI, or PrinceXML. Build a proper PATH.
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/bin"
+
+# Pin to the Homebrew 3.14 interpreter that has all dependencies installed.
+# (Anaconda 3.13 is missing `anthropic` and `schwabdev`.)
+PYBIN="/opt/homebrew/bin/python3"
+if [ ! -x "$PYBIN" ]; then
+    echo "[run_daily] !! Homebrew python3 not found at $PYBIN"
+    echo "[run_daily] Install via: brew install python@3.14 && pip3 install anthropic schwabdev yfinance pandas openpyxl python-dotenv markdown"
+    exit 127
+fi
+echo "[run_daily] Using Python: $PYBIN ($($PYBIN --version 2>&1))"
+echo "[run_daily] Claude CLI: $(command -v claude || echo 'NOT FOUND')"
+echo "[run_daily] PrinceXML:  $(command -v prince || echo 'NOT FOUND')"
+
 # Ensure .env is loaded (python-dotenv handles this, but be explicit)
 export $(grep -v '^#' .env | grep -v '^$' | xargs) 2>/dev/null || true
 
 # Run the full pipeline (non-interactive — launchd has no TTY)
 echo ""
 echo "[run_daily] Starting pipeline..."
-python3 report/main.py --non-interactive
+"$PYBIN" report/main.py --non-interactive
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
@@ -51,12 +67,17 @@ fi
 # Email the report
 echo ""
 echo "[run_daily] Emailing report..."
-python3 report/notify.py "$PDF" --date "$TODAY"
+"$PYBIN" report/notify.py "$PDF" --date "$TODAY"
 NOTIFY_CODE=$?
 
 if [ $NOTIFY_CODE -ne 0 ]; then
-    echo "[run_daily] !! Email sending failed"
-    exit $NOTIFY_CODE
+    # A missing REPORT_EMAIL_TO or Mail.app failure should NOT fail the whole
+    # run — the PDF is already on disk. Warn loudly and exit 0 so launchd
+    # sees success and doesn't keep retrying.
+    echo "[run_daily] !! Email not sent (notify.py exit $NOTIFY_CODE)"
+    echo "[run_daily] !! PDF is still available at: $PDF"
+    echo "[run_daily] !! Set REPORT_EMAIL_TO in .env to enable email delivery"
+    exit 0
 fi
 
 echo ""
