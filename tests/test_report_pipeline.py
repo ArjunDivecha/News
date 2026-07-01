@@ -155,6 +155,26 @@ class TestStaleYtd:
         assert gmo["return_ytd"] > 5.0
         assert abs(gmo["return_ytd"] - ytd["MF"]) < abs(ytd["EQ"] - ytd["MF"])
 
+    def test_subportfolio_1d_uses_last_available(self):
+        p = self._prices()
+        # give MF a distinctive -3% on its last REAL print (the 2nd-to-last row;
+        # the last row is NaN because MF has not posted its as-of NAV)
+        mf = p["MF"].copy()
+        mf.iloc[-2] = mf.iloc[-3] * 0.97
+        p["MF"] = mf
+        holds = pd.DataFrame([
+            ["GMO", "MF", 1800., 1., 90000., 0., "GMO", "t"],
+            ["GMO", "EQ", 100., 1., 10000., 0., "GMO", "t"],
+        ], columns=["account", "symbol", "quantity", "avg_price", "market_value",
+                    "open_pnl", "broker", "fetched_at"])
+        subs = analytics.compute_subportfolios(
+            pd.DataFrame(columns=holds.columns), p, "2026-07-01",
+            gmo_holdings=holds)
+        gmo = subs[subs["name"] == "GMO"].iloc[0]
+        # the stale fund's -3% last move must flow through (dominant weight),
+        # NOT be dropped so the sleeve reads only EQ's ~+0.05%
+        assert gmo["return_1d"] < -1.0
+
 
 class TestPercentile:
     def test_integer_valued(self):

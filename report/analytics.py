@@ -503,22 +503,38 @@ def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
     rets = daily_returns(prices)
     ytd = ytd_return(prices, asof)
 
+    # Last-available daily return per ticker, plus the close that immediately
+    # PRECEDED it (the correct beginning-of-day base for THAT move). A fund that
+    # has not printed on the as-of date (e.g. a GMO mutual fund lagging the
+    # equity calendar) still contributes its most recent REAL 1-day move
+    # (STALE > n/a) instead of being dropped. On a normal day every ticker's
+    # last move IS the as-of move, so this is identical to the old iloc[-1]/[-2].
+    last_ret = {}
+    bod_price = {}
+    for col in rets.columns:
+        v = rets[col].dropna()
+        if v.empty:
+            continue
+        d = v.index[-1]
+        last_ret[col] = v.iloc[-1]
+        loc = prices.index.get_loc(d)
+        bod_price[col] = prices[col].iloc[loc - 1] if loc > 0 else np.nan
+    last_ret = pd.Series(last_ret, dtype=float)
+    bod_price = pd.Series(bod_price, dtype=float)
     last_close = prices.iloc[-1]
-    prev_price = (prices.iloc[-2] if len(prices) >= 2
-                  else pd.Series(dtype=float))
 
     results = []
 
     groups = raw_holdings.groupby(["broker", "account"], sort=False)
     for (broker, acct), grp in groups:
         label = ACCOUNT_NAMES.get((broker, str(acct)), f"{broker} {acct}")
-        res = _subportfolio_returns(grp, rets, ytd, prev_price, last_close,
+        res = _subportfolio_returns(grp, last_ret, ytd, bod_price, last_close,
                                     label, broker, str(acct))
         results.append(res)
 
     if gmo_holdings is not None and not gmo_holdings.empty:
-        res = _subportfolio_returns(gmo_holdings, rets, ytd, prev_price, last_close,
-                                    "GMO", "GMO", "GMO")
+        res = _subportfolio_returns(gmo_holdings, last_ret, ytd, bod_price,
+                                    last_close, "GMO", "GMO", "GMO")
         results.append(res)
 
     out = pd.DataFrame(results)
@@ -555,11 +571,15 @@ def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
     return out
 
 
-def _subportfolio_returns(positions: pd.DataFrame, rets: pd.DataFrame,
-                          ytd: pd.Series, prev_price: pd.Series,
+def _subportfolio_returns(positions: pd.DataFrame, last_ret: pd.Series,
+                          ytd: pd.Series, bod_price: pd.Series,
                           last_close: pd.Series,
                           label: str, broker: str, account: str) -> dict:
-    """Compute return metrics for a single sub-portfolio."""
+    """Compute return metrics for a single sub-portfolio.
+
+    last_ret : last-available daily % return per ticker (STALE > n/a).
+    bod_price: the close that preceded each ticker's last_ret (its BOD base).
+    """
     df = positions.copy()
     df["symbol"] = df["symbol"].astype(str).str.strip()
     is_cash = df["symbol"].isin(CASH_EQUIVALENTS)
@@ -574,7 +594,7 @@ def _subportfolio_returns(positions: pd.DataFrame, rets: pd.DataFrame,
             "return_1d": 0.0, "return_ytd": 0.0,
         }
 
-    last_ret = rets.iloc[-1] if not rets.empty else pd.Series(dtype=float)
+    # last-available daily return per symbol (STALE > n/a), matching YTD
     pos["return_1d"] = pos["symbol"].map(last_ret)
     pos["return_ytd"] = pos["symbol"].map(ytd)
 
@@ -588,7 +608,9 @@ def _subportfolio_returns(positions: pd.DataFrame, rets: pd.DataFrame,
     short_val = mv[mv < 0].sum()
     gross = mv.abs().sum()
 
-    prev = pos["symbol"].map(prev_price)
+    # BOD base = the close preceding each symbol's last-available move, so the
+    # weight and the return line up on the same day even for a stale fund.
+    prev = pos["symbol"].map(bod_price)
     pos["value_bod"] = np.where(prev.notna() & pos["return_1d"].notna(),
                                  pos["quantity"] * prev, np.nan)
     gross_bod = pos["value_bod"].abs().sum()
