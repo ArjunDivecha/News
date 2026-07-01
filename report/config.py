@@ -111,6 +111,17 @@ ACCOUNT_NAMES = {
 # ---------------------------------------------------------------------------
 CASH_EQUIVALENTS = {"CASH", "SNSXX", "SNAXX"}
 
+# ---------------------------------------------------------------------------
+# Tier-3 tag views (multi-label analytics) — the report's benchmark for the
+# portfolio-side tag tilts is a blended 60% global equity / 40% long Treasury.
+# yf_ticker -> benchmark weight fraction (must sum to 1.0). Their tags are
+# pinned in report/tags.py MANUAL_OVERRIDES so the benchmark is exact.
+# ---------------------------------------------------------------------------
+BENCHMARK = [("ACWI", 0.60), ("TLT", 0.40)]
+# Extra series pulled purely for the tag views (never held): the benchmark legs
+# plus the VIX for the Rule-of-16 noise gate.
+TAG_VIEW_EXTRA_TICKERS = ["ACWI", "TLT", "^VIX"]
+
 SETTINGS = {
     # Price fetch
     "fetch_period": "1y",            # always refetch 1y; idempotent upsert self-heals gaps
@@ -139,6 +150,10 @@ SETTINGS = {
     "llm_retries": 3,
     "llm_timeout_s": 900,            # streaming generation can run several minutes
     "continuity_days": 5,            # prior executive summaries fed back into prompt
+    # Tier-3 tag views: adds portfolio tag-tilt / bridge / concentration and
+    # market day-type sections. Purely additive; set REPORT_ENABLE_TAG_VIEWS=0
+    # to fall back to the exact prior report.
+    "enable_tag_views": os.getenv("REPORT_ENABLE_TAG_VIEWS", "1") != "0",
     "holding_price_aliases": {
         # Schwab reports Vietnam Enterprise Investments as the OTC line VTMEF,
         # which Yahoo no longer prices reliably. Use the London line for

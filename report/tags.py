@@ -80,6 +80,15 @@ MANUAL_OVERRIDES = {
         "name": "GMO Emerging Country Debt Fund",
         "tags": "Credit, EM, Active, High Yield",
     },
+    # Benchmark components (60/40 ACWI/TLT) - must be exactly right:
+    "TLT": {  # iShares 20+ Year Treasury - NOT credit, NOT Europe
+        "name": "iShares 20+ Year Treasury Bond ETF",
+        "tags": "Treasury, US, Long Duration, Passive",
+    },
+    "ACWI": {  # iShares MSCI ACWI (global large-cap equity)
+        "name": "iShares MSCI ACWI ETF",
+        "tags": "Equity, Global, Large-Cap, Passive",
+    },
     # Research-confirmed (HIGH confidence — issuer/SEC/CUSIP-index sourced):
     "IE00BF199475": {  # GMO Equity Dislocation: long value / short growth, beta-neutral
         "name": "GMO Equity Dislocation Fund",

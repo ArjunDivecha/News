@@ -51,7 +51,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from config import PATHS, SETTINGS, ensure_dirs
+from config import PATHS, SETTINGS, BENCHMARK, TAG_VIEW_EXTRA_TICKERS, ensure_dirs
 import analytics
 import data as data_mod
 import db
@@ -60,6 +60,8 @@ import llm as llm_mod
 import names as names_mod
 import pdf as pdf_mod
 import prompt as prompt_mod
+import tag_analytics
+import tags as tags_mod
 
 
 def _load_gmo() -> pd.DataFrame:
@@ -121,8 +123,11 @@ def run(no_llm: bool = False, interactive: bool = True,
     alias_targets = set(aliases)
     alias_sources = {aliases[s] for s in holding_syms if s in aliases}
     universe_tickers = set(universe["yf_ticker"])
+    # Benchmark legs (ACWI/TLT) and the VIX are pulled purely for the tier-3
+    # tag views; they are never held, but the fetch must include them.
+    extra = set(TAG_VIEW_EXTRA_TICKERS) if SETTINGS.get("enable_tag_views") else set()
     all_tickers = ((universe_tickers | set(holding_syms) | set(gmo_syms)
-                    | alias_sources)
+                    | alias_sources | extra)
                    - (alias_targets - universe_tickers))
     all_tickers = sorted(all_tickers)
     long_df = data_mod.fetch_prices(all_tickers)
@@ -150,6 +155,37 @@ def run(no_llm: bool = False, interactive: bool = True,
         holdings_df, prices, asof, gmo_holdings=gmo_df)
     n_subs = len(subportfolios)
     print(f"  Sub-portfolios: {n_subs} accounts computed")
+
+    # Tier-3 tag views (multi-label analytics) — purely additive. Tagged from
+    # the DeepSeek cache/universe; benchmark = 60/40 ACWI/TLT (tags pinned).
+    tag_views = None
+    if SETTINGS.get("enable_tag_views"):
+        try:
+            held = list(portfolio["positions"].index)
+            tmap = {s: v["tags"]
+                    for s, v in tags_mod.resolve_tags(held, fetch=True).items()}
+            bt = tags_mod.resolve_tags([t for t, _ in BENCHMARK], fetch=True)
+            bench_specs = [(w, tag_analytics._tags(bt[t]["tags"]))
+                           for t, w in BENCHMARK]
+            at = market["asset_table"]
+            vix_level = None
+            if "^VIX" in prices.columns:
+                vser = prices["^VIX"].dropna()
+                vix_level = float(vser.iloc[-1]) if len(vser) else None
+            spy_move = (float(at.loc["SPY", "return_1d"])
+                        if "SPY" in at.index
+                        and pd.notna(at.loc["SPY", "return_1d"]) else None)
+            tag_views = tag_analytics.build_tag_views(
+                market, portfolio, tmap, bench_specs,
+                vix_level=vix_level, index_move=spy_move)
+            print(f"  Tag views: {len(tag_views['port_tilts'])} book tilts, "
+                  f"{len(tag_views['market_tilts'])} market tag groups, "
+                  f"day-type={tag_views['noise_gate']['verdict']}")
+        except Exception as e:  # additive-only: never sink the daily report
+            import traceback
+            traceback.print_exc()
+            print(f"  ⚠️  Tag views SKIPPED (report continues without them): {e}")
+            tag_views = None
 
     s = portfolio["summary"]
     print(f"  Market: {market['data_quality']['n_priced_today']} assets priced "
@@ -184,7 +220,7 @@ def run(no_llm: bool = False, interactive: bool = True,
 
     package = prompt_mod.build_data_package(
         market, portfolio, bridge, history, prior, holdings_meta,
-        subportfolios=subportfolios, name_map=name_map)
+        subportfolios=subportfolios, name_map=name_map, tag_views=tag_views)
     pkg_path = PATHS["output_dir"] / f"Data_Package_{asof}.md"
     pkg_path.write_text(package)
     print(f"  Data package: {len(package):,} chars -> {pkg_path}")

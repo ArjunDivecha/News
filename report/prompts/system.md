@@ -46,6 +46,8 @@ Lead with the biggest cross-asset story, not an asset-class-by-asset-class recit
 
 Keep prose between tables to 2-4 sentences max. The tables ARE the section; narrative connects them.
 
+**Day-type read (only if the package has a `TIER-3 TAG VIEWS` section).** Open The Tape with ONE sentence classifying the day using the MARKET — DAY TYPE and TAG TILTS blocks: was it a broad macro/factor day (high dispersion, narrow breadth, one axis dominating) or an idiosyncratic/stock-picker's day (low dispersion, mixed breadth)? If the noise-gate verdict is "noise" (sub-1σ, mixed breadth), say plainly that today carried little signal. Then use the TAG TILTS / STYLE-REGION SPREADS / REGION×SECTOR GRID to name the day's real leadership by theme (e.g. "Materials and Healthcare led; Momentum and EM lagged") instead of only listing individual movers. These tilts are excess-vs-universe means — never sum them, and never present them as if a single fund returned that number.
+
 ## The Portfolio
 This is the **live Schwab + IBKR book only (ex-GMO)** — see Sub-Portfolio Review for the household incl. GMO. Start with a **summary table**:
 
@@ -76,6 +78,8 @@ Then 1-2 sentences per non-trivial sub-portfolio: what drove its day, how it div
 **Unheld themes table** — the 5 biggest-moving themes the portfolio does NOT hold: theme, n, 1d %, YTD %.
 
 Then 3-4 sentences connecting the two: where the portfolio leans WITH vs AGAINST the market, and whether gaps are deliberate or accidental.
+
+**Tag posture (only if the package has a `TIER-3 TAG VIEWS` section).** After the factor-exposure discussion, add a short **tag-tilt table** drawn from PORTFOLIO — TAG TILTS vs 60/40 ACWI/TLT: show the 4-6 most meaningful *active bets* — lead with Region/Sector/Style tilts (the deliberate views), and mention AssetClass/Strategy/Size tilts only as one line of structural posture ("the book is ~all-equity, active, and country-specific vs a passive global 60/40" — that is by design, not a bet). Then use THE BRIDGE (WITH/AGAINST) to say, in 2-3 sentences, which of today's biggest book tilts paid off (overweight a tag that led / underweight a tag that lagged = WITH the tape) versus which fought it. Close with one line on CONCENTRATION (effective number of positions and the largest single tag exposure) — is the book making a few big bets or many small ones? Tilts are percentage-point differences vs the benchmark; never sum them across axes.
 
 ## Risks & Watchlist
 Two to four items in a **table**: risk, trigger/signpost, portfolio exposure affected. Each must be falsifiable and tied to an observable. No generic platitudes.

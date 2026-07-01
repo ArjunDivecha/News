@@ -66,6 +66,8 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `ibkr_fetch.py` | IBKR TWS subprocess (fallback, `.venv-ibkr312`) |
 | `run_daily.sh` | launchd wrapper — runs pipeline + emails |
 | `analytics.py` | ALL financial math (pure functions, fully unit-tested) |
+| `tag_analytics.py` | Tier-3 multi-label tag views (day-type, tilts, bridge, concentration) |
+| `tags.py` | DeepSeek dynamic tagger (multi-label; cached in report.db; overrides) |
 | `names.py` | Ticker -> full security name (Yahoo, cached in report.db) |
 | `prompt.py` | Builds the LLM data package |
 | `llm.py` | Claude Opus **streaming** call (adaptive thinking) + truncation guard |
@@ -93,6 +95,34 @@ the PDF table validator rejects a truncated report, the data package emits a
 summary table + breadth + proxy/scope labels, `compute_bridge` backfills
 tier-2 (and labels off-universe names "Portfolio-Specific"), and percentiles
 are integer-valued with sparse-data masking.
+
+## Tier-3 tag views (2026-07-01)
+
+Multi-label tag analytics layered on top of the report — **purely additive and
+gated** by `SETTINGS["enable_tag_views"]` (env `REPORT_ENABLE_TAG_VIEWS=0` to
+revert to the exact prior report). Every holding is dynamically tagged
+(`tags.py`, DeepSeek + manual overrides, cached in `report.db`); tags are
+orthogonal axes (AssetClass / Region / Sector / Style / Strategy / Size /
+Duration). `tag_analytics.py` computes, as pure functions:
+
+- **Market — day type:** VIX Rule-of-16 noise gate, cross-sectional dispersion,
+  two-dimensional breadth (macro/factor day vs stock-picker's day).
+- **Market — leadership:** universe-**demeaned** tag tilts (n≥3), long-short
+  style/region spreads, a Region×Sector grid (n≥5).
+- **Portfolio — posture:** tag active tilts vs a **60/40 ACWI/TLT** benchmark
+  (benchmark tags pinned in `tags.py`), the **bridge** (each big book tilt WITH
+  or AGAINST today's tape), and **concentration** (1/HHI effective positions and
+  effective tags per axis).
+
+Tags are correlated, so tilts are **never summed across axes** — each is an
+independent excess-vs-benchmark or excess-vs-universe reading. The block is fed
+to the LLM as a `TIER-3 TAG VIEWS` package section and woven into The Tape
+(day-type read) and The Bridge (tag posture); `system.md` gates both on the
+section's presence. Locked down by `tests/test_tag_analytics.py` (15 tests,
+including a flag-OFF byte-identity guarantee and the NO-n/a rule).
+
+*Not yet built (deferred — genuine design ambiguity with multi-label tags):
+per-axis tag P&L attribution, exposure-vs-realized-beta, EM dispersion ANOVA.*
 
 ## Report-writing hardening (2026-06-20 review)
 

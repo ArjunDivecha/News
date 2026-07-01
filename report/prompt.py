@@ -69,15 +69,141 @@ def _prose_only(text: str) -> str:
     return " ".join(out).strip()
 
 
+def _pct(x, dp=1):
+    """Fraction (0..1) -> signed percentage-point string; NaN -> em dash."""
+    return f"{x * 100:+.{dp}f}" if pd.notna(x) else "—"
+
+
+def _num(x, dp=2, signed=True):
+    if pd.isna(x):
+        return "—"
+    return f"{x:+.{dp}f}" if signed else f"{x:.{dp}f}"
+
+
+def _render_tag_views(tv: dict) -> list:
+    """Render the tier-3 tag views as report-package sections. Every section is
+    additive; missing/empty pieces are simply omitted (never 'n/a')."""
+    if not tv:
+        return []
+    out = ["\n" + "=" * 60,
+           "## TIER-3 TAG VIEWS (multi-label; tags are correlated — NEVER sum "
+           "tilts across axes; each tilt is an independent excess-vs-benchmark "
+           "or excess-vs-universe reading)"]
+
+    # ---- market: what kind of day ----
+    ng = tv.get("noise_gate") or {}
+    disp = tv.get("dispersion") or {}
+    br = tv.get("breadth") or {}
+    day_bits = []
+    if ng.get("verdict") and ng["verdict"] != "unknown":
+        day_bits.append(
+            f"magnitude **{ng['verdict']}** (move {_num(disp.get('mean'), 2)}% "
+            f"vs VIX-implied ±{ng.get('expected_move')}%, "
+            f"{ng.get('sigmas')}σ)")
+    if pd.notna(disp.get("dispersion", float('nan'))):
+        day_bits.append(f"cross-sectional dispersion "
+                        f"{_num(disp['dispersion'], 2, signed=False)}pp "
+                        f"(n={disp.get('n')})")
+    if br.get("pct_up") is not None:
+        day_bits.append(f"breadth {br.get('pct_up')}% of funds up, "
+                        f"{br.get('pct_groups_up')}% of tag-groups up")
+    if day_bits:
+        out.append("\n### MARKET — DAY TYPE")
+        out.append("- " + "\n- ".join(day_bits))
+        out.append("(dispersion high + narrow breadth = a macro/factor day; "
+                   "low dispersion = idiosyncratic/stock-picker's day; a "
+                   "sub-1σ mixed-breadth day is likely noise, not signal.)")
+
+    # ---- market: tag tilts (excess vs universe) ----
+    mt = tv.get("market_tilts")
+    if mt is not None and not mt.empty:
+        show = mt.head(12)[["tag", "axis", "n", "tilt_1d", "tilt_1w"]].copy()
+        show["tilt_1d"] = show["tilt_1d"].map(lambda v: _num(v, 2))
+        show["tilt_1w"] = show["tilt_1w"].map(lambda v: _num(v, 2))
+        show.columns = ["Tag", "Axis", "n", "1d excess %", "1w excess %"]
+        out.append("\n### MARKET — TAG TILTS (mean return of funds carrying the "
+                   "tag MINUS the universe mean; the day's leadership)")
+        out.append(_md_table(show.set_index("Tag")))
+
+    sp = tv.get("spreads")
+    if sp is not None and not sp.empty:
+        show = sp.copy()
+        show["value"] = show["value"].map(lambda v: _num(v, 2))
+        cols = {"spread": "Spread", "value": "1d %", "long_n": "n"}
+        show = show[[c for c in cols if c in show.columns]].rename(columns=cols)
+        out.append("\n### MARKET — STYLE / REGION SPREADS (long − short, 1d)")
+        out.append(_md_table(show.set_index("Spread")))
+
+    grid = tv.get("grid")
+    if grid is not None and not grid.empty:
+        show = grid.head(10).copy()
+        show["ret_1d"] = show["ret_1d"].map(lambda v: _num(v, 2))
+        show = show.rename(columns={"tag_region": "Region", "tag_sector": "Sector",
+                                    "n": "n", "ret_1d": "1d %"})
+        out.append("\n### MARKET — REGION × SECTOR GRID (mean 1d %, n≥5 cells)")
+        out.append(_md_table(show.set_index("Region")))
+
+    # ---- portfolio: tilts vs 60/40 ACWI/TLT ----
+    pt = tv.get("port_tilts")
+    if pt is not None and not pt.empty:
+        meaningful = pt[pt["tilt"].abs() >= 0.005].copy()
+        if not meaningful.empty:
+            meaningful["Book %"] = meaningful["book_wt"].map(lambda v: _pct(v))
+            meaningful["Bench %"] = meaningful["bench_wt"].map(lambda v: _pct(v))
+            meaningful["Tilt pp"] = meaningful["tilt"].map(lambda v: _pct(v))
+            disp_pt = meaningful[["tag", "axis", "Book %", "Bench %", "Tilt pp"]]
+            disp_pt = disp_pt.rename(columns={"tag": "Tag", "axis": "Axis"})
+            out.append("\n### PORTFOLIO — TAG TILTS vs 60/40 ACWI/TLT "
+                       "(book gross tag-weight − benchmark tag-weight; "
+                       "AssetClass/Strategy/Size tilts are structural posture, "
+                       "Region/Sector/Style tilts are the active bets)")
+            out.append(_md_table(disp_pt.set_index("Tag")))
+
+    # ---- portfolio: the bridge (with/against the tape) ----
+    bridge = tv.get("bridge")
+    if bridge is not None and not bridge.empty:
+        show = bridge.copy()
+        show["tilt_pp"] = show["tilt_pp"].map(lambda v: _num(v, 1))
+        show["mkt_tilt_1d"] = show["mkt_tilt_1d"].map(lambda v: _num(v, 2))
+        show = show.rename(columns={"tag": "Tag", "axis": "Axis",
+                                    "tilt_pp": "Book tilt pp",
+                                    "mkt_tilt_1d": "Mkt 1d excess %",
+                                    "stance": "Stance"})
+        out.append("\n### PORTFOLIO — THE BRIDGE (was each big book tilt WITH or "
+                   "AGAINST today's tape? WITH = overweight a tag that led, or "
+                   "underweight a tag that lagged)")
+        out.append(_md_table(show.set_index("Tag")))
+
+    # ---- portfolio: concentration ----
+    conc = tv.get("concentration")
+    if conc:
+        eff = conc.get("eff_tags_by_axis") or {}
+        eff_str = ", ".join(f"{k} {v}" for k, v in eff.items()
+                            if pd.notna(v))
+        out.append("\n### PORTFOLIO — CONCENTRATION (effective #, 1/HHI on gross)")
+        bits = [f"effective positions: {conc.get('eff_positions')}"]
+        if eff_str:
+            bits.append(f"effective tags per axis: {eff_str}")
+        if conc.get("top_tag"):
+            bits.append(f"largest single tag exposure: {conc['top_tag']} "
+                        f"({_num(conc.get('top_tag_gross_pct'), 0, signed=False)}% "
+                        f"of gross)")
+        out.append("- " + "\n- ".join(bits))
+    return out
+
+
 def build_data_package(market: dict, portfolio: dict, bridge: dict,
                        history: pd.DataFrame, prior_summaries: pd.DataFrame,
                        holdings_meta: dict,
                        subportfolios: pd.DataFrame = None,
-                       name_map: dict = None) -> str:
+                       name_map: dict = None,
+                       tag_views: dict = None) -> str:
     """Assemble the full user-message data package for the LLM.
 
     name_map: {ticker: full security name}. Every asset is shown by NAME, not
     ticker; an unmapped symbol falls back to itself (the raw ticker/ID).
+    tag_views: optional tier-3 multi-label analytics (see tag_analytics.py);
+    rendered as extra sections when present, omitted entirely when None.
     """
     parts = []
     asof = market["asof"]
@@ -328,6 +454,8 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                 ago = ""
             parts.append(f"\n### {r['date']}{ago}\n"
                          f"{_prose_only(r['executive_summary'])}")
+
+    parts.extend(_render_tag_views(tag_views))
 
     parts.append("\n---\nWrite today's report now, following your "
                  "instructions exactly.")
