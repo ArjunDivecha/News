@@ -70,7 +70,7 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `tags.py` | DeepSeek dynamic tagger (multi-label; cached in report.db; overrides) |
 | `names.py` | Ticker -> full security name (Yahoo, cached in report.db) |
 | `prompt.py` | Builds the LLM data package |
-| `llm.py` | Claude Opus **streaming** call (adaptive thinking) + truncation guard |
+| `llm.py` | Claude **Fable 5** call (subscription CLI first; streaming API fallback with refusal-fallback to Opus 4.8) + truncation guard |
 | `pdf.py` | Markdown -> HTML -> PDF (PrinceXML, light mode) + table validation |
 | `db.py` | SQLite layer (WAL, idempotent upserts) |
 | `prompts/system.md` | The system prompt (the report's "personality") |

@@ -17,10 +17,11 @@ LAST UPDATED: 2026-06-09
 AUTHOR: Arjun Divecha
 
 DESCRIPTION:
-    Single LLM call for the unified report, using Claude Opus via the Claude
-    CLI subscription path first. The direct Anthropic SDK streaming path is a
-    fallback only. Bounded retries with backoff; fails loudly after the last
-    attempt.
+    Single LLM call for the unified report, using Claude Fable 5 (Anthropic's
+    most capable model) via the Claude CLI subscription path first. The direct
+    Anthropic SDK streaming path is a fallback only (with a server-side
+    refusal-fallback to Opus 4.8 on Fable). Bounded retries with backoff;
+    fails loudly after the last attempt.
 
     Streaming is required, not optional: max_tokens is large (max-effort
     thinking plus the full report) and the generation runs several minutes,
@@ -158,7 +159,15 @@ def _generate_report_claude_cli(data_package: str, model: str,
 
 def _generate_report_anthropic_api(data_package: str, model: str,
                                    effort: str, system_prompt: str) -> dict:
-    """Direct Anthropic streaming fallback. This may incur API charges."""
+    """Direct Anthropic streaming fallback. This may incur API charges.
+
+    On Claude Fable 5 this opts into the server-side refusal fallback: if a
+    safety classifier declines the request (finance content — very unlikely,
+    but possible as a false positive), the API transparently re-serves it on
+    Opus 4.8 inside the same call, so the daily report never dies on a
+    classifier hiccup. Fable also requires: no thinking config (always on —
+    adaptive is the only accepted explicit value) and 30-day data retention.
+    """
     import anthropic
 
     api_key = _project_anthropic_api_key()
@@ -166,20 +175,45 @@ def _generate_report_anthropic_api(data_package: str, model: str,
     client = anthropic.Anthropic(**client_kwargs).with_options(
         timeout=SETTINGS["llm_timeout_s"])
 
-    print(f"  LLM API fallback "
-          f"(model={model}, thinking=adaptive/{effort}, "
-          f"max_tokens={SETTINGS['max_tokens']}, streaming)...")
-    with client.messages.stream(
+    kwargs = dict(
         model=model,
         max_tokens=SETTINGS["max_tokens"],
         thinking={"type": "adaptive"},
         output_config={"effort": effort},
         system=system_prompt,
         messages=[{"role": "user", "content": data_package}],
-    ) as stream:
+    )
+    is_fable = model.startswith("claude-fable") or model.startswith("claude-mythos")
+    if is_fable:
+        kwargs["betas"] = ["server-side-fallback-2026-06-01"]
+        kwargs["fallbacks"] = [{"model": "claude-opus-4-8"}]
+        stream_fn = client.beta.messages.stream
+    else:
+        stream_fn = client.messages.stream
+
+    print(f"  LLM API fallback "
+          f"(model={model}, thinking=adaptive/{effort}, "
+          f"max_tokens={SETTINGS['max_tokens']}, streaming"
+          f"{', refusal-fallback=opus-4-8' if is_fable else ''})...")
+    with stream_fn(**kwargs) as stream:
         response = stream.get_final_message()
 
     stop_reason = getattr(response, "stop_reason", None)
+
+    if stop_reason == "refusal":
+        # With the server-side fallback, a final refusal means the whole chain
+        # (Fable AND Opus 4.8) declined — surface it loudly, never save a
+        # partial. stop_details carries the classifier category when present.
+        details = getattr(response, "stop_details", None)
+        raise RuntimeError(
+            f"LLM REFUSED the request (stop_reason=refusal, "
+            f"category={getattr(details, 'category', None)}, "
+            f"explanation={getattr(details, 'explanation', None)})")
+
+    served_by = getattr(response, "model", model)
+    if is_fable and served_by and not served_by.startswith("claude-fable"):
+        print(f"  !! Fable declined; report served by fallback model "
+              f"{served_by}")
     usage = response.usage
     block_types = [getattr(b, "type", "?") for b in response.content]
 
@@ -202,7 +236,7 @@ def _generate_report_anthropic_api(data_package: str, model: str,
 
     return {
         "text": text,
-        "model": model,
+        "model": served_by,          # the model that actually wrote the report
         "tokens_input": usage.input_tokens,
         "tokens_output": usage.output_tokens,
         "elapsed_ms": 0,

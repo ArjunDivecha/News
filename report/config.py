@@ -236,12 +236,17 @@ SETTINGS = {
     "beta_window": 60,
     "percentile_window": 60,
     "min_beta_obs": 30,              # minimum observations to trust a beta
-    # Report
-    "model": os.getenv("REPORT_MODEL", "claude-opus-4-8"),
+    # Report — written by Claude Fable 5 (Anthropic's most capable model) for
+    # maximum insight depth. Fable: thinking is ALWAYS on (never send
+    # thinking:disabled or budget_tokens — both 400), 128K max output, same
+    # tokenizer as Opus 4.8. The API fallback path opts into a server-side
+    # fallback to Opus 4.8 in case a safety classifier declines (finance
+    # content — very unlikely, but the report must never silently fail).
+    "model": os.getenv("REPORT_MODEL", "claude-fable-5"),
     # LLM backend: Claude CLI uses the local Claude Code subscription path.
     # The direct Anthropic API remains available only as a fallback.
     "llm_backend": os.getenv("REPORT_LLM_BACKEND", "claude_cli"),
-    "cli_model": os.getenv("REPORT_CLI_MODEL", "opus"),
+    "cli_model": os.getenv("REPORT_CLI_MODEL", "fable"),
     "llm_api_fallback": os.getenv("REPORT_LLM_API_FALLBACK", "1") != "0",
     # max_tokens bounds thinking + visible output TOGETHER on a thinking model.
     # WARNING: 32000 was insufficient with thinking_effort=max — the 2026-06-18
@@ -251,7 +256,10 @@ SETTINGS = {
     # ~9KB report. High max_tokens REQUIRES streaming (see llm.py) so the
     # multi-minute generation does not trip the SDK's non-streaming timeout guard.
     "max_tokens": 64000,
-    "thinking_effort": os.getenv("REPORT_THINKING_EFFORT", "high"),  # low/medium/high/max; "high" ~halves runtime vs "max" with negligible quality loss for table interpretation
+    # low/medium/high/xhigh/max. "xhigh" per user mandate: maximize Fable's
+    # insight depth for the daily read; drop to "high" via env var if runtime
+    # ever becomes a problem again.
+    "thinking_effort": os.getenv("REPORT_THINKING_EFFORT", "xhigh"),
     "llm_retries": 3,
     "llm_timeout_s": 900,            # streaming generation can run several minutes
     "continuity_days": 5,            # prior executive summaries fed back into prompt
