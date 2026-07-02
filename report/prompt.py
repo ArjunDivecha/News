@@ -125,6 +125,59 @@ def _render_allocation(alloc: dict) -> list:
     return out
 
 
+def _render_scenario_risk(sr: dict, nm) -> list:
+    """Render the scenario-risk block: episode-calibrated stress table,
+    crash beta, and the liquidity ladder. `nm` maps ticker -> full name."""
+    if not sr:
+        return []
+    out = ["\n## SCENARIO RISK (household; FIRST-ORDER ESTIMATES from "
+           "episode-calibrated shocks x the actual look-through allocation, "
+           "with position-level overrides for concentrated names — models, "
+           "not predictions; every assumption is listed below the table)"]
+    t = sr.get("table")
+    if t is not None and not t.empty:
+        show = t.copy()
+        show["Scenario"] = show.apply(
+            lambda r: f"{r['name']} ({r['anchor']})", axis=1)
+        show["Est. %"] = show["impact_pct"].map(lambda v: _num(v, 1))
+        show["Est. $"] = show["impact_dollars"].map(_money)
+        show["Hurts most"] = show["hurts"].map(
+            lambda hs: "; ".join(f"{nm(s)} {_money(v)}" for s, v in hs) or "—")
+        show["Cushions"] = show["helps"].map(
+            lambda hs: "; ".join(f"{nm(s)} {_money(v)}" for s, v in hs) or "—")
+        out.append(_md_table(show[["Scenario", "Est. %", "Est. $",
+                                   "Hurts most", "Cushions"]]
+                             .set_index("Scenario")))
+        out.append("\nShock assumptions per scenario (percent moves applied; "
+                   "editable in report/scenarios.py):")
+        for _, r in t.iterrows():
+            out.append(f"- {r['name']}: {r['key_shocks']}")
+    cb = sr.get("crash_beta") or {}
+    if cb and pd.notna(cb.get("full_beta", float("nan"))):
+        cbv = cb.get("crash_beta")
+        cb_s = _num(cbv, 2) if pd.notna(cbv) else "—"
+        out.append(f"\nCRASH BETA (current-weights proxy, 1y, priced book = "
+                   f"{cb.get('coverage_pct', 0):.0f}% of gross): full-sample "
+                   f"beta {_num(cb['full_beta'], 2)} vs worst-decile-S&P-days "
+                   f"beta {cb_s} ({cb.get('n_crash_days', 0)} days). Caveat: "
+                   f"daily-NAV funds smooth/lag, which understates both.")
+    lq = sr.get("liquidity")
+    if lq is not None and not lq.empty:
+        show = lq.copy()
+        show["Value"] = show["value"].map(_money)
+        show["% of household"] = show["pct"].map(lambda v: _num(v, 1, signed=False))
+        show = show.rename(columns={"bucket": "Liquidity"})
+        out.append("\n### LIQUIDITY LADDER (how fast the household converts "
+                   "to cash)")
+        out.append(_md_table(show[["Liquidity", "Value", "% of household"]]
+                             .set_index("Liquidity")))
+    out.append("\n(Structural note: the EM-debt sleeve is B/CCC-heavy EM high "
+               "yield per the manager's own composition file — in stress it "
+               "behaves as a risk asset, not a diversifier; the scenario "
+               "shocks above reflect that.)")
+    return out
+
+
 def _render_tag_views(tv: dict) -> list:
     """Render the tier-3 tag views as report-package sections. Every section is
     additive; missing/empty pieces are simply omitted (never 'n/a')."""
@@ -287,7 +340,8 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                        subportfolios: pd.DataFrame = None,
                        name_map: dict = None,
                        tag_views: dict = None,
-                       allocation: dict = None) -> str:
+                       allocation: dict = None,
+                       scenario_risk: dict = None) -> str:
     """Assemble the full user-message data package for the LLM.
 
     name_map: {ticker: full security name}. Every asset is shown by NAME, not
@@ -546,6 +600,8 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                          f"{_prose_only(r['executive_summary'])}")
 
     parts.extend(_render_allocation(allocation))
+
+    parts.extend(_render_scenario_risk(scenario_risk, nm))
 
     parts.extend(_render_tag_views(tag_views))
 

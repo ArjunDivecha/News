@@ -66,6 +66,7 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `ibkr_fetch.py` | IBKR TWS subprocess (fallback, `.venv-ibkr312`) |
 | `run_daily.sh` | launchd wrapper — runs pipeline + emails |
 | `analytics.py` | ALL financial math (pure functions, fully unit-tested) |
+| `scenarios.py` | Scenario risk engine (episode-calibrated stress tests, crash beta, liquidity ladder) |
 | `tag_analytics.py` | Tier-3 multi-label tag views (day-type, tilts, bridge, concentration) |
 | `tags.py` | DeepSeek dynamic tagger (multi-label; cached in report.db; overrides) |
 | `names.py` | Ticker -> full security name (Yahoo, cached in report.db) |
@@ -145,6 +146,32 @@ Allocation; day-type & leadership tables in The Tape; tag-tilt / bridge / tag-P&
 tables in The Bridge & Positioning) whenever the package carries their data.
 Locked down by `tests/test_tag_analytics.py` (25 tests, including a flag-OFF
 byte-identity guarantee and the NO-n/a rule).
+
+## Investor-flow restructure + scenario risk (2026-07-01)
+
+The report now follows the owner's reading order — *what happened → how did my
+money do → what should I know → what could hurt me → bottom line* — as six
+sections: Executive Summary, The Tape, **My Money** (household line first, then
+the look-through allocation table, sub-portfolios, and the live-book detail),
+**Worth Knowing** (3-6 data-triggered bullets: extremes, streak flips, peer
+divergences, artifacts the reader would misread), **Scenario Risk**, Bottom
+Line. The Tier-1/Theme tables were cut from the rendered report (their data
+still feeds the narrative); the WITH/AGAINST structural rows and artifact-beta
+rows are no longer rendered daily.
+
+**Scenario Risk** (`scenarios.py`) is the standing stress panel. Six scenarios,
+each a documented, episode-calibrated shock vector applied to the household's
+actual look-through slices with per-symbol overrides for concentrated names
+(Vietnam CEF, GMO Beyond China, the growth short, the market-neutral Equity
+Dislocation): US −40% (2008-09), Asia/EM crisis (1997-98), China/Taiwan event,
+inflation +300bp (2022), USD +10% spike, tech/growth crash (2000-02). Output:
+household $ and % impact, biggest hurts, biggest cushions, and every shock
+assumption printed for audit (edit them in `report/scenarios.py`). Plus a
+structural panel: **crash beta** (full-sample vs worst-decile-S&P-days beta of
+the current-weights book) and a **liquidity ladder** (cash / ETF / daily-NAV /
+CEF-with-discount-risk / LP-lockup). Shorts sign correctly (a growth short
+GAINS in the tech-crash scenario); these are labeled first-order estimates,
+never predictions. Locked down by `tests/test_scenarios.py`.
 
 ## Report-writing hardening (2026-06-20 review)
 

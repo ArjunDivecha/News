@@ -62,6 +62,7 @@ import llm as llm_mod
 import names as names_mod
 import pdf as pdf_mod
 import prompt as prompt_mod
+import scenarios as scenarios_mod
 import tag_analytics
 import tags as tags_mod
 
@@ -223,8 +224,11 @@ def run(no_llm: bool = False, interactive: bool = True,
             print(f"  ⚠️  Tag views SKIPPED (report continues without them): {e}")
             tag_views = None
 
-    # Household asset allocation (live book + GMO), classified from tags.
+    # Household asset allocation (live book + GMO), classified from tags,
+    # plus the scenario-risk block (episode-calibrated stress tests, crash
+    # beta, liquidity ladder) computed on the same household decomposition.
     allocation = None
+    scenario_risk = None
     if SETTINGS.get("enable_tag_views"):
         try:
             hh = pd.concat([holdings_df, gmo_df, manual_df], ignore_index=True)
@@ -241,11 +245,19 @@ def run(no_llm: bool = False, interactive: bool = True,
                   f", look-through: {allocation['lookthrough_applied'] or 'none'}"
                   + (f", UNCLASSIFIED: {allocation['unclassified']}"
                      if allocation["unclassified"] else ""))
+            scenario_risk = scenarios_mod.compute_scenario_risk(
+                hh_port["positions"], hh_tmap, hh_cash, FUND_LOOKTHROUGH,
+                prices=prices)
+            worst = scenario_risk["table"].iloc[0]
+            print(f"  Scenario risk: worst = {worst['name']} "
+                  f"{worst['impact_pct']:+.1f}% "
+                  f"(${worst['impact_dollars']/1e6:+.1f}M)")
         except Exception as e:
             import traceback
             traceback.print_exc()
-            print(f"  ⚠️  Asset allocation SKIPPED: {e}")
-            allocation = None
+            print(f"  ⚠️  Asset allocation/scenarios SKIPPED: {e}")
+            allocation = allocation or None
+            scenario_risk = None
 
     s = portfolio["summary"]
     print(f"  Market: {market['data_quality']['n_priced_today']} assets priced "
@@ -276,12 +288,24 @@ def run(no_llm: bool = False, interactive: bool = True,
     name_syms = (set(portfolio["positions"].index)
                  | set(market["movers_up"].index)
                  | set(market["movers_down"].index))
+    if scenario_risk is not None:
+        for _, r in scenario_risk["table"].iterrows():
+            name_syms |= {s for s, _ in r["hurts"]} | {s for s, _ in r["helps"]}
+        name_syms.discard("CASH")
     name_map = names_mod.resolve_names(name_syms)
+    # Off-broker / unresolvable names: resolve_names falls back to the raw
+    # symbol, so patch in the manual-holding / look-through names where the
+    # lookup produced nothing better than the ID itself.
+    fallbacks = {h["symbol"]: h["name"] for h in MANUAL_HOLDINGS if h.get("name")}
+    fallbacks["IE00BF199475"] = "GMO Equity Dislocation Fund"
+    for sym, nm_ in fallbacks.items():
+        if name_map.get(sym, sym) == sym:
+            name_map[sym] = nm_
 
     package = prompt_mod.build_data_package(
         market, portfolio, bridge, history, prior, holdings_meta,
         subportfolios=subportfolios, name_map=name_map, tag_views=tag_views,
-        allocation=allocation)
+        allocation=allocation, scenario_risk=scenario_risk)
     pkg_path = PATHS["output_dir"] / f"Data_Package_{asof}.md"
     pkg_path.write_text(package)
     print(f"  Data package: {len(package):,} chars -> {pkg_path}")
