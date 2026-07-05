@@ -95,6 +95,19 @@ from tag_analytics import classify_holding, _tags  # noqa: E402
 #     EAFE ~-8 in USD terms, EM USD-sovereign spreads widen modestly (the GMO
 #     sleeve is 97% USD so FX pass-through is spread-driven, not currency),
 #     VND devaluation pressure on Vietnam.
+#
+#  Private AI-company stakes (ANTHROPIC_PVT, PERPLEXITY_PVT): no historical
+#  analog exists for concentrated frontier-AI venture equity, so these are
+#  ILLUSTRATIVE, deliberately aggressive assumptions (owner's explicit choice
+#  — "treat as high-beta venture equity"), not calibrated to a named episode.
+#  Rationale: max operating/financing leverage, no public liquidity to cushion
+#  a down round, capital-scarcity and multiple-compression risk compound in a
+#  broad selloff. Anthropic is shocked slightly harder than Perplexity in the
+#  liquidity/tech-crash/Taiwan scenarios (heavier frontier-model compute capex
+#  and chip-supply-chain dependency vs Perplexity's lighter app/inference
+#  footprint); USD spike has minimal direct effect (both USD-denominated).
+#  Update these if you have better information — you know this space better
+#  than any macro analog I can cite.
 # --------------------------------------------------------------------------- #
 SCENARIOS = [
     {
@@ -107,7 +120,8 @@ SCENARIOS = [
             ("Bonds", "US"): 3, ("Bonds", "EM"): -30, ("Bonds", None): -5,
             ("Alternatives", None): -8, ("Cash", None): 0, ("Other", None): -20,
         },
-        "overrides": {"VTMEF": -55, "BCHI": -45, "IE00BF199475": 0},
+        "overrides": {"VTMEF": -55, "BCHI": -45, "IE00BF199475": 0,
+                      "ANTHROPIC_PVT": -65, "PERPLEXITY_PVT": -60},
     },
     {
         "key": "tech_crash",
@@ -120,7 +134,8 @@ SCENARIOS = [
             ("Alternatives", None): 3, ("Cash", None): 0, ("Other", None): -10,
         },
         "overrides": {"IWF": -40, "VTV": -8, "IE00BF199475": 20,
-                      "BCHI": -25, "VTMEF": -20, "INTC": -45},
+                      "BCHI": -25, "VTMEF": -20, "INTC": -45,
+                      "ANTHROPIC_PVT": -75, "PERPLEXITY_PVT": -70},
     },
     {
         "key": "inflation_shock",
@@ -132,7 +147,8 @@ SCENARIOS = [
             ("Bonds", "US"): -8, ("Bonds", "EM"): -15, ("Bonds", None): -10,
             ("Alternatives", None): 0, ("Cash", None): 0, ("Other", None): -10,
         },
-        "overrides": {"IWF": -30, "VTV": -10, "IE00BF199475": 15},
+        "overrides": {"IWF": -30, "VTV": -10, "IE00BF199475": 15,
+                      "ANTHROPIC_PVT": -45, "PERPLEXITY_PVT": -40},
     },
     {
         "key": "asia_crisis",
@@ -145,7 +161,8 @@ SCENARIOS = [
             ("Alternatives", None): -5, ("Cash", None): 0, ("Other", None): -15,
         },
         "overrides": {"VTMEF": -55, "BCHI": -45, "EWY": -60,
-                      "IE00BF199475": 0},
+                      "IE00BF199475": 0,
+                      "ANTHROPIC_PVT": -15, "PERPLEXITY_PVT": -12},
     },
     {
         "key": "taiwan_event",
@@ -158,7 +175,8 @@ SCENARIOS = [
             ("Alternatives", None): -3, ("Cash", None): 0, ("Other", None): -10,
         },
         "overrides": {"BCHI": -35, "EWY": -40, "VTMEF": -20, "KTEC": -40,
-                      "IE00BF199475": 0},
+                      "IE00BF199475": 0,
+                      "ANTHROPIC_PVT": -30, "PERPLEXITY_PVT": -18},
     },
     {
         "key": "usd_spike",
@@ -170,7 +188,8 @@ SCENARIOS = [
             ("Bonds", "US"): 1, ("Bonds", "EM"): -8, ("Bonds", None): 0,
             ("Alternatives", None): 0, ("Cash", None): 0, ("Other", None): -3,
         },
-        "overrides": {"VTMEF": -15, "IE00BF199475": 0},
+        "overrides": {"VTMEF": -15, "IE00BF199475": 0,
+                      "ANTHROPIC_PVT": -5, "PERPLEXITY_PVT": -3},
     },
 ]
 
@@ -184,7 +203,12 @@ LIQUIDITY_BUCKETS = {
     "daily_fund": ("Daily-NAV mutual fund (1-3 days)", 2),
     "cef":        ("Closed-end fund — liquid, discount risk", 3),
     "lockup":     ("LP lockup (quarterly+ redemption)", 4),
-    "unpriced":   ("Unpriced / defunct lines", 5),
+    # Below the LP lockup tier on purpose: a single-company private stake has
+    # NO defined redemption mechanism at all (an LP at least has a scheduled
+    # redemption window) — it converts to cash only via an exit event
+    # (acquisition, IPO, or a secondary sale you'd have to source yourself).
+    "private_eq": ("Private equity — no public market, exit-dependent", 5),
+    "unpriced":   ("Unpriced / defunct lines", 6),
 }
 LIQUIDITY_OVERRIDES = {
     "BAUPOST": "lockup",          # Baupost LP — redemption windows
@@ -192,6 +216,7 @@ LIQUIDITY_OVERRIDES = {
     "GBMBX": "daily_fund", "GCCHX": "daily_fund", "GMOQX": "daily_fund",
     "IE00BF199475": "daily_fund", # GMO Equity Dislocation UCITS (daily dealing)
     "VCLAX": "daily_fund",
+    "ANTHROPIC_PVT": "private_eq", "PERPLEXITY_PVT": "private_eq",
 }
 
 

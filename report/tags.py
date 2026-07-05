@@ -75,6 +75,14 @@ OPENAI_SEARCH_MODEL = "gpt-4o"
 # User-authoritative overrides (you know your own holdings). name/description
 # feed the classifier; "tags" (optional) pins the canonical output directly.
 MANUAL_OVERRIDES = {
+    # Private single-company stakes (config.MANUAL_HOLDINGS) — illiquid,
+    # non-public equity. Classified as Alternatives (private equity/venture),
+    # not public Equities, matching how these are treated everywhere else in
+    # the report (no daily price, no public-market co-movement).
+    "ANTHROPIC_PVT": {"name": "Anthropic (private stake)",
+                      "tags": "Alternative, US, Active"},
+    "PERPLEXITY_PVT": {"name": "Perplexity (private stake)",
+                       "tags": "Alternative, US, Active"},
     # User-confirmed:
     "GMOQX": {
         "name": "GMO Emerging Country Debt Fund",

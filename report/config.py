@@ -105,6 +105,8 @@ ACCOUNT_NAMES = {
     ("IBKR", "U14983106"): "IBKR Experiment",
     ("IBKR", "U24887919"): "IBKR Trading",
     ("Baupost", "Baupost"): "Baupost (LP)",
+    ("Private", "ANTHROPIC"): "Anthropic (Private)",
+    ("Private", "PERPLEXITY"): "Perplexity (Private)",
 }
 
 # ---------------------------------------------------------------------------
@@ -219,6 +221,20 @@ MANUAL_HOLDINGS = [
      "quantity": float("nan"), "avg_price": float("nan"),
      "market_value": 13_806_000.0, "open_pnl": float("nan"),
      "fetched_at": "", "name": "Baupost Value Partners LP II"},
+    # Private company stakes — no daily price of any kind (not even a policy
+    # mix to blend a generic return from, unlike Baupost). Carried at the last
+    # manual mark; 1d/YTD render as the em-dash "genuinely undefined" case
+    # (never fabricated) until this market_value is updated with a new mark.
+    # Update market_value here whenever a new funding round / secondary gives
+    # a fresh valuation; bump the comment date so it's auditable.
+    {"account": "ANTHROPIC", "broker": "Private", "symbol": "ANTHROPIC_PVT",
+     "quantity": float("nan"), "avg_price": float("nan"),
+     "market_value": 330_000.0, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "Anthropic (private stake)"},  # marked 2026-07
+    {"account": "PERPLEXITY", "broker": "Private", "symbol": "PERPLEXITY_PVT",
+     "quantity": float("nan"), "avg_price": float("nan"),
+     "market_value": 1_800_000.0, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "Perplexity (private stake)"},  # marked 2026-07
 ]
 # Extra series pulled purely for the tag views (never held): the benchmark legs
 # plus the VIX for the Rule-of-16 noise gate.
