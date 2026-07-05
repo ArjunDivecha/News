@@ -54,8 +54,8 @@ This matters because the report's household table includes more than the live Sc
 - preserves account labels from `config.ACCOUNT_NAMES`,
 - uses last-available daily returns so stale NAV funds do not disappear,
 - uses the correct beginning-of-day base for stale holdings,
-- supports extra holdings such as Baupost,
-- can override a manual sleeve's 1d/YTD return with a synthesized look-through proxy.
+- supports extra holdings such as Baupost and private company stakes (Anthropic, Perplexity),
+- can override a manual sleeve's 1d/YTD return with a synthesized look-through proxy (Baupost); private single-company stakes have no proxy and render as em dashes until re-marked.
 
 ### The bridge
 `compute_bridge()` connects the market and the book.

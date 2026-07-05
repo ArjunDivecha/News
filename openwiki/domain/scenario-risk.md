@@ -28,6 +28,8 @@ Each scenario has:
 - a class/region shock matrix,
 - optional per-symbol overrides for concentrated or special names.
 
+Most overrides are episode-calibrated, but private company stakes (e.g. Anthropic, Perplexity) use deliberately aggressive, illustrative assumptions — no historical analog exists for concentrated frontier-AI venture equity, so these are the owner's explicit "treat as high-beta venture equity" choice rather than calibrated to a named episode.
+
 The engine applies shocks to the household's actual look-through slices, not to an oversimplified top-level bucket view. That means multi-asset funds are decomposed before the shock hits, and shorts sign correctly.
 
 ## Structural risk measures
@@ -48,6 +50,7 @@ The point is not prediction; it is to reveal whether the book behaves differentl
 - daily-NAV mutual funds,
 - closed-end funds,
 - LP lockup,
+- private equity (no public market, exit-dependent),
 - unpriced lines.
 
 This is useful because the owner's real question is not just downside magnitude but how quickly the household can convert to cash under stress.

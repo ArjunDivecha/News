@@ -36,7 +36,7 @@ Key concepts in the config layer:
 - `FACTORS` maps the 15 factor names to Yahoo tickers.
 - `BENCHMARK` is the 60/40 ACWI/TLT blend used for tag tilts.
 - `FUND_LOOKTHROUGH` captures published composition data for multi-asset and global funds.
-- `MANUAL_HOLDINGS` holds off-broker sleeves such as Baupost, carried at fixed value.
+- `MANUAL_HOLDINGS` holds off-broker sleeves such as Baupost and private company stakes (Anthropic, Perplexity), carried at fixed value.
 - The module loads `.env` early so the rest of the report code can read secrets via environment variables without hardcoding them.
 
 ### `data.py`

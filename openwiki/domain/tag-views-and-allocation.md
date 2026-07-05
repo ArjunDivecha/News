@@ -59,7 +59,7 @@ Important rules:
 
 - Multi-asset and global funds are looked through using `config.FUND_LOOKTHROUGH`.
 - A fund without look-through data is not invented into a fake bucket; it can remain unclassified.
-- Off-broker sleeves such as Baupost are included via `MANUAL_HOLDINGS` and receive a proxy return when they have no daily mark.
+- Off-broker sleeves such as Baupost are included via `MANUAL_HOLDINGS`. Baupost receives a synthesized look-through proxy return when it has no daily mark; private company stakes (e.g. Anthropic, Perplexity) do not — they render as em dashes until `market_value` is updated in config with a new mark.
 - Bucket returns are P&L over gross exposure so shorts behave correctly.
 - Parent rows are supported by child region rows.
 
