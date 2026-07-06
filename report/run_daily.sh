@@ -26,6 +26,16 @@ cd "$REPO_ROOT"
 # Homebrew Python, the Claude CLI, or PrinceXML. Build a proper PATH.
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/bin"
 
+# The Claude CLI is installed via nvm-managed node, which launchd knows
+# nothing about (root cause of the "Claude CLI: NOT FOUND" runs of early
+# July 2026 — the report writer silently fell back to metered API billing,
+# and Fable's Desk was skipped). Resolve the newest node bin dynamically so
+# a node upgrade doesn't re-break this.
+NVM_NODE_BIN=$(ls -d "$HOME/.nvm/versions/node/"*/bin 2>/dev/null | sort -V | tail -1)
+if [ -n "$NVM_NODE_BIN" ]; then
+    export PATH="$NVM_NODE_BIN:$PATH"
+fi
+
 # Pin to the Homebrew 3.14 interpreter that has all dependencies installed.
 # (Anaconda 3.13 is missing `anthropic` and `schwabdev`.)
 PYBIN="/opt/homebrew/bin/python3"
