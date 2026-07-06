@@ -224,8 +224,12 @@ def fetch_prices(tickers: Iterable[str], period: str = None) -> pd.DataFrame:
         missing = sorted(set(tickers) - got)
         if not missing:
             break
-        if len(got) / len(tickers) >= SETTINGS["min_coverage"]:
-            break  # already over the gate; the remainder are genuinely dead symbols
+        # ALWAYS retry the missing set (bounded). The coverage gate below only
+        # decides whether the RUN fails — it must not stop per-ticker retries:
+        # the old early-break stranded live tickers (VNM, EDEN, EWC, EWD, EWL,
+        # EWQ, VBR were stuck at their 07-01 closes through 07-06) as "dead
+        # symbols" whenever the first batch already cleared 90%. Cost of
+        # retrying ~12 genuinely-dead symbols: 2+4+8s backoff per run.
         backoff = 2 ** attempt
         print(f"  Retry {attempt}/{max_retries}: re-fetching {len(missing)} "
               f"missing tickers after {backoff}s backoff...")
