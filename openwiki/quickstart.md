@@ -25,9 +25,10 @@ The current report pipeline, as implemented in `report/main.py`, is:
 
 1. Fetch live holdings from Schwab and IBKR.
 2. Load the universe from `data/universe.xlsx` and fetch prices from Yahoo Finance.
-3. Run market, portfolio, bridge, tag, and scenario analytics.
-4. Build the LLM data package and system prompt.
+3. Run market, portfolio, bridge, tag, scenario, and policy-check analytics.
+4. Build the LLM data package and system prompt (including the Action Box mandate and Policy Check section when available).
 5. Ask Claude to write the report text.
+5b. Optionally run Fable's Desk — a second Claude pass with live web search and ASADO country signals, producing 0–4 judgment-based ideas appended after Bottom Line. Gated by `REPORT_ENABLE_FABLE_DESK`; additive-only.
 6. Render Markdown to HTML and PDF, archive results in `data/report.db`, and keep continuity through stored summaries.
 
 Key runtime guarantees come from the source and tests:
@@ -53,6 +54,8 @@ The main production code is under `report/`. Important files include:
 - `pdf.py` — Markdown to PDF rendering
 - `tag_analytics.py` and `scenarios.py` — additive report sections
 - `tags.py` — dynamic canonical tag resolution
+- `fable_desk.py` — second LLM pass (Fable's Desk) with live web search and ASADO snapshot
+- `asado.py` — read-only ASADO DuckDB snapshot (34-country value/momentum/FX/risk signals, GDELT news pulse, factor P&L) for Fable's Desk
 
 ### Universe construction
 The upstream universe pipeline is still documented in the repo root README and `AGENTS.md`. It is the source of the `data/universe.xlsx` file that the report consumes. The historical steps remain relevant when changing tagging, classification, or source data.
@@ -60,10 +63,11 @@ The upstream universe pipeline is still documented in the repo root README and `
 ### Tests
 The current safety net is in `tests/`.
 
-- `tests/test_analytics.py` covers core financial math.
+- `tests/test_analytics.py` covers core financial math and policy check.
 - `tests/test_report_pipeline.py` protects report-package and bridge behavior.
 - `tests/test_tag_analytics.py` protects tier-3 tag and allocation logic.
 - `tests/test_scenarios.py` protects the stress engine.
+- `tests/test_fable_desk.py` protects desk-json trailer parsing, desk idea persistence/grading, and policy-check math.
 
 ## Suggested reading order for contributors
 

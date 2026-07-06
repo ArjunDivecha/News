@@ -72,6 +72,26 @@ The bridge logic is intentionally honest about universe coverage:
 - If a universe label exists but the symbol is not priced today, the tier-2 backfill still allows peer comparison.
 - Peer returns are only computed when the peer group has enough members.
 
+### Policy check
+`compute_policy_check()` scores the household against the standing investment mandate: produce a real return greater than 5% per year, at volatility no higher than a 60/40 ACWI/TLT portfolio. The policy parameters live in `config.POLICY` (real return target, inflation assumption, vol tolerance ratio).
+
+It returns:
+
+- **Return vs pro-rated hurdle**: household YTD compared to the nominal target (real target + inflation assumption) pro-rated by the fraction of the year elapsed.
+- **Realized vol**: household current-weights proxy vol (annualized, 60-day window) vs the 60/40 benchmark's realized vol over the same window, with a configurable tolerance ratio (default 1.10×).
+- **Verdicts**: `return_on_track` (YTD ≥ pro-rated target) and `vol_breach` (vol ratio > tolerance).
+- **Coverage**: the percentage of household value that is priced, so the vol understatement from unpriced sleeves (LP, private stakes) is explicit.
+
+Key conventions:
+
+- Vol is a current-weights proxy: today's positions weighted by market value over household TOTAL value, so cash damps vol as it does in reality.
+- Unpriced sleeves contribute zero measured vol — the coverage figure makes that understatement explicit rather than hiding it.
+- Missing benchmark legs raise `ValueError` (no benchmark, no verdict — never score vol against nothing).
+- Returns `None` when there is not enough priced history to say anything.
+- A breach or behind verdict is a first-class Action Box trigger.
+
+The result is rendered as the `POLICY CHECK` section of the data package by `prompt._render_policy_check()`.
+
 ## Practical conventions
 
 These conventions are used throughout the report and enforced by tests:
@@ -90,12 +110,14 @@ If you are changing the math, check these functions first:
 - `compute_portfolio()`
 - `compute_subportfolios()`
 - `compute_bridge()`
+- `compute_policy_check()`
 - helper functions for return windows, betas, percentiles, and return normalization
 
 Tests that matter most:
 
 - `tests/test_analytics.py`
 - `tests/test_report_pipeline.py`
+- `tests/test_fable_desk.py` (policy-check math)
 
 Watch out for regressions around:
 
@@ -109,5 +131,7 @@ Watch out for regressions around:
 ## Source references
 
 - `report/analytics.py`
+- `report/config.py` (POLICY parameters)
 - `tests/test_analytics.py`
 - `tests/test_report_pipeline.py`
+- `tests/test_fable_desk.py`

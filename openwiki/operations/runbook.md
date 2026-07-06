@@ -13,6 +13,13 @@ From the root README and package docs, the production environment expects:
 - a root `.env` file with the required API and broker variables,
 - active broker access for Schwab and/or IBKR depending on the configured path.
 
+Fable's Desk (the optional second LLM pass) additionally requires:
+
+- the Claude CLI on PATH (subscription auth — the Desk uses WebSearch/WebFetch, which only the CLI backend supports),
+- `duckdb` (Python package) for the ASADO country-signal snapshot; degrades gracefully if missing,
+- the ASADO DuckDB warehouse at the path configured in `config.PATHS["asado_db"]`; the Desk runs without it if unavailable,
+- `REPORT_ENABLE_FABLE_DESK=1` (the default) to enable; set to `0` to skip the Desk entirely.
+
 ## How to run
 
 The main daily command is:
@@ -59,6 +66,7 @@ Important tables include:
 - portfolio_summary
 - reports
 - security_names
+- desk_ideas — Fable's Desk idea journal (title, action, conviction, horizon, invalidation, status, grade), graded by the Desk itself on subsequent days
 
 The database is used both for archival continuity and for caches such as names and tags.
 
@@ -69,6 +77,7 @@ The database is used both for archival continuity and for caches such as names a
 - `outputs/unified/Unified_Report_<date>.pdf`
 - `outputs/unified/Unified_Report_<date>.md`
 - `outputs/unified/Data_Package_<date>.md`
+- `outputs/unified/Fable_Desk_<date>.md` (standalone Desk run via `python3 report/fable_desk.py --date <date>`)
 - `data/report.db`
 - `data/holdings.xlsx`
 
@@ -95,6 +104,8 @@ These are not just implementation details; they are part of the operational cont
 - `report/llm.py`
 - `report/pdf.py`
 - `report/db.py`
+- `report/fable_desk.py`
+- `report/asado.py`
 - `report/run_daily.sh`
 
 ## For future changes

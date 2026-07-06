@@ -13,7 +13,8 @@ The production path for this repository is the `report/` package. It generates a
 5. Computes market, portfolio, bridge, sub-portfolio, tag, allocation, and scenario analytics.
 6. Builds the data package and system prompt.
 7. Invokes Claude through `llm.py`.
-8. Renders the report to PDF and archives the result through `db.py` and `pdf.py`.
+8. Optionally runs Fable's Desk (`fable_desk.py`) — a second Claude pass with live web search and an ASADO country-signal snapshot, producing 0–4 judgment-based ideas persisted to the `desk_ideas` table. Additive-only: any failure logs loudly and the report ships without the section. Gated by `REPORT_ENABLE_FABLE_DESK`.
+9. Renders the report to PDF and archives the result through `db.py` and `pdf.py`.
 
 The root README and package README both describe this as the replacement for the older Phase 0 / Step 4 / Phase 2 flow.
 
@@ -62,7 +63,8 @@ It computes:
 - market-level tables and factor views,
 - portfolio-level returns, weights, exposures, and alpha inputs,
 - sub-portfolio returns for broker/account/grouped sleeves,
-- the bridge between market moves and the held book.
+- the bridge between market moves and the held book,
+- the policy check (see [Market, portfolio, and bridge analytics](../analytics/market-portfolio.md) for details).
 
 The implementation is deliberately fail-loud when benchmark data is missing.
 
@@ -76,7 +78,7 @@ These modules support the optional tier-3 layer.
 This is the standing stress engine. It computes episode-calibrated scenario impacts, crash beta, and a liquidity ladder using the same look-through decomposition as the asset-allocation table.
 
 ### `prompt.py`
-Builds the data package consumed by the LLM. It is the canonical serialization layer for the report's numbers and labels.
+Builds the data package consumed by the LLM. It is the canonical serialization layer for the report's numbers and labels. It renders the Policy Check, Scenario Risk, and Tag Views sections when their respective data is available (`_render_policy_check`, `_render_scenario_risk`, `_render_tag_views`).
 
 ### `llm.py`
 Handles the actual model call.
@@ -89,6 +91,26 @@ Handles the actual model call.
 ### `pdf.py`
 Turns Markdown into HTML and PDF using PrinceXML. It also validates tables so a malformed or truncated report cannot be rendered silently.
 
+### `fable_desk.py`
+The judgment-based second pass of the daily report. While the main report is deterministic (numbers-only, no news, no recommendations outside data-triggered Action Box items), the Desk is a second Claude call with live web search (WebSearch/WebFetch) and an ASADO country-signal snapshot. It proposes 0–4 idiosyncratic ideas, each with conviction, horizon, and a falsifiable invalidation. Ideas are persisted to the `desk_ideas` table in `report.db` and graded by the Desk itself on subsequent days (the scorecard).
+
+Key design principles:
+
+- **Additive-only**: any failure logs loudly and the deterministic report ships without the section. The Desk never sinks the report.
+- **Fail is fail**: a missing or unparseable `desk-json` machine trailer raises rather than silently losing idea tracking.
+- **Pre-validated**: the Desk section is run through the same table-validation check the PDF renderer applies to the full report, so a malformed Desk table rejects only the Desk.
+- **Requires Claude CLI**: the Desk is the only path with WebSearch/WebFetch; the API fallback does not carry the Desk.
+- Gated by `REPORT_ENABLE_FABLE_DESK` in `config.py` SETTINGS.
+
+### `asado.py`
+Builds the ASADO country-signal snapshot that feeds Fable's Desk. It reads from a local DuckDB warehouse (`asado.duckdb`, read-only) and renders a markdown snapshot with:
+
+- a 34-country composite table from `t2_factors_daily` (cross-sectional valuation, long-horizon momentum, RSI, currency, and country-risk z-scores),
+- GDELT news tone/attention extremes from `gdelt_factors_daily`,
+- best/worst country-selection factors from `factor_returns_daily` over the last 5 sessions.
+
+Any failure (missing DuckDB, missing `duckdb` package, query error) returns `None` with a loud message; the Desk then runs without ASADO data and says so.
+
 ### `db.py`
 SQLite backing store for:
 
@@ -98,6 +120,7 @@ SQLite backing store for:
 - `portfolio_summary`
 - `reports`
 - `security_names`
+- `desk_ideas` — Fable's Desk idea journal (title, action, conviction, horizon, invalidation, status, grade), graded by the Desk itself on subsequent days
 
 The storage layer uses WAL mode, foreign keys, and idempotent upserts.
 
