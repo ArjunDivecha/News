@@ -62,6 +62,10 @@ PATHS = {
     # IBKR fetch runs in its own interpreter (ib_insync needs Python 3.12)
     # Kept as FALLBACK only — Flex Web Service (ibkr_flex.py) is primary
     "ibkr_python": ROOT_DIR / ".venv-ibkr312" / "bin" / "python3",
+    # Fable's Desk (second LLM pass: live web + ASADO country signals)
+    "desk_prompt": REPORT_DIR / "prompts" / "fable_desk.md",
+    "asado_db": Path("/Users/arjundivecha/Dropbox/AAA Backup/A Working/"
+                     "ASADO/Data/asado.duckdb"),
 }
 
 # ---------------------------------------------------------------------------
@@ -121,6 +125,25 @@ CASH_EQUIVALENTS = {"CASH", "SNSXX", "SNAXX"}
 # pinned in report/tags.py MANUAL_OVERRIDES so the benchmark is exact.
 # ---------------------------------------------------------------------------
 BENCHMARK = [("ACWI", 0.60), ("TLT", 0.40)]
+
+# ---------------------------------------------------------------------------
+# Investment policy (the mandate) — outcome-based, set by the principal
+# (2026-07): produce a REAL return greater than 5%/yr at volatility no higher
+# than a 60/40 ACWI/TLT portfolio. Scored daily by
+# analytics.compute_policy_check and rendered as the POLICY CHECK section of
+# the data package. The inflation assumption converts the real target into a
+# nominal hurdle; it is a stated assumption, not a fetched number — update it
+# when the inflation regime changes and bump the asof so it stays auditable.
+# ---------------------------------------------------------------------------
+POLICY = {
+    "real_return_target_pct": 5.0,
+    "inflation_assumption_pct": 3.0,   # core PCE running ~3% (tariff era), mid-2026
+    "inflation_asof": "2026-07",
+    # Vol breach threshold: household realized vol must stay at or below
+    # vol_tolerance_ratio x the 60/40 benchmark's realized vol over the same
+    # window (small buffer so a one-day blip doesn't flag a breach).
+    "vol_tolerance_ratio": 1.10,
+}
 
 # ---------------------------------------------------------------------------
 # Fund look-through for the asset-allocation report. Multi-asset funds (GMO
@@ -283,6 +306,16 @@ SETTINGS = {
     # market day-type sections. Purely additive; set REPORT_ENABLE_TAG_VIEWS=0
     # to fall back to the exact prior report.
     "enable_tag_views": os.getenv("REPORT_ENABLE_TAG_VIEWS", "1") != "0",
+    # Fable's Desk: a SECOND Fable pass with live web search plus an ASADO
+    # country-signal snapshot, producing 0-4 judgment-based ideas appended as
+    # "## Fable's Desk" after Bottom Line. Purely additive: any failure logs
+    # loudly and the deterministic report ships without the section.
+    # Requires the Claude CLI backend (web tools); the API fallback path does
+    # not carry the Desk.
+    "enable_fable_desk": os.getenv("REPORT_ENABLE_FABLE_DESK", "1") != "0",
+    "desk_effort": os.getenv("REPORT_DESK_EFFORT", "high"),
+    "desk_timeout_s": 1500,          # web-search turns make this slower than the report call
+    "desk_max_ideas": 4,
     "holding_price_aliases": {
         # Schwab reports Vietnam Enterprise Investments as the OTC line VTMEF,
         # which Yahoo no longer prices reliably. Use the London line for

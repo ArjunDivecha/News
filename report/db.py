@@ -122,6 +122,23 @@ CREATE TABLE IF NOT EXISTS security_names (
     name       TEXT,
     fetched_at TEXT DEFAULT (datetime('now'))
 );
+
+-- Fable's Desk idea journal: every idea the judgment pass proposes, with its
+-- falsifiable invalidation, graded by the Desk itself on later days. This is
+-- the accountability layer - the Desk's hit-rate is computable from here.
+CREATE TABLE IF NOT EXISTS desk_ideas (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    date         TEXT NOT NULL,        -- report date the idea was proposed
+    title        TEXT NOT NULL,
+    action       TEXT,
+    conviction   TEXT,                 -- High / Medium / Low
+    horizon      TEXT,
+    invalidation TEXT,
+    status       TEXT DEFAULT 'open',  -- open / confirmed / killed
+    grade_note   TEXT,
+    graded_on    TEXT,
+    created_at   TEXT DEFAULT (datetime('now'))
+);
 """
 
 
@@ -322,6 +339,57 @@ def upsert_names(mapping: dict) -> int:
                 name=excluded.name, fetched_at=datetime('now')
         """, recs)
     return len(recs)
+
+
+def get_open_desk_ideas() -> list:
+    """All open Fable's Desk ideas, oldest first, as plain dicts."""
+    with connect() as conn:
+        try:
+            rows = conn.execute("""
+                SELECT id, date, title, action, conviction, horizon,
+                       invalidation
+                FROM desk_ideas WHERE status = 'open' ORDER BY date ASC
+            """).fetchall()
+        except sqlite3.OperationalError:
+            return []                    # table not created yet (first run)
+    return [dict(r) for r in rows]
+
+
+def save_desk_ideas(date: str, ideas: list) -> int:
+    """Persist today's NEW Desk ideas (idempotent per date: re-running a day
+    replaces that day's ideas rather than duplicating them)."""
+    with connect() as conn:
+        conn.execute("DELETE FROM desk_ideas WHERE date = ?", (date,))
+        conn.executemany("""
+            INSERT INTO desk_ideas
+                (date, title, action, conviction, horizon, invalidation)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, [(date, i["title"], i["action"], i["conviction"], i["horizon"],
+               i["invalidation"]) for i in ideas])
+    return len(ideas)
+
+
+def apply_desk_grades(grades: list, graded_on: str = None) -> int:
+    """Apply the Desk's scorecard verdicts to open ideas by id.
+    grade='open' leaves the idea open (note still recorded)."""
+    n = 0
+    with connect() as conn:
+        for g in grades or []:
+            grade = str(g.get("grade", "")).lower()
+            if grade in ("confirmed", "killed"):
+                conn.execute("""
+                    UPDATE desk_ideas
+                    SET status = ?, grade_note = ?,
+                        graded_on = COALESCE(?, date('now'))
+                    WHERE id = ? AND status = 'open'
+                """, (grade, g.get("note", ""), graded_on, g.get("id")))
+                n += 1
+            elif grade == "open" and g.get("note"):
+                conn.execute("""
+                    UPDATE desk_ideas SET grade_note = ?
+                    WHERE id = ? AND status = 'open'
+                """, (g.get("note", ""), g.get("id")))
+    return n
 
 
 def get_prior_summaries(before_date: str, n: int = 5) -> pd.DataFrame:

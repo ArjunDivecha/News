@@ -51,12 +51,14 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from config import (PATHS, SETTINGS, BENCHMARK, TAG_VIEW_EXTRA_TICKERS,
+from config import (PATHS, SETTINGS, BENCHMARK, POLICY,
+                    TAG_VIEW_EXTRA_TICKERS,
                     CASH_EQUIVALENTS, FUND_LOOKTHROUGH, MANUAL_HOLDINGS,
                     ensure_dirs)
 import analytics
 import data as data_mod
 import db
+import fable_desk as fable_desk_mod
 import holdings as holdings_mod
 import llm as llm_mod
 import names as names_mod
@@ -259,6 +261,33 @@ def run(no_llm: bool = False, interactive: bool = True,
             allocation = allocation or None
             scenario_risk = None
 
+    # Policy check — the standing mandate (>5% real at vol <= 60/40) scored
+    # against live data. Additive-only: a failure here never sinks the report.
+    policy_check = None
+    if SETTINGS.get("enable_tag_views") and allocation is not None:
+        try:
+            total_row = subportfolios.loc[subportfolios["name"] == "TOTAL"]
+            hh_ytd = (float(total_row["return_ytd"].iloc[0])
+                      if not total_row.empty else float("nan"))
+            policy_check = analytics.compute_policy_check(
+                hh_port["positions"], prices, asof,
+                household_ytd_pct=hh_ytd,
+                household_total_value=allocation["total_value"],
+                policy=POLICY, benchmark_legs=BENCHMARK,
+                vol_window=SETTINGS["vol_window"])
+            if policy_check:
+                print(f"  Policy check: YTD {policy_check['ytd_pct']:+.1f}% vs "
+                      f"{policy_check['prorated_target_pct']:+.1f}% hurdle "
+                      f"({'ON TRACK' if policy_check['return_on_track'] else 'BEHIND'})"
+                      f" | vol {policy_check['hh_vol_pct']:.1f}% vs 60/40 "
+                      f"{policy_check['bench_vol_pct']:.1f}% "
+                      f"({'BREACH' if policy_check['vol_breach'] else 'within'})")
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"  ⚠️  Policy check SKIPPED: {e}")
+            policy_check = None
+
     s = portfolio["summary"]
     print(f"  Market: {market['data_quality']['n_priced_today']} assets priced "
           f"({market['data_quality']['coverage_pct']}%)")
@@ -305,7 +334,8 @@ def run(no_llm: bool = False, interactive: bool = True,
     package = prompt_mod.build_data_package(
         market, portfolio, bridge, history, prior, holdings_meta,
         subportfolios=subportfolios, name_map=name_map, tag_views=tag_views,
-        allocation=allocation, scenario_risk=scenario_risk)
+        allocation=allocation, scenario_risk=scenario_risk,
+        policy_check=policy_check)
     pkg_path = PATHS["output_dir"] / f"Data_Package_{asof}.md"
     pkg_path.write_text(package)
     print(f"  Data package: {len(package):,} chars -> {pkg_path}")
@@ -316,6 +346,16 @@ def run(no_llm: bool = False, interactive: bool = True,
         return {"package": pkg_path}
 
     result = llm_mod.generate_report(package)
+
+    # Fable's Desk — judgment pass (live web + ASADO), appended after Bottom
+    # Line. Additive-only: a Desk failure logs loudly and the deterministic
+    # report ships without the section.
+    if SETTINGS.get("enable_fable_desk"):
+        print("\n[4b/5] FABLE'S DESK")
+        desk_section = fable_desk_mod.run_fable_desk(
+            asof, result["text"], package)
+        if desk_section:
+            result["text"] = f"{result['text'].rstrip()}\n\n{desk_section}\n"
 
     # ------------------------------------------------------------------ 5
     print("\n[5/5] RENDER & ARCHIVE")

@@ -125,6 +125,44 @@ def _render_allocation(alloc: dict) -> list:
     return out
 
 
+def _render_policy_check(pc: dict) -> list:
+    """The mandate scored against live data: return vs pro-rated nominal
+    hurdle, and realized household vol vs the 60/40 ACWI/TLT benchmark.
+    Omitted entirely when the check could not be computed."""
+    if not pc:
+        return []
+    pol = pc["policy"]
+    out = [
+        f"\n## POLICY CHECK (the mandate: real return > "
+        f"{pol['real_return_target_pct']:.0f}%/yr at vol <= 60/40 ACWI/TLT; "
+        f"inflation assumption {pol['inflation_assumption_pct']:.1f}% as of "
+        f"{pol['inflation_asof']} -> nominal hurdle "
+        f"{pc['nominal_target_pct']:.1f}%/yr)"
+    ]
+    ret_verdict = "ON TRACK" if pc["return_on_track"] else "BEHIND"
+    tol_vol = pc["bench_vol_pct"] * pc["vol_tolerance_ratio"]
+    vol_verdict = "BREACH" if pc["vol_breach"] else "WITHIN"
+    out.append("| Test | Household | Target / Benchmark | Verdict |")
+    out.append("|---|---|---|---|")
+    out.append(
+        f"| Return YTD vs pro-rated hurdle | {pc['ytd_pct']:+.1f}% | "
+        f"{pc['prorated_target_pct']:+.1f}% "
+        f"({pc['nominal_target_pct']:.1f}%/yr x {pc['elapsed_frac']:.0%} of "
+        f"year) | {ret_verdict} |")
+    out.append(
+        f"| Realized vol ({pc['vol_window']}d, annualized) | "
+        f"{pc['hh_vol_pct']:.1f}% | {pc['bench_vol_pct']:.1f}% 60/40 "
+        f"(tolerance {tol_vol:.1f}% = {pc['vol_tolerance_ratio']:.2f}x) | "
+        f"{vol_verdict} |")
+    out.append(
+        f"_Vol is a current-weights proxy on priced positions "
+        f"({pc['coverage_pct']:.0f}% of household value); cash and unpriced "
+        f"sleeves (LP / private stakes) contribute zero measured vol, so "
+        f"household vol is modestly understated. A verdict of BREACH or "
+        f"BEHIND is a first-class Action Box trigger._")
+    return out
+
+
 def _render_scenario_risk(sr: dict, nm) -> list:
     """Render the scenario-risk block: episode-calibrated stress table,
     crash beta, and the liquidity ladder. `nm` maps ticker -> full name."""
@@ -341,7 +379,8 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                        name_map: dict = None,
                        tag_views: dict = None,
                        allocation: dict = None,
-                       scenario_risk: dict = None) -> str:
+                       scenario_risk: dict = None,
+                       policy_check: dict = None) -> str:
     """Assemble the full user-message data package for the LLM.
 
     name_map: {ticker: full security name}. Every asset is shown by NAME, not
@@ -600,6 +639,8 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                          f"{_prose_only(r['executive_summary'])}")
 
     parts.extend(_render_allocation(allocation))
+
+    parts.extend(_render_policy_check(policy_check))
 
     parts.extend(_render_scenario_risk(scenario_risk, nm))
 

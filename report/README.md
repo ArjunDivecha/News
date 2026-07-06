@@ -72,9 +72,12 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `names.py` | Ticker -> full security name (Yahoo, cached in report.db) |
 | `prompt.py` | Builds the LLM data package |
 | `llm.py` | Claude **Fable 5** call (subscription CLI first; streaming API fallback with refusal-fallback to Opus 4.8) + truncation guard |
+| `fable_desk.py` | **Fable's Desk** — judgment pass: live web search + ASADO snapshot, 0-4 tracked ideas appended after Bottom Line |
+| `asado.py` | Read-only ASADO warehouse snapshot (34-country value/momentum/FX/risk z-scores, GDELT news pulse, factor P&L) |
 | `pdf.py` | Markdown -> HTML -> PDF (PrinceXML, light mode) + table validation |
-| `db.py` | SQLite layer (WAL, idempotent upserts) |
+| `db.py` | SQLite layer (WAL, idempotent upserts) — incl. the `desk_ideas` journal |
 | `prompts/system.md` | The system prompt (the report's "personality") |
+| `prompts/fable_desk.md` | The Desk's system prompt (judgment contract + machine trailer) |
 | `build_universe.py` | One-time: builds `data/universe.xlsx` |
 | `migrate_history.py` | One-time: seeded history from legacy databases |
 | `etf_map.py` | Bloomberg index -> ETF mapping (from ETF migration) |
@@ -96,6 +99,39 @@ the PDF table validator rejects a truncated report, the data package emits a
 summary table + breadth + proxy/scope labels, `compute_bridge` backfills
 tier-2 (and labels off-universe names "Portfolio-Specific"), and percentiles
 are integer-valued with sparse-data masking.
+
+## Action-oriented report + Fable's Desk (2026-07-06)
+
+Three changes, made on the principal's explicit decisions (see
+`PRD_Action_Report_and_Fable_Desk.md`):
+
+1. **Recommendations un-banned + Action Box.** `prompts/system.md` no longer
+   forbids trade recommendations. A new required **Action Box** section sits
+   right after the Executive Summary: 0-3 items, each with a verb + size,
+   conviction, horizon, invalidation, and the data trigger that fired.
+   The empty state ("No action required") is explicit and encouraged —
+   fabricated asks are the failure mode, not boring days.
+2. **Policy check (the mandate).** The household's outcome-based policy —
+   **real return > 5%/yr at vol ≤ a 60/40 ACWI/TLT portfolio** — is scored
+   daily (`analytics.compute_policy_check`, config `POLICY`) and rendered as
+   a `POLICY CHECK` package section: YTD vs the pro-rated nominal hurdle
+   (real target + stated inflation assumption) and 60d realized household
+   vol (current-weights proxy over total value, so cash damps it) vs the
+   benchmark's, with a 1.10x tolerance. BREACH/BEHIND is a first-class
+   Action Box trigger.
+3. **Fable's Desk.** A second Fable pass (`fable_desk.py`) appended after
+   Bottom Line, gated by `SETTINGS["enable_fable_desk"]`
+   (`REPORT_ENABLE_FABLE_DESK=0` to disable). Unlike the deterministic
+   report, the Desk has **live WebSearch/WebFetch** and an **ASADO
+   warehouse snapshot** (`asado.py`, read-only duckdb: 34-country
+   value/momentum/FX/risk z-scores, GDELT news tone, factor P&L). It writes
+   0-4 idiosyncratic ideas — thesis, expression, conviction, horizon,
+   invalidation — plus a scorecard grading its own prior ideas. Ideas are
+   persisted in the `desk_ideas` table via a machine-parsed `desk-json`
+   trailer, so the Desk's hit-rate is computable. Additive-only: any Desk
+   failure (including a malformed table, pre-validated with the same check
+   the PDF renderer uses) ships the report without the section.
+   Standalone run: `python3 report/fable_desk.py --date YYYY-MM-DD`.
 
 ## Tier-3 tag views (2026-07-01)
 

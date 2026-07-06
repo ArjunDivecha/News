@@ -754,3 +754,80 @@ def compute_bridge(market: dict, portfolio: dict,
 
     return {"attribution": attribution, "unheld_themes": biggest_unheld,
             "breadth": breadth}
+
+
+def compute_policy_check(positions: pd.DataFrame, prices: pd.DataFrame,
+                         asof: str, household_ytd_pct: float,
+                         household_total_value: float,
+                         policy: dict, benchmark_legs: list,
+                         vol_window: int = 60) -> Optional[dict]:
+    """
+    Score the household against the standing mandate: real return >
+    policy['real_return_target_pct'] per year at volatility no higher than
+    the 60/40 ACWI/TLT benchmark.
+
+    Vol is a current-weights proxy: today's household positions weighted by
+    market value over household TOTAL value (so cash damps vol, as it does in
+    reality). Unpriced sleeves (Baupost LP, private stakes) contribute zero
+    measured vol - the coverage figure makes that understatement explicit
+    rather than hiding it (NO fabricated vol for unpriced assets).
+
+    Returns None when there is not enough priced history to say anything.
+    Raises ValueError when the benchmark legs are missing from prices (no
+    benchmark, no verdict - never score vol against nothing).
+    """
+    p = prices.sort_index()
+    p = p.loc[p.index <= asof]
+    if p.empty or household_total_value is None or household_total_value <= 0:
+        return None
+
+    # --- benchmark vol (60/40 ACWI/TLT) ---
+    missing = [t for t, _ in benchmark_legs if t not in p.columns]
+    if missing:
+        raise ValueError(
+            f"POLICY CHECK impossible: benchmark leg(s) {missing} missing "
+            f"from prices - refusing to score vol against nothing.")
+    rets = daily_returns(p)
+    bench_ret = sum(w * rets[t] for t, w in benchmark_legs).dropna()
+    bench_win = bench_ret.tail(vol_window)
+    bench_vol = float(bench_win.std() * np.sqrt(252))
+
+    # --- household vol (current-weights proxy over TOTAL value) ---
+    mv = positions["market_value_mtm"].dropna()
+    priced = [s for s in mv.index if s in p.columns]
+    weights = mv.loc[priced] / household_total_value
+    port_ret = (rets[priced].tail(vol_window) * weights).sum(axis=1,
+                                                             min_count=1)
+    port_ret = port_ret.dropna()
+    if len(port_ret) < max(20, vol_window // 3):
+        return None                      # not enough history to say anything
+    hh_vol = float(port_ret.std() * np.sqrt(252))
+    coverage_pct = float(100.0 * mv.loc[priced].abs().sum()
+                         / abs(household_total_value))
+
+    # --- return vs pro-rated nominal hurdle ---
+    nominal_target = (policy["real_return_target_pct"]
+                      + policy["inflation_assumption_pct"])
+    ts = pd.Timestamp(asof)
+    elapsed_frac = ts.dayofyear / (366.0 if ts.is_leap_year else 365.0)
+    prorated_target = nominal_target * elapsed_frac
+
+    tol = policy.get("vol_tolerance_ratio", 1.0)
+    vol_ratio = hh_vol / bench_vol if bench_vol > 0 else float("nan")
+    return {
+        "asof": asof,
+        "ytd_pct": household_ytd_pct,
+        "nominal_target_pct": nominal_target,
+        "prorated_target_pct": prorated_target,
+        "elapsed_frac": elapsed_frac,
+        "return_on_track": bool(pd.notna(household_ytd_pct)
+                                and household_ytd_pct >= prorated_target),
+        "hh_vol_pct": hh_vol,
+        "bench_vol_pct": bench_vol,
+        "vol_ratio": vol_ratio,
+        "vol_tolerance_ratio": tol,
+        "vol_breach": bool(pd.notna(vol_ratio) and vol_ratio > tol),
+        "vol_window": vol_window,
+        "coverage_pct": coverage_pct,
+        "policy": dict(policy),
+    }
