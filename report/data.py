@@ -11,8 +11,8 @@ INPUT FILES:
 OUTPUT FILES:
     - data/report.db       (prices table, via store_prices)
 
-VERSION: 1.0
-LAST UPDATED: 2026-06-09
+VERSION: 1.1
+LAST UPDATED: 2026-07-05
 AUTHOR: Arjun Divecha
 
 DESCRIPTION:
@@ -22,6 +22,22 @@ DESCRIPTION:
     FAILS LOUDLY if more than 10% of requested tickers return nothing -
     no silent NaN-filling, per the project's fail-is-fail policy.
 
+    ROOT-CAUSE FIX (2026-07-05): the launchd daily runs (07/01-07/04) failed
+    with ~10-17% coverage and per-ticker
+    `OperationalError('unable to open database file')`. That SQLite message is
+    the classic symptom of FILE-DESCRIPTOR EXHAUSTION (EMFILE): launchd starts
+    jobs with a low default soft limit (`launchctl limit maxfiles` -> 256),
+    and yfinance's threaded download of ~800 tickers opens far more than 256
+    concurrent sockets + per-thread SQLite cache handles, so most tickers fail
+    to open the tz-cache DB. Interactive shells inherit a huge FD limit
+    (1048576) which is why the pipeline always worked when run by hand.
+    `_ensure_fd_limit()` raises the process soft RLIMIT_NOFILE to 8192 (well
+    under macOS kern.maxfilesperproc 245760) before any download. A bounded
+    retry of the still-missing tickers with exponential backoff is layered on
+    top so a transient Yahoo error storm degrades gracefully instead of zeroing
+    coverage. The 90% coverage gate is UNCHANGED - the fix makes real data
+    arrive, it does not lower the bar or fabricate prices.
+
 DEPENDENCIES:
     - yfinance, pandas
 
@@ -30,7 +46,9 @@ USAGE:
 =============================================================================
 """
 
+import resource
 import sys
+import time
 from pathlib import Path
 from typing import Iterable
 
@@ -45,6 +63,97 @@ import db
 
 class DataCoverageError(RuntimeError):
     """Raised when the price fetch returns insufficient coverage."""
+
+
+# Target soft FD limit for the download. 8192 comfortably covers a threaded
+# ~800-ticker pull (sockets + per-thread SQLite cache handles) and stays far
+# below macOS kern.maxfilesperproc (245760). launchd's default is 256.
+_FD_LIMIT_TARGET = 8192
+
+
+def _ensure_fd_limit(target: int = _FD_LIMIT_TARGET) -> None:
+    """
+    Raise this process's soft open-files limit so the threaded yfinance
+    download cannot exhaust file descriptors.
+
+    Under launchd the soft limit is 256; yfinance's threaded fetch of the full
+    universe opens many more concurrent sockets + SQLite cache handles than
+    that, and SQLite reports the resulting EMFILE as
+    `OperationalError('unable to open database file')`, silently dropping ~90%
+    of tickers. Raising the soft limit (bounded by the hard limit) is the
+    root-cause fix; it is a no-op if the limit is already high enough.
+    """
+    soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    if soft != resource.RLIM_INFINITY and soft >= target:
+        return
+    new_soft = target
+    if hard != resource.RLIM_INFINITY:
+        new_soft = min(target, hard)
+    try:
+        resource.setrlimit(resource.RLIMIT_NOFILE, (new_soft, hard))
+        print(f"  Raised open-files limit: {soft} -> {new_soft} (hard={hard})")
+    except (ValueError, OSError) as e:
+        # Fail LOUDLY per fail-is-fail: if we cannot raise the limit, the
+        # download will likely under-cover and the coverage gate will catch it,
+        # but surface the reason here so it is diagnosable.
+        print(f"  !! Could not raise open-files limit from {soft} to {new_soft}: {e}")
+
+
+def _download_long(tickers: list, period: str) -> pd.DataFrame:
+    """
+    One batched yfinance download of `tickers`, normalized to long format
+    [date, close, volume, yf_ticker]. Returns an empty frame if nothing came
+    back (caller handles retry / coverage). Never raises on partial results.
+    """
+    empty = pd.DataFrame(columns=["date", "close", "volume", "yf_ticker"])
+    if not tickers:
+        return empty
+
+    # yf.download can itself RAISE (e.g. YFRateLimitError, or a failed ISIN
+    # lookup for ISIN-format tickers like GMO's IE00BF199475) rather than just
+    # returning a sparse frame. Swallow that here and return empty so the
+    # caller's bounded-backoff retry loop can handle it, instead of letting one
+    # raise kill the whole run before any retry.
+    try:
+        raw = yf.download(
+            tickers=tickers,
+            period=period,
+            interval="1d",
+            auto_adjust=True,
+            group_by="ticker",
+            threads=True,
+            progress=False,
+        )
+    except Exception as e:  # noqa: BLE001 - intentional: convert to retryable
+        print(f"  yfinance download raised ({type(e).__name__}: {e}); "
+              f"treating as empty for retry")
+        return empty
+    if raw is None or raw.empty:
+        return empty
+
+    frames = []
+    if isinstance(raw.columns, pd.MultiIndex):
+        available = raw.columns.get_level_values(0).unique()
+        for t in available:
+            sub = raw[t][["Close", "Volume"]].dropna(subset=["Close"])
+            if sub.empty:
+                continue
+            sub = sub.reset_index()
+            sub.columns = ["date", "close", "volume"]
+            sub["yf_ticker"] = t
+            frames.append(sub)
+    else:  # single-ticker shape
+        sub = raw[["Close", "Volume"]].dropna(subset=["Close"]).reset_index()
+        sub.columns = ["date", "close", "volume"]
+        sub["yf_ticker"] = tickers[0]
+        frames.append(sub)
+
+    if not frames:
+        return pd.DataFrame(columns=["date", "close", "volume", "yf_ticker"])
+
+    long_df = pd.concat(frames, ignore_index=True)
+    long_df["date"] = pd.to_datetime(long_df["date"]).dt.strftime("%Y-%m-%d")
+    return long_df
 
 
 def filter_sparse_rows(prices_wide: pd.DataFrame,
@@ -98,42 +207,35 @@ def fetch_prices(tickers: Iterable[str], period: str = None) -> pd.DataFrame:
     tickers = sorted(set(t for t in tickers if t and isinstance(t, str)))
     period = period or SETTINGS["fetch_period"]
 
+    # ROOT-CAUSE FIX: raise the FD limit before the threaded download so we do
+    # not hit launchd's 256-fd cap (which surfaces as SQLite
+    # "unable to open database file" and drops ~90% of tickers).
+    _ensure_fd_limit()
+
     print(f"  Downloading {len(tickers)} tickers, period={period} (batched)...")
-    raw = yf.download(
-        tickers=tickers,
-        period=period,
-        interval="1d",
-        auto_adjust=True,
-        group_by="ticker",
-        threads=True,
-        progress=False,
-    )
-    if raw is None or raw.empty:
-        raise DataCoverageError("yfinance returned an empty frame - no data at all")
+    long_df = _download_long(tickers, period)
 
-    # Normalize to long format
-    frames = []
-    if isinstance(raw.columns, pd.MultiIndex):
-        available = raw.columns.get_level_values(0).unique()
-        for t in available:
-            sub = raw[t][["Close", "Volume"]].dropna(subset=["Close"])
-            if sub.empty:
-                continue
-            sub = sub.reset_index()
-            sub.columns = ["date", "close", "volume"]
-            sub["yf_ticker"] = t
-            frames.append(sub)
-    else:  # single-ticker shape
-        sub = raw[["Close", "Volume"]].dropna(subset=["Close"]).reset_index()
-        sub.columns = ["date", "close", "volume"]
-        sub["yf_ticker"] = tickers[0]
-        frames.append(sub)
+    # Bounded retry with exponential backoff for whatever is still missing, so
+    # a transient Yahoo error storm or a partial connection reset retries the
+    # gap instead of zeroing coverage. This does NOT relax the coverage gate.
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        got = set(long_df["yf_ticker"].unique()) if not long_df.empty else set()
+        missing = sorted(set(tickers) - got)
+        if not missing:
+            break
+        if len(got) / len(tickers) >= SETTINGS["min_coverage"]:
+            break  # already over the gate; the remainder are genuinely dead symbols
+        backoff = 2 ** attempt
+        print(f"  Retry {attempt}/{max_retries}: re-fetching {len(missing)} "
+              f"missing tickers after {backoff}s backoff...")
+        time.sleep(backoff)
+        retry_df = _download_long(missing, period)
+        if not retry_df.empty:
+            long_df = pd.concat([long_df, retry_df], ignore_index=True)
 
-    if not frames:
-        raise DataCoverageError("No ticker returned any usable price rows")
-
-    long_df = pd.concat(frames, ignore_index=True)
-    long_df["date"] = pd.to_datetime(long_df["date"]).dt.strftime("%Y-%m-%d")
+    if long_df.empty:
+        raise DataCoverageError("yfinance returned no usable price rows at all")
 
     # Coverage check - LOUD failure, with the list of what's missing
     got = set(long_df["yf_ticker"].unique())
