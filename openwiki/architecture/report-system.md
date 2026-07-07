@@ -43,7 +43,7 @@ Key concepts in the config layer:
 ### `data.py`
 Responsible for market data acquisition and cleanup.
 
-- `fetch_prices()` downloads a batched daily price matrix from Yahoo Finance.
+- `fetch_prices()` downloads a batched daily price matrix from Yahoo Finance. Before the threaded download it calls `_ensure_fd_limit()` to raise the process soft RLIMIT_NOFILE to 8192 — under launchd the default is 256, and yfinance's threaded pull of ~800 tickers exhausts file descriptors, which surfaces as SQLite `unable to open database file` and silently drops most tickers. A bounded retry (3 attempts, exponential backoff) always re-fetches whatever is still missing; the coverage gate (`DataCoverageError` when coverage falls below `SETTINGS['min_coverage']`) only decides whether the run fails, not whether to retry. The retry never early-breaks on sufficient coverage, because that previously stranded live tickers (e.g. VNM, EDEN, EWC, EWD, EWL, EWQ, VBR) at stale closes whenever the first batch already cleared 90%.
 - `apply_holding_price_aliases()` creates synthetic price series for held symbols that must inherit a source ticker's return history.
 - `filter_sparse_rows()` removes sparse market-holiday rows so daily return calculations use real trading sessions.
 - `latest_trading_date()` returns the most recent real session after sparse-row filtering.
