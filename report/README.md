@@ -17,8 +17,8 @@ That's it. ~2.5 minutes later you have a PDF.
    brokers can run fully unattended:
    - **Schwab**: Playwright auto-auth (headless Chromium, TOTP) or
      interactive OAuth fallback
-   - **IBKR**: Flex Web Service (token-based, no TWS) or TWS subprocess
-     fallback
+   - **IBKR**: IB Gateway/TWS subprocess (requires a logged-in Gateway
+     session — Arjun logs in daily; Flex Web Service removed 2026-07-11)
 2. **Prices** - Downloads 1 year of daily prices for ~800 ETFs from
    Yahoo Finance in one batched call.
 3. **Analytics** - Computes everything: returns, YTD, volatility, betas,
@@ -62,8 +62,7 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `holdings.py` | Schwab + IBKR pulls, preflights, stale fallback |
 | `notify.py` | Emails the report PDF (Mail.app or SMTP) |
 | `schwab_auto.py` | Playwright headless OAuth (auto-refresh tokens) |
-| `ibkr_flex.py` | IBKR Flex Web Service HTTP client (no TWS) |
-| `ibkr_fetch.py` | IBKR TWS subprocess (fallback, `.venv-ibkr312`) |
+| `ibkr_fetch.py` | IBKR TWS/Gateway subprocess (`.venv-ibkr312`) |
 | `run_daily.sh` | launchd wrapper — runs pipeline + emails |
 | `analytics.py` | ALL financial math (pure functions, fully unit-tested) |
 | `scenarios.py` | Scenario risk engine (episode-calibrated stress tests, crash beta, liquidity ladder) |
@@ -285,33 +284,18 @@ prompt enforces names-only in both tables and prose.
   `python-dotenv`, `markdown`, `pytest`)
 - PrinceXML (`brew install prince`) for PDFs
 - `.env` at repo root: `ANTHROPIC_API_KEY`, `SCHWAB_APP_KEY`,
-  `SCHWAB_APP_SECRET`, and **`IBKR_FLEX_TOKEN` + `IBKR_FLEX_QUERY_ID`**
-  (see IBKR Flex setup below)
-- TWS / IB Gateway: **no longer required** when Flex is configured.
-  The `.venv-ibkr312` venv is kept as an optional TWS fallback.
+  `SCHWAB_APP_SECRET`
+- TWS / IB Gateway: **required** for live IBKR holdings — keep a logged-in
+  Gateway/TWS session (Arjun logs in daily). Uses the `.venv-ibkr312` venv.
 
-### IBKR Flex Web Service setup (one-time, 5 minutes)
+### Why there is no IBKR Flex Web Service path (removed 2026-07-11)
 
-This is the primary IBKR path — no TWS login, no `.venv-ibkr312`, no
-interactive prompts. Once set up, it just works.
-
-1. **Log into Client Portal** at https://ndcdyn.interactivebrokers.com
-2. **Performance & Reports → Flex Queries → Create New Query**
-   - Name it "Daily Positions"
-   - Add an **Open Positions** section (all default fields are fine)
-   - Optionally add **Cash Transactions** to include cash balances
-   - Save — note the **Query ID** (a number)
-3. **Flex Web Service Configuration** (gear icon on the Flex Queries page)
-   - Enable Flex Web Service → **Generate Token**
-   - Copy the token and query ID into `.env`:
-     ```
-     IBKR_FLEX_TOKEN=<your-token-here>
-     IBKR_FLEX_QUERY_ID=<your-query-id-here>
-     ```
-
-That's it. The token is permanent until you regenerate it; no expiration,
-no re-auth, no TWS dependency. If Flex is NOT configured (env vars absent),
-the system falls back to the TWS subprocess path automatically.
+Flex was tried and abandoned. The API intermittently refuses statement
+generation (error 1001, documented-transient), and retrying trips an
+ACCOUNT-LEVEL failed-attempts lockout (error 1025) that regenerating the
+token does NOT clear — it even locked Client Portal login. One valid pull
+per portal-side generation worked; unattended daily pulls did not.
+Do not re-add Flex; use Gateway.
 
 ### Schwab auto-auth setup (optional, one-time)
 

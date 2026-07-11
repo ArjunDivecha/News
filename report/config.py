@@ -7,8 +7,8 @@ SCRIPT NAME: config.py
 INPUT FILES:
     - /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/.env
       API keys: ANTHROPIC_API_KEY, SCHWAB_APP_KEY, SCHWAB_APP_SECRET.
-      IBKR: IBKR_FLEX_TOKEN + IBKR_FLEX_QUERY_ID (primary, no TWS needed);
-             fallback still supported via .venv-ibkr312 subprocess.
+      IBKR: IB Gateway subprocess via .venv-ibkr312 (requires logged-in
+             Gateway/TWS; the Flex Web Service path was removed 2026-07-11).
 
 OUTPUT FILES:
     (none - this is a configuration module)
@@ -59,8 +59,9 @@ PATHS = {
     "gmo_xlsx": ROOT_DIR / "GMO.xlsx",
     # Legacy holdings file (stale-fallback seed for first run)
     "legacy_client_xlsx": ROOT_DIR / "Client.xlsx",
-    # IBKR fetch runs in its own interpreter (ib_insync needs Python 3.12)
-    # Kept as FALLBACK only — Flex Web Service (ibkr_flex.py) is primary
+    # IBKR fetch runs in its own interpreter (ib_insync needs Python 3.12).
+    # Gateway is the ONLY IBKR path (Flex Web Service removed 2026-07-11
+    # after IBKR's account-level lockout made it unusable).
     "ibkr_python": ROOT_DIR / ".venv-ibkr312" / "bin" / "python3",
     # Fable's Desk (second LLM pass: live web + ASADO country signals)
     "desk_prompt": REPORT_DIR / "prompts" / "fable_desk.md",
@@ -323,10 +324,6 @@ SETTINGS = {
         "VTMEF": "VEIL.L",
     },
     # Brokers
-    # IBKR Flex Web Service (primary — no TWS login required, token-based)
-    # Set both in .env to skip TWS entirely:
-    "ibkr_flex_token_env": "IBKR_FLEX_TOKEN",
-    "ibkr_flex_query_id_env": "IBKR_FLEX_QUERY_ID",
     # IB Gateway API port (live=4002, paper=4001; override with IBKR_GATEWAY_PORT)
     "ibkr_port": int(os.getenv("IBKR_GATEWAY_PORT", "4002")),
     "ibkr_client_id": 103,

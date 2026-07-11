@@ -9,8 +9,8 @@ INPUT FILES:
     - Schwab auto-auth credentials     (primary: env vars SCHWAB_USERNAME,
       SCHWAB_PASSWORD, SCHWAB_TOTP_SECRET → Playwright headless OAuth)
     - Schwab interactive fallback      (when auto-auth creds are absent)
-    - IBKR Flex Web Service            (primary: HTTPS API, token-based, no TWS)
-    - IBKR Gateway on 127.0.0.1        (fallback: via report/ibkr_fetch.py subprocess)
+    - IBKR Gateway on 127.0.0.1        (via report/ibkr_fetch.py subprocess;
+      requires a logged-in IB Gateway/TWS session — Arjun logs in daily)
     - data/holdings.xlsx              (previous snapshot, stale fallback)
     - Client.xlsx                     (legacy snapshot, first-run fallback)
 
@@ -32,15 +32,16 @@ DESCRIPTION:
       authorization code — fully unattended. Falls back to the interactive
       schwabdev browser+paste-URL flow when auto-auth env vars are absent.
 
-    IBKR: Flex Web Service (primary, token-based, no Gateway login) or
-      IB Gateway subprocess (automatic fallback when Flex env vars are absent).
+    IBKR: IB Gateway subprocess (requires a logged-in Gateway/TWS session).
+      NOTE: the Flex Web Service path was removed 2026-07-11 — IBKR's
+      account-level failed-attempts lockout (error 1025) made it unusable
+      and even locked the Client Portal login. Do not re-add it.
 
     PREFLIGHTS (user-in-the-loop, only when interactive fallback is active):
       - Schwab auto-auth: NO preflight — Playwright handles everything.
       - Schwab interactive: reads refresh_token_issued from tokens.db.
         Prods user if the 7-day token is near expiry.
-      - IBKR (Flex): NO preflight — the token is stateless.
-      - IBKR (Gateway fallback): probes Gateway port; launches + prompts if closed.
+      - IBKR (Gateway): probes Gateway port; launches + prompts if closed.
 
     FALLBACK (explicitly approved): if a broker still fails, the run
     continues on the LAST SAVED snapshot, loudly stamped as stale.
@@ -310,26 +311,15 @@ def fetch_schwab() -> pd.DataFrame:
     return df
 
 
-def fetch_ibkr(port: int, flex_token: Optional[str] = None,
-               flex_query_id: Optional[str] = None) -> pd.DataFrame:
+def fetch_ibkr(port: int) -> pd.DataFrame:
     """
-    Pull IBKR positions: Flex Web Service (primary) or IB Gateway subprocess (fallback).
+    Pull IBKR positions via the IB Gateway subprocess.
 
-    Flex is tried first when a token + query ID are provided. If Flex
-    succeeds, Gateway is never touched. If Flex env vars are not set, the
-    Gateway subprocess is used. If Flex is configured but fails
-    (e.g. expired token), we DO NOT fall back to Gateway — the token should work,
-    and a single failing path means a stale-fallback per the design rule.
+    Requires a logged-in IB Gateway/TWS session on 127.0.0.1. The Flex Web
+    Service path was removed 2026-07-11 (IBKR account-level lockout — see
+    holdings module docstring); Gateway is the only live IBKR path.
     """
-    use_flex = bool(flex_token and flex_query_id)
-    if not use_flex:
-        return _fetch_ibkr_gateway(port)
-
-    from ibkr_flex import fetch_positions
-    try:
-        return fetch_positions(flex_token, flex_query_id)
-    except Exception as e:
-        raise BrokerError(f"IBKR Flex Web Service failed: {e}")
+    return _fetch_ibkr_gateway(port)
 
 
 def _fetch_ibkr_gateway(port: int) -> pd.DataFrame:
@@ -468,21 +458,10 @@ def get_holdings(interactive: bool = True) -> Tuple[pd.DataFrame, dict]:
         failures.append(f"Schwab: {e}")
         print(f"  !! Schwab pull failed: {e}")
 
-    # --- IBKR ---
-    flex_token = os.getenv(SETTINGS["ibkr_flex_token_env"])
-    flex_query_id = os.getenv(SETTINGS["ibkr_flex_query_id_env"])
-    use_flex = bool(flex_token and flex_query_id)
-
+    # --- IBKR (Gateway only — Flex Web Service removed 2026-07-11) ---
     try:
-        if use_flex:
-            print(f"  IBKR: Flex Web Service configured "
-                  f"(token {flex_token[:4]}..., query {flex_query_id})")
-            frames.append(fetch_ibkr(
-                port, flex_token=flex_token, flex_query_id=flex_query_id))
-        else:
-            print("  IBKR: Flex not configured, falling back to Gateway...")
-            preflight_ibkr(interactive, port)
-            frames.append(fetch_ibkr(port))
+        preflight_ibkr(interactive, port)
+        frames.append(fetch_ibkr(port))
     except (BrokerError, Exception) as e:
         failures.append(f"IBKR: {e}")
         print(f"  !! IBKR pull failed: {e}")
