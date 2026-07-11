@@ -86,28 +86,54 @@ def _http_get(url: str, timeout: int = 30) -> str:
         return resp.read().decode("utf-8")
 
 
+# IBKR error codes that are documented as transient ("try again shortly") —
+# retried with backoff. Everything else (bad token 1015, bad query 1014,
+# expired token 1012, ...) is permanent and fails immediately.
+# Source: ibkrguides.com Flex Web Service Version 3 Error Codes.
+_TRANSIENT_ERRORS = {"1001", "1004", "1005", "1006", "1007", "1008",
+                     "1009", "1019", "1021"}
+_SEND_RETRIES = 5
+_SEND_BACKOFF_S = (10, 20, 30, 60)  # waits between the 5 attempts
+
+
 def _request_report(token: str, query_id: str) -> str:
-    """Send a Flex request; extract and return the reference code."""
+    """Send a Flex request; extract and return the reference code.
+
+    Transient generation errors (1001 etc.) are retried with backoff —
+    IBKR's statement generator intermittently refuses during its nightly
+    processing window, and a single 1001 must not kill the daily pull.
+    """
     url = f"{_SEND_URL}?t={token}&q={query_id}&v=3"
-    body = _http_get(url)
-    root = ET.fromstring(body)
+    for attempt in range(1, _SEND_RETRIES + 1):
+        body = _http_get(url)
+        root = ET.fromstring(body)
 
-    status = root.findtext("Status", "")
-    if status and status != "Success":
-        code = root.findtext("ErrorCode", "")
-        msg = root.findtext("ErrorMessage", "")
-        raise RuntimeError(
-            f"Flex SendRequest failed: {status} "
-            f"(error {code}: {msg})")
+        status = root.findtext("Status", "")
+        if status and status != "Success":
+            code = (root.findtext("ErrorCode") or "").strip()
+            msg = root.findtext("ErrorMessage", "")
+            if code in _TRANSIENT_ERRORS and attempt < _SEND_RETRIES:
+                wait = _SEND_BACKOFF_S[attempt - 1]
+                print(f"    Flex SendRequest transient error {code} "
+                      f"({msg}); retry {attempt}/{_SEND_RETRIES - 1} "
+                      f"in {wait}s...")
+                time.sleep(wait)
+                continue
+            raise RuntimeError(
+                f"Flex SendRequest failed: {status} "
+                f"(error {code}: {msg})")
 
-    ref = root.findtext("ReferenceCode") or root.findtext("referenceCode")
-    if not ref:
-        raise RuntimeError(
-            f"Flex SendRequest returned no ReferenceCode. "
-            f"Root element: {root.tag}, children: "
-            f"{[c.tag for c in root[:5]]}")
+        ref = root.findtext("ReferenceCode") or root.findtext("referenceCode")
+        if not ref:
+            raise RuntimeError(
+                f"Flex SendRequest returned no ReferenceCode. "
+                f"Root element: {root.tag}, children: "
+                f"{[c.tag for c in root[:5]]}")
 
-    return ref.strip()
+        return ref.strip()
+
+    raise RuntimeError(
+        f"Flex SendRequest failed after {_SEND_RETRIES} attempts")
 
 
 def _fetch_statement(token: str, ref_code: str, max_polls: int = _MAX_POLLS,
