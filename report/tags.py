@@ -12,8 +12,12 @@ INPUT FILES:
     - /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/GMO.xlsx
       (the separate GMO sleeve holdings)
     - Yahoo Finance (full name + longBusinessSummary description, via yfinance)
-    - DeepSeek API (api.deepseek.com; key = DEEPSEEK_API_KEY) — the classifier
-    - OpenAI API (key = OPENAI_API_KEY) — web_search FALLBACK for junk names only
+    - Arjun Model Gateway (local LaunchAgent, http://127.0.0.1:8765/v1) — BOTH
+      the classifier (routing profile "cheap") and the web_search fallback for
+      junk names (OpenRouter web_search server tool). The gateway picks the
+      actual model dynamically from the live catalog, bills exact cost, and
+      LEARNS from the outcomes this script reports back. No provider API keys
+      are needed in this repo for tagging.
     - /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/fine tuning/scripts/expert_review_common.py
       (SYSTEM_PROMPT, build_user_prompt, parse_model_json, tags_to_string,
        ALLOWED_TIER3_TAGS — the canonical vocabulary + normalizer)
@@ -22,8 +26,8 @@ OUTPUT FILES:
     - /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/data/report.db
       (security_tags table: yf_ticker -> canonical tags, cached)
 
-VERSION: 2.0
-LAST UPDATED: 2026-07-01
+VERSION: 3.0
+LAST UPDATED: 2026-07-11
 AUTHOR: Arjun Divecha
 
 DESCRIPTION:
@@ -35,11 +39,15 @@ DESCRIPTION:
       2. universe tags     - authoritative for clean universe rows (unless forced).
       3. report.db cache   - previously resolved.
       4. classify          - fetch REAL FACTS first (Yahoo longName + business
-                             summary; for junk names an OpenAI web_search lookup),
-                             then hand the name+description to the DeepSeek
-                             classifier. DeepSeek has NO web access itself, so it
-                             must be fed facts - name-only starves it and it
-                             hallucinates (that was the v1 failure).
+                             summary; for junk names a gateway web_search lookup),
+                             then hand the name+description to the gateway
+                             classifier ("cheap" profile). The classifier model
+                             has NO web access itself, so it must be fed facts -
+                             name-only starves it and it hallucinates (that was
+                             the v1 failure). v3: every classification call's
+                             outcome (non-empty canonical tags or not) is posted
+                             to the gateway's /v1/outcomes, so model routing
+                             improves from this pipeline's real results.
 
     Holdings are force-reclassified fresh (universe tags are currently GS-basket
     contaminated for ~41 tickers, so the book must not inherit them).
@@ -52,7 +60,6 @@ DEPENDENCIES:
 =============================================================================
 """
 
-import os
 import re
 import sys
 from pathlib import Path
@@ -68,9 +75,14 @@ import db
 import names as names_mod
 import expert_review_common as erc                                  # the tagger
 
-DEEPSEEK_BASE_URL = "https://api.deepseek.com"
-DEEPSEEK_MODEL = "deepseek-chat"
-OPENAI_SEARCH_MODEL = "gpt-4o"
+# All LLM calls go through the local Arjun Model Gateway (Divecha Router).
+# "Models" here are ROUTING PROFILES — the gateway resolves the actual model
+# from the live OpenRouter catalog, so nothing in this file goes stale when
+# new models ship. FAIL IS FAIL: if the gateway is down, tagging fails loudly
+# (the per-symbol handler records "none" exactly as before).
+GATEWAY_BASE_URL = "http://127.0.0.1:8765/v1"
+GATEWAY_CLASSIFY_PROFILE = "cheap"
+GATEWAY_SEARCH_PROFILE = "cheap"  # + openrouter:web_search server tool
 
 # User-authoritative overrides (you know your own holdings). name/description
 # feed the classifier; "tags" (optional) pins the canonical output directly.
@@ -224,7 +236,7 @@ def upsert_tags(rows: list) -> int:
                 tags=excluded.tags, tier1=excluded.tier1, tier2=excluded.tier2,
                 name=excluded.name, source=excluded.source, fetched_at=datetime('now')
         """, [(r["yf_ticker"], r["tags"], r.get("tier1"), r.get("tier2"),
-               r.get("name"), r.get("source", "deepseek")) for r in rows])
+               r.get("name"), r.get("source", "gateway")) for r in rows])
     return len(rows)
 
 
@@ -266,24 +278,34 @@ def _is_junk_name(name: str, sym: str) -> bool:
 
 
 def _websearch_identify(sym: str) -> tuple:
-    """OpenAI web_search FALLBACK for junk names -> (name, description).
+    """Gateway web_search FALLBACK for junk names -> (name, description).
 
-    DeepSeek can't browse; this is how a genuinely-unknown ticker/CUSIP gets
-    real facts. Low-confidence by nature - flagged for review by the caller.
+    The classifier model can't browse; this is how a genuinely-unknown
+    ticker/CUSIP gets real facts. Runs through the gateway with OpenRouter's
+    web_search server tool (tool_choice=required so the search always runs).
+    Low-confidence by nature - flagged for review by the caller.
     """
     try:
         from openai import OpenAI
-        client = OpenAI()  # OPENAI_API_KEY from env
-        r = client.responses.create(
-            model=OPENAI_SEARCH_MODEL,
-            tools=[{"type": "web_search"}],
-            input=(f"Identify the security with ticker or CUSIP '{sym}'. "
-                   f"Give its official name, then one or two sentences on what "
-                   f"it is and what it invests in (asset class, region, sector, "
-                   f"strategy). If you cannot identify it confidently, say so."))
-        txt = (r.output_text or "").strip()
-        # first line ~ name; whole thing ~ description
+        client = OpenAI(api_key="local", base_url=GATEWAY_BASE_URL)
+        r = client.chat.completions.create(
+            model=GATEWAY_SEARCH_PROFILE,
+            messages=[{"role": "user", "content": (
+                f"Identify the security with ticker or CUSIP '{sym}'. "
+                f"FIRST LINE of your answer: ONLY the security's official name, "
+                f"nothing else. Then one or two sentences on what it is and what "
+                f"it invests in (asset class, region, sector, strategy). If you "
+                f"cannot identify it confidently, the first line must be "
+                f"UNIDENTIFIED.")}],
+            tools=[{"type": "openrouter:web_search"}],
+            tool_choice="required",
+            extra_body={"metadata": {"repo": "News", "script": "report/tags.py",
+                                     "call_site_id": "tags._websearch_identify"}})
+        txt = (r.choices[0].message.content or "").strip()
+        # first line = official name (prompt-enforced); whole thing ~ description
         first = txt.split("\n", 1)[0].strip(" *#-")
+        if not first or first.upper().startswith("UNIDENTIFIED"):
+            return "", ""
         return first[:120], txt[:1200]
     except Exception as e:
         print(f"    web_search failed for {sym}: {e}")
@@ -302,15 +324,37 @@ def _drop_multicap(tags_str: str) -> str:
     return ", ".join(tags)
 
 
-def _deepseek_classify(client, ticker: str, name: str, description: str) -> dict:
+def _gateway_classify(client, ticker: str, name: str, description: str) -> tuple:
+    """One classification call through the gateway -> (parsed, amg_request_id).
+
+    The amg_request_id is the key for reporting this call's verified outcome
+    back to the gateway (its learning signal)."""
     row = pd.Series({"yf_ticker": ticker, "name": name,
                      "description": description})
     resp = client.chat.completions.create(
-        model=DEEPSEEK_MODEL,
+        model=GATEWAY_CLASSIFY_PROFILE,
         messages=[{"role": "system", "content": erc.SYSTEM_PROMPT},
                   {"role": "user", "content": erc.build_user_prompt(row)}],
-        temperature=0, max_tokens=256)
-    return erc.parse_model_json(resp.choices[0].message.content)
+        temperature=0, max_tokens=256,
+        extra_body={"metadata": {"repo": "News", "script": "report/tags.py",
+                                 "call_site_id": "tags._gateway_classify"}})
+    request_id = getattr(resp, "amg_request_id", None)
+    return erc.parse_model_json(resp.choices[0].message.content), request_id
+
+
+def _report_outcome(request_id, success: bool, detail: str) -> None:
+    """Post a verified outcome to the gateway. Best-effort: outcome reporting
+    must never break the report pipeline."""
+    if not request_id:
+        return
+    try:
+        import httpx
+        httpx.post(f"{GATEWAY_BASE_URL}/outcomes",
+                   json={"request_id": request_id, "success": bool(success),
+                         "verifier": "tests", "detail": detail},
+                   timeout=10)
+    except Exception:
+        pass
 
 
 # --------------------------------------------------------------------------- #
@@ -319,7 +363,8 @@ def _deepseek_classify(client, ticker: str, name: str, description: str) -> dict
 def resolve_tags(symbols, name_hints=None, force=None, fetch=True) -> dict:
     """
     Return {symbol: {"tags", "source", "name"}}.
-      source: override | universe | cache | deepseek | deepseek+websearch | none
+      source: override | universe | cache | gateway | gateway+websearch | none
+              (rows cached before 2026-07-11 may carry the old "deepseek" labels)
       force:  symbols to (re)classify fresh, bypassing universe + cache.
     """
     name_hints = name_hints or {}
@@ -350,7 +395,7 @@ def resolve_tags(symbols, name_hints=None, force=None, fetch=True) -> dict:
         return out
 
     from openai import OpenAI
-    ds = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"], base_url=DEEPSEEK_BASE_URL)
+    gw = OpenAI(api_key="local", base_url=GATEWAY_BASE_URL)
     new_rows = []
     for s in to_tag:
         ov = MANUAL_OVERRIDES.get(s, {})
@@ -360,24 +405,28 @@ def resolve_tags(symbols, name_hints=None, force=None, fetch=True) -> dict:
                                    _is_junk_name(name_hints.get(s, ""), s) else "") \
             or (yf_name if not _is_junk_name(yf_name, s) else "") or ""
         desc = ov.get("description") or yf_desc or ""
-        src = "deepseek"
+        src = "gateway"
         if _is_junk_name(name, s):
             ws_name, ws_desc = _websearch_identify(s)
             if ws_name:
-                name, desc, src = ws_name, ws_desc or desc, "deepseek+websearch"
+                name, desc, src = ws_name, ws_desc or desc, "gateway+websearch"
         if _is_junk_name(name, s):
             out[s] = {"tags": "", "source": "none", "name": name or s}
             print(f"  UNRESOLVED {s:14s} (no name from Yahoo or web)")
             continue
-        # ---- classify from the facts (best-of-3: DeepSeek is non-deterministic
-        #      even at temp 0 and ~15% of calls return empty/thin) ----
+        # ---- classify from the facts (best-of-3: cheap classifier models are
+        #      non-deterministic even at temp 0 and some calls return
+        #      empty/thin). Each call's outcome is reported to the gateway:
+        #      that is how the router learns which models actually work here.
         def _ntags(t):
             return len([x for x in t.split(",") if x.strip()])
         try:
             best_tags, best_p = "", None
             for _ in range(3):
-                p = _deepseek_classify(ds, s, name, desc)
+                p, req_id = _gateway_classify(gw, s, name, desc)
                 cand = _drop_multicap(erc.tags_to_string(p["tier3_tags"]))
+                _report_outcome(req_id, bool(cand),
+                                f"canonical tags {'non-empty' if cand else 'EMPTY'} for {s}")
                 if _ntags(cand) > _ntags(best_tags):
                     best_tags, best_p = cand, p
                 if _ntags(best_tags) >= 3:

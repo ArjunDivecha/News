@@ -30,7 +30,7 @@ Repo root: `/Users/arjundivecha/Dropbox/AAA Backup/A Working/News`
 - `report/analytics.py` — ALL financial math as pure functions
   (`compute_market`, `compute_portfolio`, `compute_subportfolios`,
   `compute_bridge`, `compute_policy_check`).
-- `report/tags.py` + `report/tag_analytics.py` — DeepSeek multi-label tagger
+- `report/tags.py` + `report/tag_analytics.py` — gateway multi-label tagger (routes via the local Arjun Model Gateway at 127.0.0.1:8765; no hardcoded models)
   (cached in `report.db`) and tier-3 tag views + household allocation.
 - `report/scenarios.py` — episode-calibrated stress engine.
 - `report/prompt.py` — builds the LLM data package (exactly what the model reads).

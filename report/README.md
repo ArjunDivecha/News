@@ -67,7 +67,7 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `analytics.py` | ALL financial math (pure functions, fully unit-tested) |
 | `scenarios.py` | Scenario risk engine (episode-calibrated stress tests, crash beta, liquidity ladder) |
 | `tag_analytics.py` | Tier-3 multi-label tag views (day-type, tilts, bridge, concentration) |
-| `tags.py` | DeepSeek dynamic tagger (multi-label; cached in report.db; overrides) |
+| `tags.py` | Gateway dynamic tagger (multi-label; model picked live by the local Arjun Model Gateway; outcomes reported back so routing learns; cached in report.db; overrides) |
 | `names.py` | Ticker -> full security name (Yahoo, cached in report.db) |
 | `prompt.py` | Builds the LLM data package |
 | `llm.py` | Claude **Fable 5** call (subscription CLI first; streaming API fallback with refusal-fallback to Opus 4.8) + truncation guard |
@@ -137,7 +137,7 @@ Three changes, made on the principal's explicit decisions (see
 Multi-label tag analytics layered on top of the report — **purely additive and
 gated** by `SETTINGS["enable_tag_views"]` (env `REPORT_ENABLE_TAG_VIEWS=0` to
 revert to the exact prior report). Every holding is dynamically tagged
-(`tags.py`, DeepSeek + manual overrides, cached in `report.db`); tags are
+(`tags.py`, Arjun Model Gateway + manual overrides, cached in `report.db`); tags are
 orthogonal axes (AssetClass / Region / Sector / Style / Strategy / Size /
 Duration). `tag_analytics.py` computes, as pure functions:
 
