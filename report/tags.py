@@ -300,7 +300,8 @@ def _websearch_identify(sym: str) -> tuple:
             tools=[{"type": "openrouter:web_search"}],
             tool_choice="required",
             extra_body={"metadata": {"repo": "News", "script": "report/tags.py",
-                                     "call_site_id": "tags._websearch_identify"}})
+                                     "call_site_id": "tags._websearch_identify",
+                                     "routing_profile": GATEWAY_SEARCH_PROFILE}})
         txt = (r.choices[0].message.content or "").strip()
         # first line = official name (prompt-enforced); whole thing ~ description
         first = txt.split("\n", 1)[0].strip(" *#-")
@@ -337,7 +338,8 @@ def _gateway_classify(client, ticker: str, name: str, description: str) -> tuple
                   {"role": "user", "content": erc.build_user_prompt(row)}],
         temperature=0, max_tokens=256,
         extra_body={"metadata": {"repo": "News", "script": "report/tags.py",
-                                 "call_site_id": "tags._gateway_classify"}})
+                                 "call_site_id": "tags._gateway_classify",
+                                 "routing_profile": GATEWAY_CLASSIFY_PROFILE}})
     request_id = getattr(resp, "amg_request_id", None)
     return erc.parse_model_json(resp.choices[0].message.content), request_id
 
