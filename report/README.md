@@ -121,6 +121,13 @@ Three changes, made on the principal's explicit decisions (see
 3. **Fable's Desk.** A second Fable pass (`fable_desk.py`) appended after
    Bottom Line, gated by `SETTINGS["enable_fable_desk"]`
    (`REPORT_ENABLE_FABLE_DESK=0` to disable). Unlike the deterministic
+   **Backends:** Claude CLI first (subscription, free); if the CLI fails —
+   most importantly when the Fable plan quota is exhausted (HTTP 429) — the
+   Desk automatically falls back to the direct Anthropic API with the same
+   model plus Anthropic's native `web_search` server tool, so the section
+   ships instead of being dropped. The API path costs money and logs a loud
+   warning. Disable with `SETTINGS["desk_api_fallback"] = False`.
+   (Same fallback exists in `llm.py` for the main report.)
    report, the Desk has **live WebSearch/WebFetch** and an **ASADO
    warehouse snapshot** (`asado.py`, read-only duckdb: 34-country
    value/momentum/FX/risk z-scores, GDELT news tone, factor P&L). It writes

@@ -10,8 +10,10 @@ INPUT FILES:
       (read-only, via asado.py)
     - /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/data/report.db
       (open desk ideas for continuity/scorecard, via db.py)
-    - Claude CLI subscription auth (the Desk REQUIRES the CLI backend:
-      it is the only path with WebSearch/WebFetch)
+    - Claude CLI subscription auth (PRIMARY backend — free under the plan)
+    - /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/.env
+      (ANTHROPIC_API_KEY — the direct-API FALLBACK, used only when the CLI
+       fails, e.g. the Fable plan quota is exhausted. This path costs money.)
 
 OUTPUT FILES:
     - /Users/arjundivecha/Dropbox/AAA Backup/A Working/News/data/report.db
@@ -19,8 +21,8 @@ OUTPUT FILES:
     (the rendered section markdown is returned to main.py, which appends it
      to the daily report before PDF render)
 
-VERSION: 1.0
-LAST UPDATED: 2026-07-06
+VERSION: 2.0
+LAST UPDATED: 2026-07-12
 AUTHOR: Arjun Divecha
 
 DESCRIPTION:
@@ -34,11 +36,19 @@ DESCRIPTION:
     by the Desk itself on subsequent days (the scorecard), so the judgment
     stays accountable.
 
-    Additive-only: ANY failure here is logged loudly and the daily report
-    ships without the section. The Desk never sinks the report.
+    Backends (v2): the Claude CLI (subscription auth, free) is tried FIRST.
+    If it fails for ANY reason — most importantly an exhausted Fable plan
+    quota, which returns HTTP 429 — the Desk automatically falls back to the
+    direct Anthropic API with the SAME model and web search (Anthropic's
+    native web_search server tool), so the section ships instead of being
+    dropped. The API path costs money and says so loudly in the log.
+
+    Additive-only: if BOTH backends fail, that is logged loudly and the daily
+    report ships without the section. The Desk never sinks the report.
 
 DEPENDENCIES:
     - claude CLI on PATH (subscription auth)
+    - anthropic (API fallback)
     - duckdb (via asado.py; degrades gracefully if missing)
 
 USAGE:
@@ -61,9 +71,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import llm  # noqa: E402  (reuses the project's .env API-key resolution)
 from config import PATHS, SETTINGS
 
 DESK_HEADING = "## Fable's Desk"
+# Anthropic's native web_search SERVER tool — the API-fallback equivalent of
+# the CLI's WebSearch. The _20260209 variant (dynamic filtering) is the current
+# one; SETTINGS may pin the basic variant if a model doesn't support it.
+DESK_WEB_SEARCH_TOOL = SETTINGS.get("desk_web_search_tool", "web_search_20260209")
 _TRAILER_RE = re.compile(
     r"```(?:desk-json|json)\s*\n(\{.*?\})\s*\n```\s*$", re.DOTALL)
 
@@ -192,6 +207,113 @@ def _generate_desk_claude_cli(desk_input: str, system_prompt: str) -> str:
     return text
 
 
+def _is_quota_error(exc: Exception) -> bool:
+    """Did the CLI fail because the Claude plan quota is exhausted (429)?
+
+    Used for logging only — the fallback fires on ANY CLI failure, because a
+    dropped Desk section is worse than an API charge either way.
+    """
+    text = str(exc).lower()
+    return ("429" in text
+            or "reached your" in text and "limit" in text
+            or "usage limit" in text
+            or "rate limit" in text
+            or "quota" in text)
+
+
+def _generate_desk_anthropic_api(desk_input: str, system_prompt: str) -> str:
+    """Direct Anthropic API fallback for the Desk. THIS COSTS MONEY.
+
+    Mirrors llm.py's API fallback: same model, streaming (the Desk runs for
+    minutes), and — on Fable — the server-side refusal fallback to Opus 4.8 so
+    a safety-classifier false positive on finance content can't kill the Desk.
+
+    Web access is preserved with Anthropic's native web_search SERVER tool
+    (executed on Anthropic's side; no client tool loop needed), which is what
+    makes this a real substitute for the CLI's WebSearch/WebFetch.
+    """
+    import anthropic
+
+    api_key = llm._project_anthropic_api_key()
+    client_kwargs = {"api_key": api_key} if api_key else {}
+    client = anthropic.Anthropic(**client_kwargs).with_options(
+        timeout=SETTINGS.get("desk_timeout_s", 1500))
+
+    model = SETTINGS["model"]
+    effort = SETTINGS.get("desk_effort", "high")
+    max_tokens = SETTINGS.get("desk_max_tokens") or SETTINGS["max_tokens"]
+    is_fable = model.startswith("claude-fable") or model.startswith("claude-mythos")
+
+    kwargs = dict(
+        model=model,
+        max_tokens=max_tokens,
+        thinking={"type": "adaptive"},
+        output_config={"effort": effort},
+        system=system_prompt,
+        messages=[{"role": "user", "content": desk_input}],
+        tools=[{"type": DESK_WEB_SEARCH_TOOL, "name": "web_search",
+                "max_uses": SETTINGS.get("desk_max_searches", 8)}],
+    )
+    if is_fable:
+        # `fallbacks` is a top-level request param that the installed SDK
+        # (0.83) does not yet type — pass it via extra_body, which is the
+        # documented pre-GA-SDK path. Drop this once the SDK is upgraded.
+        kwargs["betas"] = ["server-side-fallback-2026-06-01"]
+        kwargs["extra_body"] = {"fallbacks": [{"model": "claude-opus-4-8"}]}
+        stream_fn = client.beta.messages.stream
+    else:
+        stream_fn = client.messages.stream
+
+    t0 = time.time()
+    print(f"  !! Desk API FALLBACK — THIS COSTS MONEY "
+          f"(model={model}, effort={effort}, tool={DESK_WEB_SEARCH_TOOL}"
+          f"{', refusal-fallback=opus-4-8' if is_fable else ''})...")
+    with stream_fn(**kwargs) as stream:
+        response = stream.get_final_message()
+    elapsed = time.time() - t0
+
+    stop_reason = getattr(response, "stop_reason", None)
+    if stop_reason == "refusal":
+        details = getattr(response, "stop_details", None)
+        raise RuntimeError(
+            f"Desk REFUSED by the model chain (stop_reason=refusal, "
+            f"category={getattr(details, 'category', None)})")
+    if stop_reason == "max_tokens":
+        raise RuntimeError(
+            f"Desk output TRUNCATED (max_tokens={max_tokens}) - refusing a "
+            f"partial Desk section.")
+
+    text = "\n".join(b.text for b in response.content
+                     if getattr(b, "type", "") == "text").strip()
+    if not text:
+        raise RuntimeError(f"Desk API returned empty output "
+                           f"(stop_reason={stop_reason})")
+    usage = response.usage
+    served_by = getattr(response, "model", model)
+    print(f"  Desk done via API in {elapsed:.0f}s "
+          f"({usage.input_tokens} in / {usage.output_tokens} out tokens, "
+          f"served_by={served_by})")
+    return text
+
+
+def _generate_desk(desk_input: str, system_prompt: str) -> str:
+    """CLI first (free, subscription auth); direct API on any CLI failure.
+
+    The quota case is the one this exists for: when the Claude plan's Fable
+    limit is hit the CLI returns 429, and before v2 the Desk section was simply
+    dropped from the daily report. Now it switches to the API.
+    """
+    try:
+        return _generate_desk_claude_cli(desk_input, system_prompt)
+    except Exception as cli_err:
+        if not SETTINGS.get("desk_api_fallback", True):
+            raise
+        reason = ("Claude CLI is OUT OF QUOTA" if _is_quota_error(cli_err)
+                  else "Claude CLI failed")
+        print(f"  !! {reason}: {str(cli_err)[:300]}")
+        return _generate_desk_anthropic_api(desk_input, system_prompt)
+
+
 def run_fable_desk(asof: str, report_md: str, data_package: str) -> str | None:
     """Full Desk pass. Returns the section markdown (WITH its heading) ready
     to append to the report, or None on any failure (additive-only)."""
@@ -205,7 +327,7 @@ def run_fable_desk(asof: str, report_md: str, data_package: str) -> str | None:
         desk_input = build_desk_input(asof, report_md, data_package,
                                       snapshot, open_ideas)
 
-        raw = _generate_desk_claude_cli(desk_input, system_prompt)
+        raw = _generate_desk(desk_input, system_prompt)
         clean_md, ideas, grades = parse_desk_output(raw)
 
         max_ideas = SETTINGS.get("desk_max_ideas", 4)

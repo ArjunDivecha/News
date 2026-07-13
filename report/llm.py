@@ -185,8 +185,13 @@ def _generate_report_anthropic_api(data_package: str, model: str,
     )
     is_fable = model.startswith("claude-fable") or model.startswith("claude-mythos")
     if is_fable:
+        # `fallbacks` is a top-level request param the installed SDK (0.83)
+        # does not yet type — passing it as a kwarg raises TypeError and takes
+        # this whole fallback path down with it (verified 2026-07-12; the path
+        # had never been exercised because the CLI always succeeded). extra_body
+        # is the documented pre-GA-SDK path. Drop it once the SDK is upgraded.
         kwargs["betas"] = ["server-side-fallback-2026-06-01"]
-        kwargs["fallbacks"] = [{"model": "claude-opus-4-8"}]
+        kwargs["extra_body"] = {"fallbacks": [{"model": "claude-opus-4-8"}]}
         stream_fn = client.beta.messages.stream
     else:
         stream_fn = client.messages.stream
