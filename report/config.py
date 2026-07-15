@@ -107,9 +107,11 @@ ACCOUNT_NAMES = {
     ("Schwab", "12790167"): "Country Value",
     ("Schwab", "28739966"): "Schwab Main",
     ("Schwab", "28739970"): "IRA Mom",
-    ("Schwab", "36563696"): "AA",   # Asset Allocation sleeve (Schwab nickname
-                                    # "AA"; ex-"Muni" — holds the muni ladder,
-                                    # SNAXX and cash being deployed, 2026-07)
+    ("Schwab", "36563696"): "Muni",  # Schwab nickname is "AA", but "Muni" is
+                                     # the correct report name (user-confirmed
+                                     # 2026-07-15) — holds the muni ladder,
+                                     # SNAXX and cash being deployed
+
     ("Schwab", "36959647"): "Dancing Elephant",
     ("Schwab", "50913476"): "Schwab 50913476",
     ("Schwab", "76705090"): "Country Momentum",
