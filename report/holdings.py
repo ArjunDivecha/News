@@ -76,8 +76,14 @@ SCHWAB_TOKENS_DB = Path.home() / ".schwabdev" / "tokens.db"
 REFRESH_TOKEN_LIFETIME_S = 7 * 24 * 3600          # Schwab refresh tokens last 7 days
 REFRESH_TOKEN_WARN_S = int(6.5 * 24 * 3600)       # warn at 6.5 days
 
+# asset_type/description carry Schwab's instrument metadata (assetType,
+# description) so non-yfinance-priceable holdings — e.g. the AA sleeve's
+# individual muni-bond CUSIPs — get real names and correct tag classification
+# instead of raw CUSIPs. Other sources (IBKR, legacy, old snapshots) simply
+# leave them blank; every reader must treat them as optional.
 HOLDINGS_COLUMNS = ["account", "symbol", "quantity", "avg_price",
-                    "market_value", "open_pnl", "broker", "fetched_at"]
+                    "market_value", "open_pnl", "broker", "fetched_at",
+                    "asset_type", "description"]
 
 
 class BrokerError(RuntimeError):
@@ -269,15 +275,20 @@ def fetch_schwab() -> pd.DataFrame:
                 continue
             pnl = (float(pos.get("longOpenProfitLoss", 0.0))
                    + float(pos.get("shortOpenProfitLoss", 0.0)))
+            inst = pos.get("instrument", {}) or {}
             rows.append({
                 "account": acct_num,
-                "symbol": str(pos.get("instrument", {}).get("symbol", "")).strip(),
+                "symbol": str(inst.get("symbol", "")).strip(),
                 "quantity": qty,
                 "avg_price": float(pos.get("averagePrice", 0.0)),
                 "market_value": float(pos.get("marketValue", 0.0)),
                 "open_pnl": pnl,
                 "broker": "Schwab",
                 "fetched_at": fetched_at,
+                # e.g. FIXED_INCOME + "PLEASANTON CALIF UNI GO 4.25% ..." for
+                # the AA sleeve's muni CUSIPs — feeds names + tag classifier
+                "asset_type": str(inst.get("assetType", "") or ""),
+                "description": str(inst.get("description", "") or ""),
             })
 
         cash = (sec_acct.get("currentBalances", {}) or {}).get("cashBalance")
@@ -289,6 +300,7 @@ def fetch_schwab() -> pd.DataFrame:
                 "quantity": float(cash), "avg_price": 1.0,
                 "market_value": float(cash), "open_pnl": 0.0,
                 "broker": "Schwab", "fetched_at": fetched_at,
+                "asset_type": "CASH", "description": "",
             })
 
     if not rows:
@@ -405,7 +417,9 @@ def load_stale_holdings() -> Tuple[pd.DataFrame, str]:
     if snap.exists():
         df = pd.read_excel(snap)
         as_of = str(df["fetched_at"].max()) if "fetched_at" in df.columns else "unknown"
-        return df[HOLDINGS_COLUMNS], as_of
+        # reindex, not [...]: snapshots written before asset_type/description
+        # were added must not KeyError — the missing columns come back blank
+        return df.reindex(columns=HOLDINGS_COLUMNS), as_of
 
     legacy = PATHS["legacy_client_xlsx"]
     if legacy.exists():
@@ -477,7 +491,8 @@ def get_holdings(interactive: bool = True) -> Tuple[pd.DataFrame, dict]:
         print("  " + "!" * 60)
         return df, {"stale": True, "as_of": as_of, "failures": failures}
 
-    df = pd.concat(frames, ignore_index=True)[HOLDINGS_COLUMNS]
+    # reindex, not [...]: IBKR frames don't carry asset_type/description
+    df = pd.concat(frames, ignore_index=True).reindex(columns=HOLDINGS_COLUMNS)
     as_of = datetime.now().isoformat(timespec="seconds")
 
     # Persist the fresh snapshot for future stale-fallbacks

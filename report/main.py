@@ -196,6 +196,18 @@ def run(no_llm: bool = False, interactive: bool = True,
     n_subs = len(subportfolios)
     print(f"  Sub-portfolios: {n_subs} accounts computed")
 
+    # Broker instrument descriptions (Schwab assetType/description, e.g. the
+    # AA sleeve's muni-bond CUSIPs -> "PLEASANTON CALIF UNI GO 4.25% ...").
+    # Used as (a) name hints for the tag classifier, which cannot identify a
+    # bare CUSIP via Yahoo, and (b) name fallbacks so the report never prints
+    # a raw CUSIP. Optional columns: absent/blank on IBKR and old snapshots.
+    desc_hints = {}
+    if "description" in holdings_df.columns:
+        for _, r in holdings_df.iterrows():
+            d = str(r.get("description") or "").strip()
+            if d and d.lower() != "nan":
+                desc_hints.setdefault(str(r["symbol"]).strip(), d)
+
     # Tier-3 tag views (multi-label analytics) — purely additive. Tagged from
     # the DeepSeek cache/universe; benchmark = 60/40 ACWI/TLT (tags pinned).
     tag_views = None
@@ -203,7 +215,8 @@ def run(no_llm: bool = False, interactive: bool = True,
         try:
             held = list(portfolio["positions"].index)
             tmap = {s: v["tags"]
-                    for s, v in tags_mod.resolve_tags(held, fetch=True).items()}
+                    for s, v in tags_mod.resolve_tags(
+                        held, name_hints=desc_hints, fetch=True).items()}
             bt = tags_mod.resolve_tags([t for t, _ in BENCHMARK], fetch=True)
             bench_specs = [(w, tag_analytics._tags(bt[t]["tags"]))
                            for t, w in BENCHMARK]
@@ -238,7 +251,8 @@ def run(no_llm: bool = False, interactive: bool = True,
             hh_port = analytics.compute_portfolio(hh, prices, asof)
             hh_syms = list(hh_port["positions"].index)
             hh_tmap = {s: v["tags"]
-                       for s, v in tags_mod.resolve_tags(hh_syms, fetch=True).items()}
+                       for s, v in tags_mod.resolve_tags(
+                           hh_syms, name_hints=desc_hints, fetch=True).items()}
             hh_cash = float(hh.loc[hh["symbol"].astype(str).str.strip().isin(
                 CASH_EQUIVALENTS), "market_value"].sum())
             allocation = tag_analytics.compute_asset_allocation(
@@ -335,6 +349,11 @@ def run(no_llm: bool = False, interactive: bool = True,
     # lookup produced nothing better than the ID itself.
     fallbacks = {h["symbol"]: h["name"] for h in MANUAL_HOLDINGS if h.get("name")}
     fallbacks["IE00BF199475"] = "GMO Equity Dislocation Fund"
+    # Broker instrument descriptions last (e.g. the AA sleeve's muni CUSIPs):
+    # anything Yahoo could not name renders as Schwab's description, never as
+    # a raw CUSIP.
+    for sym, d in desc_hints.items():
+        fallbacks.setdefault(sym, d)
     for sym, nm_ in fallbacks.items():
         if name_map.get(sym, sym) == sym:
             name_map[sym] = nm_

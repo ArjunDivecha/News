@@ -59,7 +59,7 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `main.py` | Orchestrator - the only thing you run |
 | `config.py` | Every path, constant, window, and model name |
 | `data.py` | Batched yfinance download with loud coverage validation |
-| `holdings.py` | Schwab + IBKR pulls, preflights, stale fallback |
+| `holdings.py` | Schwab + IBKR pulls, preflights, stale fallback; captures Schwab instrument metadata (`asset_type`/`description`) so the AA sleeve's muni-bond CUSIPs get real names + correct Bonds/US classification |
 | `notify.py` | Emails the report PDF (Mail.app or SMTP) |
 | `schwab_auto.py` | Playwright headless OAuth (auto-refresh tokens) |
 | `ibkr_fetch.py` | IBKR TWS/Gateway subprocess (`.venv-ibkr312`) |

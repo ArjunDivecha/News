@@ -255,6 +255,8 @@ class TestAssetAllocation:
         assert ta.classify_holding(["Multi-Asset", "Global"]) == ("Alternatives", "Global")
         assert ta.classify_holding(["Equity", "Japan"]) == ("Equities", "International")
         assert ta.classify_holding([], is_cash=True) == ("Cash", "Cash")
+        # AA sleeve muni-bond CUSIPs (tagged from Schwab descriptions)
+        assert ta.classify_holding(["Municipal", "US", "Long Duration"]) == ("Bonds", "US")
 
     def _pos(self):
         return pd.DataFrame({

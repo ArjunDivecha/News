@@ -50,7 +50,7 @@ Repo root: `/Users/arjundivecha/Dropbox/AAA Backup/A Working/News`
 
 ## Commands that work
 
-- `python3 -m pytest tests/ -q` — **verified: 113 passed in ~1s** (2026-07-15).
+- `python3 -m pytest tests/ -q` — **verified: 116 passed in ~1.5s** (2026-07-15).
 - `python3 report/main.py` — full daily run (unverified here: hits live Schwab/
   IBKR, Yahoo, and a metered/subscription LLM call — do not run casually).
 - `python3 report/main.py --no-llm` — data + analytics only, no LLM/PDF

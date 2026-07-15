@@ -344,3 +344,44 @@ class TestTableValidator:
         good = ("## X\n\n| Theme | n | 1d % | YTD % |\n|---|---|---|---|\n"
                 "| Sovereign Bonds \\| Corporate Credit (FI) | 1 | -0.34 | 0.08 |\n")
         pdf_mod._validate_report_tables(good)   # must not raise
+
+
+class TestHoldingsInstrumentMetadata:
+    """AA-sleeve support: Schwab instrument metadata (asset_type/description)
+    must survive the snapshot round-trip, old snapshots must still load, and
+    CUSIP-like symbols (the muni ladder) must never reach yfinance."""
+
+    def test_priceable_symbols_excludes_cusips_and_cash(self):
+        import holdings
+        df = pd.DataFrame({"symbol": [
+            "AAPL", "CASH", "SNAXX", "54947TGP8", "728835P45",  # munis: out
+            "VEIL.L", "ES.FUT", "UNKNOWN"]})
+        out = holdings.priceable_symbols(df)
+        assert "AAPL" in out and "VEIL.L" in out
+        for bad in ("CASH", "SNAXX", "54947TGP8", "728835P45",
+                    "ES.FUT", "UNKNOWN"):
+            assert bad not in out
+
+    def test_holdings_columns_carry_instrument_metadata(self):
+        import holdings
+        assert "asset_type" in holdings.HOLDINGS_COLUMNS
+        assert "description" in holdings.HOLDINGS_COLUMNS
+
+    def test_stale_snapshot_without_new_columns_still_loads(self, tmp_path,
+                                                            monkeypatch):
+        # snapshots written before 2026-07-15 lack asset_type/description;
+        # load_stale_holdings must reindex, not KeyError
+        import holdings
+        old = pd.DataFrame({
+            "account": ["36563696"], "symbol": ["54947TGP8"],
+            "quantity": [250.0], "avg_price": [97.5],
+            "market_value": [242157.5], "open_pnl": [-1582.5],
+            "broker": ["Schwab"], "fetched_at": ["2026-07-03T11:05:07"],
+        })
+        snap = tmp_path / "holdings.xlsx"
+        old.to_excel(snap, index=False)
+        monkeypatch.setitem(holdings.PATHS, "holdings", snap)
+        df, as_of = holdings.load_stale_holdings()
+        assert list(df.columns) == holdings.HOLDINGS_COLUMNS
+        assert df["description"].isna().all()   # blank, not missing
+        assert as_of.startswith("2026-07-03")

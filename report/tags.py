@@ -124,6 +124,13 @@ MANUAL_OVERRIDES = {
         "name": "Morgan Stanley Emerging Markets Domestic Debt Fund",
         "tags": "Credit, EM, HY Credit, Medium Duration, Active",
     },
+    "54947TGP8": {  # AA sleeve muni CUSIP — classifier tagged it correctly but
+        # dropped the US region tag (needed for the allocation report's
+        # Bonds/US bucket). Other ladder CUSIPs classified fine from their
+        # Schwab descriptions; add entries here only if one misfires.
+        "name": "Lucia Mar Unified School District CA GO 4% 08/01/2049",
+        "tags": "Municipal, US, Long Duration",
+    },
     "92189F403": {  # VanEck Russia ETF (RSX) — wound down / frozen legacy position
         "name": "VanEck Russia ETF (RSX)",
         "tags": "Equity, EM, Passive, Diversified",
