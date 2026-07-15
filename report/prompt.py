@@ -380,13 +380,16 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                        tag_views: dict = None,
                        allocation: dict = None,
                        scenario_risk: dict = None,
-                       policy_check: dict = None) -> str:
+                       policy_check: dict = None,
+                       ews: str = None) -> str:
     """Assemble the full user-message data package for the LLM.
 
     name_map: {ticker: full security name}. Every asset is shown by NAME, not
     ticker; an unmapped symbol falls back to itself (the raw ticker/ID).
     tag_views: optional tier-3 multi-label analytics (see tag_analytics.py);
     rendered as extra sections when present, omitted entirely when None.
+    ews: optional pre-rendered MARKET REGIME — EARLY WARNING SYSTEM markdown
+    (see ews.py); inserted after the theme summary, omitted when None.
     """
     parts = []
     asof = market["asof"]
@@ -456,6 +459,10 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
     t2_show = t2[t2["n"] >= 3]
     parts.append(f"\n## THEME SUMMARY (tier-2 with >=3 assets, equal-weighted %)")
     parts.append(_md_table(t2_show))
+
+    # ---------------- market regime (Early Warning System) ----------------
+    if ews:
+        parts.append(ews)
 
     # ---------------- movers & streaks ----------------
     # Show the full NAME (from name_map), not the ticker index or the polluted

@@ -202,7 +202,7 @@ class TestProseOnly:
 
 
 class TestDataPackage:
-    def _pkg(self, name_map=None):
+    def _pkg(self, name_map=None, **kw):
         prices = _prices()
         universe = _universe()
         market = analytics.compute_market(prices, universe, "2026-06-09")
@@ -214,7 +214,7 @@ class TestDataPackage:
         return prompt_mod.build_data_package(
             market, portfolio, bridge, pd.DataFrame(), prior,
             {"stale": False, "as_of": "2026-06-09", "failures": []},
-            subportfolios=subs, name_map=name_map)
+            subportfolios=subs, name_map=name_map, **kw)
 
     def test_contains_new_sections_and_labels(self):
         pkg = self._pkg()
@@ -223,6 +223,17 @@ class TestDataPackage:
                        "HOUSEHOLD TOTAL", "days ago)"]:
             assert needle in pkg, needle
         assert "| x | y |" not in pkg   # prior-summary table stripped
+
+    def test_ews_section_threads_through(self):
+        # the pre-rendered EWS markdown lands verbatim, after the theme
+        # summary and before the movers; omitted entirely when None
+        section = ("\n## MARKET REGIME — EARLY WARNING SYSTEM (test)\n"
+                   "- Regime: **IN**")
+        pkg = self._pkg(ews=section)
+        assert "MARKET REGIME — EARLY WARNING SYSTEM" in pkg
+        assert (pkg.index("THEME SUMMARY") < pkg.index("MARKET REGIME")
+                < pkg.index("BIGGEST MOVERS"))
+        assert "MARKET REGIME" not in self._pkg()
 
     def test_no_literal_na_anywhere(self):
         # the project's NO-NA rule: the package must never contain "n/a"/"N/A"

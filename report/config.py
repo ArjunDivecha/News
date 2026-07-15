@@ -67,6 +67,11 @@ PATHS = {
     "desk_prompt": REPORT_DIR / "prompts" / "fable_desk.md",
     "asado_db": Path("/Users/arjundivecha/Dropbox/AAA Backup/A Working/"
                      "ASADO/Data/asado.duckdb"),
+    # Early Warning System (external sibling project, READ-ONLY): current
+    # market-regime reading + monthly history, rebuilt by that project's
+    # weekly_update.py. Feeds the MARKET REGIME section of the data package.
+    "ews_data": Path("/Users/arjundivecha/Dropbox/AAA Backup/A Working/"
+                     "Early Warning/dashboard/data.json"),
 }
 
 # ---------------------------------------------------------------------------
@@ -314,6 +319,14 @@ SETTINGS = {
     # Requires the Claude CLI backend (web tools); the API fallback path does
     # not carry the Desk.
     "enable_fable_desk": os.getenv("REPORT_ENABLE_FABLE_DESK", "1") != "0",
+    # Early Warning System regime section: reads the external Early Warning
+    # project's dashboard/data.json (see PATHS["ews_data"]). Purely additive:
+    # any failure logs loudly and the report ships without the section.
+    "enable_ews": os.getenv("REPORT_ENABLE_EWS", "1") != "0",
+    # The EWS dashboard is rebuilt weekly (Monday). If its "generated" stamp
+    # is older than this many days, the section still renders but is loudly
+    # marked STALE (stale-with-asterisk, never silently dropped).
+    "ews_stale_days": 12,
     "desk_effort": os.getenv("REPORT_DESK_EFFORT", "high"),
     "desk_timeout_s": 1500,          # web-search turns make this slower than the report call
     "desk_max_ideas": 4,

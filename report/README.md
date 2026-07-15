@@ -73,6 +73,7 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 | `llm.py` | Claude **Fable 5** call (subscription CLI first; streaming API fallback with refusal-fallback to Opus 4.8) + truncation guard |
 | `fable_desk.py` | **Fable's Desk** — judgment pass: live web search + ASADO snapshot, 0-4 tracked ideas appended after Bottom Line |
 | `asado.py` | Read-only ASADO warehouse snapshot (34-country value/momentum/FX/risk z-scores, GDELT news pulse, factor P&L) |
+| `ews.py` | Read-only Early Warning System snapshot (IN/TRANSITION/OUT market regime, escalation ladder, composite/diffusion, per-signal panel — from `A Working/Early Warning/dashboard/data.json`, rebuilt weekly by that project) |
 | `pdf.py` | Markdown -> HTML -> PDF (PrinceXML, light mode) + table validation |
 | `db.py` | SQLite layer (WAL, idempotent upserts) — incl. the `desk_ideas` journal |
 | `prompts/system.md` | The system prompt (the report's "personality") |
@@ -84,7 +85,7 @@ python3 report/main.py --date 2026-06-09 # as-of date for analytics
 ## Tests
 
 ```bash
-python3 -m pytest tests/ -v     # 35 tests (financial math + report pipeline)
+python3 -m pytest tests/ -v     # 113 tests (financial math, report pipeline, tags, scenarios, Desk, EWS)
 ```
 
 `test_analytics.py` locks down the exact bugs found in the legacy system review:

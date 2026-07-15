@@ -38,6 +38,10 @@ Repo root: `/Users/arjundivecha/Dropbox/AAA Backup/A Working/News`
   fallback (server-side refusal-fallback to Opus 4.8); truncation guard.
 - `report/fable_desk.py` + `report/asado.py` — second Fable pass (live web +
   read-only ASADO country-signal snapshot).
+- `report/ews.py` — read-only Early Warning System snapshot (IN/TRANSITION/OUT
+  US market regime from `A Working/Early Warning/dashboard/data.json`, rebuilt
+  weekly by that project; monthly signals, stale-with-asterisk if the weekly
+  rebuild stops). Additive-only, ASADO pattern.
 - `report/pdf.py` — Markdown → HTML → PDF (PrinceXML) + table validation.
 - `report/db.py` — SQLite layer (WAL, idempotent upserts).
 - `report/prompts/system.md`, `report/prompts/fable_desk.md` — system prompts.
@@ -46,8 +50,7 @@ Repo root: `/Users/arjundivecha/Dropbox/AAA Backup/A Working/News`
 
 ## Commands that work
 
-- `python3 -m pytest tests/ -q` — **verified: 105 passed in ~1.5s** (2026-07-06).
-  Note: `report/README.md` says "35 tests" and "25 tests" — both stale; actual is 105.
+- `python3 -m pytest tests/ -q` — **verified: 113 passed in ~1s** (2026-07-15).
 - `python3 report/main.py` — full daily run (unverified here: hits live Schwab/
   IBKR, Yahoo, and a metered/subscription LLM call — do not run casually).
 - `python3 report/main.py --no-llm` — data + analytics only, no LLM/PDF

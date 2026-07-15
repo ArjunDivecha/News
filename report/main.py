@@ -58,6 +58,7 @@ from config import (PATHS, SETTINGS, BENCHMARK, POLICY,
 import analytics
 import data as data_mod
 import db
+import ews as ews_mod
 import fable_desk as fable_desk_mod
 import holdings as holdings_mod
 import llm as llm_mod
@@ -288,6 +289,13 @@ def run(no_llm: bool = False, interactive: bool = True,
             print(f"  ⚠️  Policy check SKIPPED: {e}")
             policy_check = None
 
+    # Market-regime early warning (external Early Warning project, read-only
+    # dashboard JSON). Additive-only: build_ews_section returns None on any
+    # failure with a loud SKIPPED message, and the report ships without it.
+    ews_section = None
+    if SETTINGS.get("enable_ews"):
+        ews_section = ews_mod.build_ews_section(asof=asof)
+
     s = portfolio["summary"]
     print(f"  Market: {market['data_quality']['n_priced_today']} assets priced "
           f"({market['data_quality']['coverage_pct']}%)")
@@ -335,7 +343,7 @@ def run(no_llm: bool = False, interactive: bool = True,
         market, portfolio, bridge, history, prior, holdings_meta,
         subportfolios=subportfolios, name_map=name_map, tag_views=tag_views,
         allocation=allocation, scenario_risk=scenario_risk,
-        policy_check=policy_check)
+        policy_check=policy_check, ews=ews_section)
     pkg_path = PATHS["output_dir"] / f"Data_Package_{asof}.md"
     pkg_path.write_text(package)
     print(f"  Data package: {len(package):,} chars -> {pkg_path}")
