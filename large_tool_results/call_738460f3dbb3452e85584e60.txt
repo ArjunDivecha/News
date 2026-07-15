@@ -1,0 +1,1270 @@
+./.DS_Store
+./.claude/settings.local.json
+./.cursor/hooks/state/continual-learning-index.json
+./.cursor/hooks/state/continual-learning.json
+./.env
+./.gitignore
+./AGENTS.md
+./Client.xlsx
+./GMO.xlsx
+./GS_Basket_ETF_Replacements_Research.md
+./Historical Monthly Returns.pdf
+./README.md
+./Step 1 Data Collection/Betas from Bloomberg.xlsx
+./Step 1 Data Collection/Bloomberg_Indices_Cluster.py
+./Step 1 Data Collection/Bloomberg_Indices_Cluster_documentation.md
+./Step 1 Data Collection/ETF Cluster.py
+./Step 1 Data Collection/ETF Master List.xlsx
+./Step 1 Data Collection/GSCB_FLAGSHIP_coverage_Classified.xlsx
+./Step 1 Data Collection/GSCB_FLAGSHIP_coverage_with_desc_ALL.xlsx
+./Step 1 Data Collection/README.md
+./Step 1 Data Collection/gs_basket_data.py
+./Step 1 Data Collection/gs_basket_data_with_headings.py
+./Step 2 Data Processing - Final1000/CLAUDE.md
+./Step 2 Data Processing - Final1000/ETF Master List Classified.xlsx
+./Step 2 Data Processing - Final1000/ETF Master List.xlsx
+./Step 2 Data Processing - Final1000/Filtered Bloomberg Indices Classified.xlsx
+./Step 2 Data Processing - Final1000/Filtered Bloomberg Indices.xlsx
+./Step 2 Data Processing - Final1000/Final 1000 Asset Master List.xlsx
+./Step 2 Data Processing - Final1000/Final Master.xlsx
+./Step 2 Data Processing - Final1000/Master Asset List Classified.xlsx
+./Step 2 Data Processing - Final1000/PRD.md
+./Step 2 Data Processing - Final1000/README.md
+./Step 2 Data Processing - Final1000/Thematic ETFS.xlsx
+./Step 2 Data Processing - Final1000/Thematic ETFs Classified.xlsx
+./Step 2 Data Processing - Final1000/classify_bloomberg_full.py
+./Step 2 Data Processing - Final1000/classify_etfs_full.py
+./Step 2 Data Processing - Final1000/classify_goldman_full.py
+./Step 2 Data Processing - Final1000/classify_thematic_etfs_full.py
+./Step 2 Data Processing - Final1000/etf_classifier.py
+./Step 2 Data Processing - Final1000/final_selection_algorithm.py
+./Step 2 Data Processing - Final1000/final_selection_algorithm_v2.py
+./Step 2 Data Processing - Final1000/merge_classified_files.py
+./Step 2 Data Processing - Final1000/search_based_meme_stocks.json
+./Step 2 Data Processing - Final1000/unified_asset_classifier.py
+./Step 3 Data Analysis/Dedup Report - Full Dataset.xlsx
+./Step 3 Data Analysis/Dedup Report - Top 30 Groups.xlsx
+./Step 3 Data Analysis/MemeFinder.py
+./Step 3 Data Analysis/P1_Source_Analysis.xlsx
+./Step 3 Data Analysis/P1_Tier1_Analysis.xlsx
+./Step 3 Data Analysis/P1_Tier2_Analysis.xlsx
+./Step 3 Data Analysis/P2_Enriched_Asset_Profiles.xlsx
+./Step 3 Data Analysis/README.md
+./Step 3 Data Analysis/p0_deduplication_analysis.py
+./Step 3 Data Analysis/p0_deduplication_analysis_full.py
+./Step 3 Data Analysis/p1_category_analysis.py
+./Step 3 Data Analysis/p2_factor_decomposition.py
+./Step 3 Data Analysis/search_based_meme_stocks.json
+./archive/Bloomberg Import Data/BFAF Country Sector.xlsx
+./archive/Phase 0 Portfolio Feed/README.md
+./archive/Phase 0 Portfolio Feed/scripts/01_build_client_holdings.py
+./archive/Phase 2 Portfolio Reports/.DS_Store
+./archive/Phase 2 Portfolio Reports/PRD.md
+./archive/Phase 2 Portfolio Reports/README.md
+./archive/Phase 2 Portfolio Reports/database/portfolio.db
+./archive/Phase 2 Portfolio Reports/database/schema.sql
+./archive/Phase 2 Portfolio Reports/outputs/.DS_Store
+./archive/Phase 2 Portfolio Reports/outputs/CLIENT/portfolio_wrap_2026-03-13.html
+./archive/Phase 2 Portfolio Reports/outputs/CLIENT/portfolio_wrap_2026-03-13.md
+./archive/Phase 2 Portfolio Reports/outputs/CLIENT/portfolio_wrap_2026-03-13.pdf
+./archive/Phase 2 Portfolio Reports/outputs/LIVE/portfolio_wrap_2026-04-03.html
+./archive/Phase 2 Portfolio Reports/outputs/LIVE/portfolio_wrap_2026-04-03.md
+./archive/Phase 2 Portfolio Reports/outputs/LIVE/portfolio_wrap_2026-04-03.pdf
+./archive/Phase 2 Portfolio Reports/outputs/LIVE/portfolio_wrap_2026-05-27.html
+./archive/Phase 2 Portfolio Reports/outputs/LIVE/portfolio_wrap_2026-05-27.md
+./archive/Phase 2 Portfolio Reports/outputs/LIVE/portfolio_wrap_2026-05-27.pdf
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-01-30.html
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-01-30.md
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-01-30.pdf
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-03.html
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-03.md
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-03.pdf
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-04.html
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-04.md
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-04.pdf
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-12.html
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-12.md
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-12.pdf
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-19.html
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-19.md
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-19.pdf
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-24.html
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-24.md
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-02-24.pdf
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-03-03.html
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-03-03.md
+./archive/Phase 2 Portfolio Reports/outputs/TEST/portfolio_wrap_2026-03-03.pdf
+./archive/Phase 2 Portfolio Reports/prompts/portfolio_daily_wrap.md
+./archive/Phase 2 Portfolio Reports/real_portfolio.xlsx
+./archive/Phase 2 Portfolio Reports/scripts/01_ingest_portfolio.py
+./archive/Phase 2 Portfolio Reports/scripts/02_fetch_daily_prices.py
+./archive/Phase 2 Portfolio Reports/scripts/03_compute_analytics.py
+./archive/Phase 2 Portfolio Reports/scripts/04_generate_report.py
+./archive/Phase 2 Portfolio Reports/scripts/run_pipeline.py
+./archive/Phase 2 Portfolio Reports/scripts/utils/__init__.py
+./archive/Phase 2 Portfolio Reports/scripts/utils/db.py
+./archive/Phase 2 Portfolio Reports/scripts/utils/llm.py
+./archive/Phase 2 Portfolio Reports/scripts/utils/pdf_prince/__init__.py
+./archive/Phase 2 Portfolio Reports/scripts/utils/pdf_prince/charts.py
+./archive/Phase 2 Portfolio Reports/scripts/utils/pdf_prince/convert.py
+./archive/Phase 2 Portfolio Reports/scripts/utils/pdf_prince/templates/report.html
+./archive/Phase 2 Portfolio Reports/scripts/utils/pdf_prince/templates/report_phase1.html
+./archive/Phase 2 Portfolio Reports/scripts/utils/pdf_prince/templates/report_phase1_style.html
+./archive/Phase 2 Portfolio Reports/scripts/utils/pdf_prince/templates/styles.css
+./archive/Phase 2 Portfolio Reports/scripts/utils/taxonomy.py
+./archive/Phase 2 Portfolio Reports/scripts/utils/yfinance_utils.py
+./archive/Phase 2 Portfolio Reports/test_portfolio.xlsx
+./archive/README.md
+./archive/Step 4 Report Generation/.DS_Store
+./archive/Step 4 Report Generation/PLAN.md
+./archive/Step 4 Report Generation/PRINCEXML_SETUP.md
+./archive/Step 4 Report Generation/README.md
+./archive/Step 4 Report Generation/data/Bloomberg_Data_Template.xlsx
+./archive/Step 4 Report Generation/data/~$Bloomberg_Data_Template.xlsx
+./archive/Step 4 Report Generation/database/init_db.py
+./archive/Step 4 Report Generation/database/market_data.db
+./archive/Step 4 Report Generation/database/schema.sql
+./archive/Step 4 Report Generation/logs/bloomberg_backfill_20260131_153048.log
+./archive/Step 4 Report Generation/logs/bloomberg_backfill_20260131_153110.log
+./archive/Step 4 Report Generation/logs/bloomberg_backfill_20260131_153124.log
+./archive/Step 4 Report Generation/logs/bloomberg_backfill_20260131_225425.log
+./archive/Step 4 Report Generation/logs/bloomberg_backfill_20260131_232634.log
+./archive/Step 4 Report Generation/logs/bloomberg_backfill_20260131_232732.log
+./archive/Step 4 Report Generation/logs/bloomberg_backfill_20260201_002304.log
+./archive/Step 4 Report Generation/logs/bloomberg_daily_20260131_202407.log
+./archive/Step 4 Report Generation/logs/bloomberg_daily_20260131_202519.log
+./archive/Step 4 Report Generation/logs/bloomberg_daily_20260131_224420.log
+./archive/Step 4 Report Generation/logs/bloomberg_daily_20260131_232930.log
+./archive/Step 4 Report Generation/logs/bloomberg_daily_20260131_234821.log
+./archive/Step 4 Report Generation/logs/correlations_20260131_163134.log
+./archive/Step 4 Report Generation/logs/correlations_20260131_202545.log
+./archive/Step 4 Report Generation/logs/correlations_20260131_224451.log
+./archive/Step 4 Report Generation/logs/correlations_20260131_224713.log
+./archive/Step 4 Report Generation/logs/correlations_20260131_225207.log
+./archive/Step 4 Report Generation/logs/correlations_20260131_225819.log
+./archive/Step 4 Report Generation/logs/correlations_20260131_232958.log
+./archive/Step 4 Report Generation/logs/correlations_20260131_233044.log
+./archive/Step 4 Report Generation/logs/correlations_20260131_233437.log
+./archive/Step 4 Report Generation/logs/correlations_20260131_234850.log
+./archive/Step 4 Report Generation/outputs/.DS_Store
+./archive/Step 4 Report Generation/outputs/comparison/.DS_Store
+./archive/Step 4 Report Generation/outputs/comparison/04/03/.DS_Store
+./archive/Step 4 Report Generation/outputs/comparison/04/03/2026/anthropic_report.md
+./archive/Step 4 Report Generation/outputs/comparison/04/03/2026/comparison_summary.txt
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-03/anthropic_report.json
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-03/anthropic_report.md
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-03/anthropic_report.pdf
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-03/comparison_summary.txt
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-04/anthropic_report.json
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-04/anthropic_report.md
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-04/anthropic_report.pdf
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-04/comparison_summary.txt
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-12/anthropic_report.json
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-12/anthropic_report.md
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-12/anthropic_report.pdf
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-12/comparison_summary.txt
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-24/anthropic_report.json
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-24/anthropic_report.md
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-24/anthropic_report.pdf
+./archive/Step 4 Report Generation/outputs/comparison/2026-02-24/comparison_summary.txt
+./archive/Step 4 Report Generation/outputs/comparison/2026-03-03/anthropic_report.json
+./archive/Step 4 Report Generation/outputs/comparison/2026-03-03/anthropic_report.md
+./archive/Step 4 Report Generation/outputs/comparison/2026-03-03/anthropic_report.pdf
+./archive/Step 4 Report Generation/outputs/comparison/2026-03-03/comparison_summary.txt
+./archive/Step 4 Report Generation/outputs/comparison/2026-03-13/anthropic_report.json
+./archive/Step 4 Report Generation/outputs/comparison/2026-03-13/anthropic_report.md
+./archive/Step 4 Report Generation/outputs/comparison/2026-03-13/anthropic_report.pdf
+./archive/Step 4 Report Generation/outputs/comparison/2026-03-13/comparison_summary.txt
+./archive/Step 4 Report Generation/outputs/comparison/2026-05-27/anthropic_report.json
+./archive/Step 4 Report Generation/outputs/comparison/2026-05-27/anthropic_report.md
+./archive/Step 4 Report Generation/outputs/comparison/2026-05-27/anthropic_report.pdf
+./archive/Step 4 Report Generation/outputs/comparison/2026-05-27/comparison_summary.txt
+./archive/Step 4 Report Generation/outputs/daily/daily_wrap_2026-01-30_anthropic.md
+./archive/Step 4 Report Generation/outputs/daily/daily_wrap_2026-01-31_anthropic.md
+./archive/Step 4 Report Generation/outputs/daily/daily_wrap_2026-02-03_anthropic.md
+./archive/Step 4 Report Generation/outputs/daily/daily_wrap_2026-02-03_anthropic.pdf
+./archive/Step 4 Report Generation/prompts/daily_wrap.md
+./archive/Step 4 Report Generation/prompts/daily_wrap_structured.md
+./archive/Step 4 Report Generation/prompts/flash_report.md
+./archive/Step 4 Report Generation/requirements.txt
+./archive/Step 4 Report Generation/run_backfill_wrapper.py
+./archive/Step 4 Report Generation/run_daily.py
+./archive/Step 4 Report Generation/scripts/bloomberg_backfill.py
+./archive/Step 4 Report Generation/scripts/bloomberg_daily.py
+./archive/Step 4 Report Generation/scripts/bloomberg_fetcher.py
+./archive/Step 4 Report Generation/scripts/calculate_ytd.py
+./archive/Step 4 Report Generation/scripts/compute_correlations.py
+./archive/Step 4 Report Generation/scripts/generate_report.py
+./archive/Step 4 Report Generation/scripts/ingest_meme_social.py
+./archive/Step 4 Report Generation/scripts/setup_database.py
+./archive/Step 4 Report Generation/scripts/utils/__init__.py
+./archive/Step 4 Report Generation/scripts/utils/db.py
+./archive/Step 4 Report Generation/scripts/utils/llm.py
+./archive/Step 4 Report Generation/scripts/utils/pdf_prince/__init__.py
+./archive/Step 4 Report Generation/scripts/utils/pdf_prince/charts.py
+./archive/Step 4 Report Generation/scripts/utils/pdf_prince/convert.py
+./archive/Step 4 Report Generation/scripts/utils/pdf_prince/parser.py
+./archive/Step 4 Report Generation/scripts/utils/pdf_prince/templates/report.html
+./archive/Step 4 Report Generation/scripts/utils/pdf_prince/templates/styles.css
+./archive/Step 4 Report Generation/scripts/utils/pdf_simple.py
+./archive/Step 4 Report Generation/scripts/utils/pdf_weasyprint.py
+./archive/runphase0.py
+./archive/runphase1.py
+./archive/runphase2.py
+./archive/test_ibkr_portfolio.py
+./archive/test_yf.py
+./data/holdings.xlsx
+./data/report.db
+./data/universe.xlsx
+./data_backups/2026_06_09_170206/market_data.db
+./data_backups/2026_06_09_170206/portfolio.db
+./fine tuning/.env
+./fine tuning/.env.example
+./fine tuning/.gitignore
+./fine tuning/COMPARISON_RESULTS.md
+./fine tuning/IMPLEMENTATION_PLAN.md
+./fine tuning/INFERENCE.md
+./fine tuning/INSTRUCTIONS_FOR_GEMINI.md
+./fine tuning/PRD_Expert_Review_Training_Round.md
+./fine tuning/README.md
+./fine tuning/data/processed/sample_examples.json
+./fine tuning/data/processed/statistics.json
+./fine tuning/data/processed/test.jsonl
+./fine tuning/data/processed/train.jsonl
+./fine tuning/data/processed/val.jsonl
+./fine tuning/outputs/.DS_Store
+./fine tuning/outputs/comparison/ETF_Master_List_Comparison.xlsx
+./fine tuning/outputs/comparison/ETF_Master_List_FineTuned.xlsx
+./fine tuning/outputs/comparison/comparison_report.txt
+./fine tuning/outputs/comparison_run.log
+./fine tuning/outputs/comparison_run_full.log
+./fine tuning/outputs/expert_review/deepseek_predictions_partial.parquet
+./fine tuning/outputs/expert_review/raw_predictions.parquet
+./fine tuning/outputs/expert_review/review_batch.xlsx
+./fine tuning/outputs/expert_review/review_report_blank.md
+./fine tuning/outputs/expert_review_smoke/expert_label_manifest.json
+./fine tuning/outputs/expert_review_smoke/raw_predictions.parquet
+./fine tuning/outputs/expert_review_smoke/review_batch.xlsx
+./fine tuning/outputs/expert_review_smoke/review_batch_partial.xlsx
+./fine tuning/outputs/expert_review_smoke/review_report_blank.md
+./fine tuning/outputs/expert_review_smoke/review_report_partial.md
+./fine tuning/outputs/expert_review_smoke/test_expert.jsonl
+./fine tuning/outputs/expert_review_smoke/train_expert.jsonl
+./fine tuning/outputs/expert_review_smoke2/raw_predictions.parquet
+./fine tuning/outputs/expert_review_smoke2/review_batch.xlsx
+./fine tuning/outputs/expert_review_smoke2/review_report_blank.md
+./fine tuning/outputs/final_1000/Final_1000_FineTuned_Classified.xlsx
+./fine tuning/outputs/final_1000/classification_comparison_report.xlsx
+./fine tuning/outputs/training_run/checkpoints.jsonl
+./fine tuning/outputs/training_run/code.diff
+./fine tuning/outputs/training_run/config.json
+./fine tuning/outputs/training_run/logs.log
+./fine tuning/outputs/training_run/metrics.jsonl
+./fine tuning/outputs/training_run/training.log
+./fine tuning/outputs/training_run/wandb/run-20260129_201214-hbdxa6ib/files/config.yaml
+./fine tuning/outputs/training_run/wandb/run-20260129_201214-hbdxa6ib/files/output.log
+./fine tuning/outputs/training_run/wandb/run-20260129_201214-hbdxa6ib/files/requirements.txt
+./fine tuning/outputs/training_run/wandb/run-20260129_201214-hbdxa6ib/files/wandb-metadata.json
+./fine tuning/outputs/training_run/wandb/run-20260129_201214-hbdxa6ib/files/wandb-summary.json
+./fine tuning/outputs/training_run/wandb/run-20260129_201214-hbdxa6ib/logs/debug-internal.log
+./fine tuning/outputs/training_run/wandb/run-20260129_201214-hbdxa6ib/logs/debug.log
+./fine tuning/outputs/training_run/wandb/run-20260129_201214-hbdxa6ib/run-hbdxa6ib.wandb
+./fine tuning/outputs/training_run_backup_20260129_201039/checkpoints.jsonl
+./fine tuning/outputs/training_run_backup_20260129_201039/code.diff
+./fine tuning/outputs/training_run_backup_20260129_201039/config.json
+./fine tuning/outputs/training_run_backup_20260129_201039/logs.log
+./fine tuning/outputs/training_run_backup_20260129_201039/metrics.jsonl
+./fine tuning/outputs/training_run_backup_20260129_201039/training_resume.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_172904-bvhi7r5x/files/output.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_172904-bvhi7r5x/files/requirements.txt
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_172904-bvhi7r5x/files/wandb-metadata.json
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_172904-bvhi7r5x/logs/debug-internal.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_172904-bvhi7r5x/logs/debug.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_172904-bvhi7r5x/run-bvhi7r5x.wandb
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_173231-g0o0x1gq/files/config.yaml
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_173231-g0o0x1gq/files/output.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_173231-g0o0x1gq/files/requirements.txt
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_173231-g0o0x1gq/files/wandb-metadata.json
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_173231-g0o0x1gq/files/wandb-summary.json
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_173231-g0o0x1gq/logs/debug-internal.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_173231-g0o0x1gq/logs/debug.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_173231-g0o0x1gq/run-g0o0x1gq.wandb
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200601-759gwmcc/files/output.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200601-759gwmcc/files/requirements.txt
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200601-759gwmcc/files/wandb-metadata.json
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200601-759gwmcc/logs/debug-internal.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200601-759gwmcc/logs/debug.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200601-759gwmcc/run-759gwmcc.wandb
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200847-oc75jk04/files/output.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200847-oc75jk04/files/requirements.txt
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200847-oc75jk04/files/wandb-metadata.json
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200847-oc75jk04/logs/debug-internal.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200847-oc75jk04/logs/debug.log
+./fine tuning/outputs/training_run_backup_20260129_201039/wandb/run-20260129_200847-oc75jk04/run-oc75jk04.wandb
+./fine tuning/outputs/training_run_buggy_val/checkpoints.jsonl
+./fine tuning/outputs/training_run_buggy_val/code.diff
+./fine tuning/outputs/training_run_buggy_val/config.json
+./fine tuning/outputs/training_run_buggy_val/logs.log
+./fine tuning/outputs/training_run_buggy_val/metrics.jsonl
+./fine tuning/outputs/training_run_buggy_val/wandb/run-20260129_162126-9pbhrumv/files/output.log
+./fine tuning/outputs/training_run_buggy_val/wandb/run-20260129_162126-9pbhrumv/files/requirements.txt
+./fine tuning/outputs/training_run_buggy_val/wandb/run-20260129_162126-9pbhrumv/files/wandb-metadata.json
+./fine tuning/outputs/training_run_buggy_val/wandb/run-20260129_162126-9pbhrumv/logs/debug-internal.log
+./fine tuning/outputs/training_run_buggy_val/wandb/run-20260129_162126-9pbhrumv/logs/debug.log
+./fine tuning/outputs/training_run_buggy_val/wandb/run-20260129_162126-9pbhrumv/run-9pbhrumv.wandb
+./fine tuning/outputs/val_evaluation.log
+./fine tuning/outputs/val_results.log
+./fine tuning/requirements.txt
+./fine tuning/run_training.sh
+./fine tuning/scripts/01_prepare_data.py
+./fine tuning/scripts/02_train_tinker.py
+./fine tuning/scripts/02_train_tinker_wandb.py
+./fine tuning/scripts/02_train_tinker_wandb_enhanced.py
+./fine tuning/scripts/03_train_with_validation.py
+./fine tuning/scripts/04_evaluate_model.py
+./fine tuning/scripts/05_train_proper.py
+./fine tuning/scripts/build_review_batch.py
+./fine tuning/scripts/classify_final_1000.py
+./fine tuning/scripts/compare_models.py
+./fine tuning/scripts/eval_simple.py
+./fine tuning/scripts/expert_review_common.py
+./fine tuning/scripts/merge_expert_labels.py
+./fine tuning/scripts/predict_funds.py
+./fine tuning/scripts/predict_single.py
+./fine tuning/scripts/quick_eval.py
+./fine tuning/scripts/score_review_batch.py
+./fine tuning/scripts/test_model.py
+./fine tuning/venv/.lock
+./fine tuning/venv/bin/Activate.ps1
+./fine tuning/venv/bin/accelerate
+./fine tuning/venv/bin/accelerate-config
+./fine tuning/venv/bin/accelerate-estimate-memory
+./fine tuning/venv/bin/accelerate-launch
+./fine tuning/venv/bin/accelerate-merge-weights
+./fine tuning/venv/bin/activate
+./fine tuning/venv/bin/activate.csh
+./fine tuning/venv/bin/activate.fish
+./fine tuning/venv/bin/debugpy
+./fine tuning/venv/bin/debugpy-adapter
+./fine tuning/venv/bin/distro
+./fine tuning/venv/bin/dotenv
+./fine tuning/venv/bin/f2py
+./fine tuning/venv/bin/fonttools
+./fine tuning/venv/bin/hf
+./fine tuning/venv/bin/httpx
+./fine tuning/venv/bin/huggingface-cli
+./fine tuning/venv/bin/idna
+./fine tuning/venv/bin/ipython
+./fine tuning/venv/bin/ipython3
+./fine tuning/venv/bin/isympy
+./fine tuning/venv/bin/jlpm
+./fine tuning/venv/bin/jsonpointer
+./fine tuning/venv/bin/jsonschema
+./fine tuning/venv/bin/jupyter
+./fine tuning/venv/bin/jupyter-builder
+./fine tuning/venv/bin/jupyter-console
+./fine tuning/venv/bin/jupyter-dejavu
+./fine tuning/venv/bin/jupyter-events
+./fine tuning/venv/bin/jupyter-execute
+./fine tuning/venv/bin/jupyter-kernel
+./fine tuning/venv/bin/jupyter-kernelspec
+./fine tuning/venv/bin/jupyter-lab
+./fine tuning/venv/bin/jupyter-labextension
+./fine tuning/venv/bin/jupyter-labhub
+./fine tuning/venv/bin/jupyter-migrate
+./fine tuning/venv/bin/jupyter-nbconvert
+./fine tuning/venv/bin/jupyter-notebook
+./fine tuning/venv/bin/jupyter-run
+./fine tuning/venv/bin/jupyter-server
+./fine tuning/venv/bin/jupyter-troubleshoot
+./fine tuning/venv/bin/jupyter-trust
+./fine tuning/venv/bin/markdown-it
+./fine tuning/venv/bin/mistune
+./fine tuning/venv/bin/mlx.distributed_config
+./fine tuning/venv/bin/mlx.launch
+./fine tuning/venv/bin/mlx_lm
+./fine tuning/venv/bin/mlx_lm.awq
+./fine tuning/venv/bin/mlx_lm.benchmark
+./fine tuning/venv/bin/mlx_lm.cache_prompt
+./fine tuning/venv/bin/mlx_lm.chat
+./fine tuning/venv/bin/mlx_lm.convert
+./fine tuning/venv/bin/mlx_lm.dwq
+./fine tuning/venv/bin/mlx_lm.dynamic_quant
+./fine tuning/venv/bin/mlx_lm.evaluate
+./fine tuning/venv/bin/mlx_lm.fuse
+./fine tuning/venv/bin/mlx_lm.generate
+./fine tuning/venv/bin/mlx_lm.gptq
+./fine tuning/venv/bin/mlx_lm.lora
+./fine tuning/venv/bin/mlx_lm.manage
+./fine tuning/venv/bin/mlx_lm.perplexity
+./fine tuning/venv/bin/mlx_lm.server
+./fine tuning/venv/bin/mlx_lm.share
+./fine tuning/venv/bin/mlx_lm.upload
+./fine tuning/venv/bin/normalizer
+./fine tuning/venv/bin/numpy-config
+./fine tuning/venv/bin/pip
+./fine tuning/venv/bin/pip3
+./fine tuning/venv/bin/pip3.12
+./fine tuning/venv/bin/pybabel
+./fine tuning/venv/bin/pyftmerge
+./fine tuning/venv/bin/pyftsubset
+./fine tuning/venv/bin/pygmentize
+./fine tuning/venv/bin/pyjson5
+./fine tuning/venv/bin/send2trash
+./fine tuning/venv/bin/tinker
+./fine tuning/venv/bin/tiny-agents
+./fine tuning/venv/bin/torchfrtrace
+./fine tuning/venv/bin/torchrun
+./fine tuning/venv/bin/tqdm
+./fine tuning/venv/bin/transformers
+./fine tuning/venv/bin/ttx
+./fine tuning/venv/bin/typer
+./fine tuning/venv/bin/wsdump
+./fine tuning/venv/etc/jupyter/jupyter_notebook_config.d/jupyterlab.json
+./fine tuning/venv/etc/jupyter/jupyter_server_config.d/jupyter-lsp-jupyter-server.json
+./fine tuning/venv/etc/jupyter/jupyter_server_config.d/jupyter_server_terminals.json
+./fine tuning/venv/etc/jupyter/jupyter_server_config.d/jupyterlab.json
+./fine tuning/venv/etc/jupyter/jupyter_server_config.d/notebook.json
+./fine tuning/venv/etc/jupyter/jupyter_server_config.d/notebook_shim.json
+./fine tuning/venv/etc/jupyter/nbconfig/notebook.d/widgetsnbextension.json
+./fine tuning/venv/lib/python3.12/site-packages/81d243bd2c585b0f4821__mypyc.cpython-312-darwin.so
+./fine tuning/venv/lib/python3.12/site-packages/IPython/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/__main__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/alias.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/application.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/async_helpers.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/autocall.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/builtin_trap.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/compilerop.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/completer.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/completerlib.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/crashhandler.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/debugger.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/debugger_backport.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/display.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/display_functions.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/display_trap.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/displayhook.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/displaypub.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/doctb.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/error.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/events.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/extensions.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/formatters.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/getipython.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/guarded_eval.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/history.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/historyapp.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/hooks.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/inputtransformer2.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/interactiveshell.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/kitty.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/latex_symbols.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/logger.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/macro.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magic.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magic_arguments.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/ast_mod.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/auto.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/basic.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/code.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/config.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/display.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/execution.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/extension.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/history.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/logging.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/namespace.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/osm.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/packaging.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/pylab.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/magics/script.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/oinspect.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/page.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/payload.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/payloadpage.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/prefilter.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/profile/README_STARTUP
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/profileapp.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/profiledir.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/pylabtools.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/release.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/shellapp.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/splitinput.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/tbtools.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/tips.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/ultratb.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/core/usage.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/display.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/extensions/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/extensions/autoreload.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/extensions/deduperreload/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/extensions/deduperreload/deduperreload.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/extensions/deduperreload/deduperreload_patching.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/extensions/storemagic.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/external/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/external/pickleshare.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/external/qt_for_kernel.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/external/qt_loaders.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/backgroundjobs.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/clipboard.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/deepreload.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/demo.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/display.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/editorhooks.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/guisupport.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/latextools.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/lexers.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/lib/pretty.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/paths.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/py.typed
+./fine tuning/venv/lib/python3.12/site-packages/IPython/sphinxext/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/sphinxext/custom_doctests.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/sphinxext/ipython_console_highlighting.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/sphinxext/ipython_directive.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/sphinxext/tests/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/sphinxext/tests/test_ansi_stripping.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/debugger.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/embed.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/interactiveshell.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/ipapp.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/magics.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/prompts.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/asyncio.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/glut.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/gtk.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/gtk3.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/gtk4.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/osx.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/pyglet.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/qt.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/tk.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/pt_inputhooks/wx.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/ptutils.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/shortcuts/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/shortcuts/auto_match.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/shortcuts/auto_suggest.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/terminal/shortcuts/filters.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/decorators.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/globalipapp.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/ipunittest.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/dtexample.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/ipdoctest.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/pytest_ipdoctest.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/setup.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/simple.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/simplevars.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/test_combo.txt
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/test_example.txt
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/test_exampleip.txt
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/test_ipdoctest.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/plugin/test_refs.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/skipdoctest.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/testing/tools.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/PyColorize.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/_process_cli.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/_process_common.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/_process_emscripten.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/_process_posix.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/_process_win32.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/_process_win32_controller.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/_sysinfo.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/capture.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/coloransi.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/contexts.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/data.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/decorators.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/dir2.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/docs.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/encoding.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/eventful.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/frame.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/generics.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/importstring.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/io.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/ipstruct.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/jsonutil.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/log.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/module_paths.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/openpy.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/path.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/process.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/py3compat.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/sentinel.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/strdispatch.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/sysinfo.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/syspathcontext.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/tempdir.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/terminal.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/text.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/timing.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/tokenutil.py
+./fine tuning/venv/lib/python3.12/site-packages/IPython/utils/wildcard.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libXau.6.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libavif.16.4.1.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libbrotlicommon.1.2.0.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libbrotlidec.1.2.0.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libfreetype.6.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libharfbuzz.0.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libjpeg.62.4.0.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/liblcms2.2.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/liblzma.5.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libopenjp2.2.5.4.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libpng16.16.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libsharpyuv.0.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libtiff.6.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libwebp.7.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libwebpdemux.2.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libwebpmux.3.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libxcb.1.1.0.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/.dylibs/libz.1.3.1.zlib-ng.dylib
+./fine tuning/venv/lib/python3.12/site-packages/PIL/AvifImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/BdfFontFile.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/BlpImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/BmpImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/BufrStubImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ContainerIO.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/CurImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/DcxImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/DdsImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/EpsImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ExifTags.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/FitsImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/FliImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/FontFile.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/FpxImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/FtexImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/GbrImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/GdImageFile.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/GifImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/GimpGradientFile.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/GimpPaletteFile.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/GribStubImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/Hdf5StubImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/IcnsImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/IcoImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/Image.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageChops.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageCms.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageColor.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageDraw.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageDraw2.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageEnhance.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageFile.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageFilter.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageFont.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageGrab.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageMath.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageMode.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageMorph.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageOps.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImagePalette.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImagePath.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageQt.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageSequence.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageShow.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageStat.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageText.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageTk.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageTransform.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImageWin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/ImtImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/IptcImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/Jpeg2KImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/JpegImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/JpegPresets.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/McIdasImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/MicImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/MpegImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/MpoImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/MspImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PSDraw.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PaletteFile.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PalmImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PcdImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PcfFontFile.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PcxImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PdfImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PdfParser.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PixarImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PngImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PpmImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/PsdImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/QoiImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/SgiImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/SpiderImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/SunImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/TarIO.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/TgaImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/TiffImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/TiffTags.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/WalImageFile.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/WebPImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/WmfImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/XVThumbImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/XbmImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/XpmImagePlugin.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/__main__.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_avif.cpython-312-darwin.so
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_avif.pyi
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_binary.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_deprecate.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imaging.cpython-312-darwin.so
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imaging.pyi
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imagingcms.cpython-312-darwin.so
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imagingcms.pyi
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imagingft.cpython-312-darwin.so
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imagingft.pyi
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imagingmath.cpython-312-darwin.so
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imagingmath.pyi
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imagingmorph.cpython-312-darwin.so
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imagingmorph.pyi
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imagingtk.cpython-312-darwin.so
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_imagingtk.pyi
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_tkinter_finder.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_typing.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_util.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_version.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_webp.cpython-312-darwin.so
+./fine tuning/venv/lib/python3.12/site-packages/PIL/_webp.pyi
+./fine tuning/venv/lib/python3.12/site-packages/PIL/features.py
+./fine tuning/venv/lib/python3.12/site-packages/PIL/py.typed
+./fine tuning/venv/lib/python3.12/site-packages/PIL/report.py
+./fine tuning/venv/lib/python3.12/site-packages/_argon2_cffi_bindings/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/_argon2_cffi_bindings/_ffi.abi3.so
+./fine tuning/venv/lib/python3.12/site-packages/_argon2_cffi_bindings/_ffi_build.py
+./fine tuning/venv/lib/python3.12/site-packages/_cffi_backend.cpython-312-darwin.so
+./fine tuning/venv/lib/python3.12/site-packages/_distutils_hack/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/_distutils_hack/override.py
+./fine tuning/venv/lib/python3.12/site-packages/_yaml/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate-1.14.0.dist-info/INSTALLER
+./fine tuning/venv/lib/python3.12/site-packages/accelerate-1.14.0.dist-info/METADATA
+./fine tuning/venv/lib/python3.12/site-packages/accelerate-1.14.0.dist-info/RECORD
+./fine tuning/venv/lib/python3.12/site-packages/accelerate-1.14.0.dist-info/REQUESTED
+./fine tuning/venv/lib/python3.12/site-packages/accelerate-1.14.0.dist-info/WHEEL
+./fine tuning/venv/lib/python3.12/site-packages/accelerate-1.14.0.dist-info/entry_points.txt
+./fine tuning/venv/lib/python3.12/site-packages/accelerate-1.14.0.dist-info/licenses/LICENSE
+./fine tuning/venv/lib/python3.12/site-packages/accelerate-1.14.0.dist-info/top_level.txt
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/accelerator.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/big_modeling.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/checkpointing.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/accelerate_cli.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/config/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/config/cluster.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/config/config.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/config/config_args.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/config/config_utils.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/config/default.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/config/sagemaker.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/config/update.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/env.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/estimate.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/launch.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/menu/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/menu/cursor.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/menu/helpers.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/menu/input.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/menu/keymap.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/menu/selection_menu.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/merge.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/test.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/to_fsdp2.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/tpu.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/commands/utils.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/data_loader.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/hooks.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/inference.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/launchers.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/local_sgd.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/logging.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/memory_utils.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/optimizer.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/parallelism_config.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/scheduler.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/state.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/examples.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/external_deps/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/external_deps/test_checkpointing.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/external_deps/test_ds_alst_ulysses_sp.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/external_deps/test_ds_multiple_model.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/external_deps/test_metrics.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/external_deps/test_peak_memory_usage.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/external_deps/test_performance.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/external_deps/test_pippy.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/external_deps/test_zero3_integration.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/test_cli.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/test_ddp_comm_hook.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/test_distributed_data_loop.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/test_merge_weights.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/test_notebook.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/test_ops.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/test_script.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/scripts/test_sync.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/testing.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/test_utils/training.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/tracking.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/ao.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/bnb.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/constants.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/dataclasses.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/deepspeed.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/environment.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/fsdp_utils.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/imports.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/launch.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/megatron_lm.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/memory.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/modeling.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/offload.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/operations.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/other.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/random.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/rich.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/torch_xla.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/tqdm.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/transformer_engine.py
+./fine tuning/venv/lib/python3.12/site-packages/accelerate/utils/versions.py
+./fine tuning/venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/INSTALLER
+./fine tuning/venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/METADATA
+./fine tuning/venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/RECORD
+./fine tuning/venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/REQUESTED
+./fine tuning/venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/WHEEL
+./fine tuning/venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/entry_points.txt
+./fine tuning/venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info/licenses/LICENSE
+./fine tuning/venv/lib/python3.12/site-packages/annotated_doc/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/annotated_doc/main.py
+./fine tuning/venv/lib/python3.12/site-packages/annotated_doc/py.typed
+./fine tuning/venv/lib/python3.12/site-packages/annotated_types-0.7.0.dist-info/INSTALLER
+./fine tuning/venv/lib/python3.12/site-packages/annotated_types-0.7.0.dist-info/METADATA
+./fine tuning/venv/lib/python3.12/site-packages/annotated_types-0.7.0.dist-info/RECORD
+./fine tuning/venv/lib/python3.12/site-packages/annotated_types-0.7.0.dist-info/REQUESTED
+./fine tuning/venv/lib/python3.12/site-packages/annotated_types-0.7.0.dist-info/WHEEL
+./fine tuning/venv/lib/python3.12/site-packages/annotated_types-0.7.0.dist-info/licenses/LICENSE
+./fine tuning/venv/lib/python3.12/site-packages/annotated_types/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/annotated_types/py.typed
+./fine tuning/venv/lib/python3.12/site-packages/annotated_types/test_cases.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic-0.115.0.dist-info/INSTALLER
+./fine tuning/venv/lib/python3.12/site-packages/anthropic-0.115.0.dist-info/METADATA
+./fine tuning/venv/lib/python3.12/site-packages/anthropic-0.115.0.dist-info/RECORD
+./fine tuning/venv/lib/python3.12/site-packages/anthropic-0.115.0.dist-info/REQUESTED
+./fine tuning/venv/lib/python3.12/site-packages/anthropic-0.115.0.dist-info/WHEEL
+./fine tuning/venv/lib/python3.12/site-packages/anthropic-0.115.0.dist-info/licenses/LICENSE
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_base_client.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_client.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_compat.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_constants.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_decoders/jsonl.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_exceptions.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_files.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_legacy_response.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_middleware.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_models.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_qs.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_request.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_resource.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_response.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_streaming.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_types.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_compat.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_datetime_parse.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_httpx.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_json.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_logs.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_path.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_proxy.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_reflection.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_resources_proxy.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_streams.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_sync.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_transform.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_typing.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_utils/_utils.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/_version.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/.keep
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/_extras/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/_extras/_common.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/_extras/_google_auth.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/_files.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/_parse/_response.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/_parse/_transform.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/_retry.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/_scoped_client.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/_stainless_helpers.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/aws/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/aws/_auth.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/aws/_client.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/aws/_credentials.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/bedrock/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/bedrock/_auth.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/bedrock/_beta.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/bedrock/_beta_messages.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/bedrock/_client.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/bedrock/_mantle.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/bedrock/_stream.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/bedrock/_stream_decoder.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/credentials/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/credentials/_auth.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/credentials/_cache.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/credentials/_chain.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/credentials/_constants.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/credentials/_providers.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/credentials/_types.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/credentials/_workload.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/environments/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/environments/_poller.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/environments/_worker.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/foundry.md
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/foundry.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/middleware/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/middleware/_fallbacks.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/sessions/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/sessions/_accumulate.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/streaming/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/streaming/_beta_messages.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/streaming/_beta_types.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/streaming/_messages.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/streaming/_types.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/tools/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/tools/_beta_builtin_memory_tool.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/tools/_beta_compaction_control.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/tools/_beta_functions.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/tools/_beta_runner.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/tools/_beta_session_runner.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/tools/_skills.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/tools/_tool_dispatch.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/tools/agent_toolset.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/tools/mcp.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/vertex/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/vertex/_auth.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/vertex/_beta.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/vertex/_beta_messages.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/lib/vertex/_client.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/pagination.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/py.typed
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/agents/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/agents/agents.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/agents/versions.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/beta.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/deployment_runs.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/deployments.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/environments/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/environments/environments.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/environments/work.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/files.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/memory_stores/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/memory_stores/memories.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/memory_stores/memory_stores.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/memory_stores/memory_versions.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/messages/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/messages/batches.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/messages/messages.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/models.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/sessions/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/sessions/events.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/sessions/resources.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/sessions/sessions.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/sessions/threads/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/sessions/threads/events.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/sessions/threads/threads.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/skills/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/skills/skills.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/skills/versions.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/user_profiles.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/vaults/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/vaults/credentials.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/vaults/vaults.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/beta/webhooks.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/completions.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/messages/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/messages/batches.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/messages/messages.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/resources/models.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/tools/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/tools/memory.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/anthropic_beta_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/base64_image_source_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/base64_pdf_source.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/base64_pdf_source_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/bash_code_execution_output_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/bash_code_execution_output_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/bash_code_execution_result_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/bash_code_execution_result_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/bash_code_execution_tool_result_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/bash_code_execution_tool_result_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/bash_code_execution_tool_result_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/bash_code_execution_tool_result_error_code.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/bash_code_execution_tool_result_error_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/agent_create_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/agent_list_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/agent_retrieve_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/agent_update_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/agents/__init__.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/agents/version_list_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_advisor_message_iteration_usage.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_advisor_redacted_result_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_advisor_redacted_result_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_advisor_result_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_advisor_result_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_advisor_tool_20260301_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_advisor_tool_result_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_advisor_tool_result_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_advisor_tool_result_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_advisor_tool_result_error_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_all_thinking_turns_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_base64_image_source_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_base64_pdf_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_base64_pdf_source.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_base64_pdf_source_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_bash_code_execution_output_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_bash_code_execution_output_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_bash_code_execution_result_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_bash_code_execution_result_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_bash_code_execution_tool_result_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_bash_code_execution_tool_result_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_bash_code_execution_tool_result_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_bash_code_execution_tool_result_error_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_cache_control_ephemeral_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_cache_creation.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_cache_miss_messages_changed.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_cache_miss_model_changed.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_cache_miss_previous_message_not_found.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_cache_miss_system_changed.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_cache_miss_tools_changed.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_cache_miss_unavailable.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_capability_support.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citation_char_location.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citation_char_location_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citation_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citation_content_block_location.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citation_content_block_location_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citation_page_location.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citation_page_location_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citation_search_result_location.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citation_search_result_location_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citation_web_search_result_location_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citations_config_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citations_delta.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_citations_web_search_result_location.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_clear_thinking_20251015_edit_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_clear_thinking_20251015_edit_response.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_clear_tool_uses_20250919_edit_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_clear_tool_uses_20250919_edit_response.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_cloud_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_cloud_config_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_output_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_output_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_result_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_result_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_20250522_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_20250825_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_20260120_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_20260521_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_result_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_result_block_content.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_result_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_result_block_param_content_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_result_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_result_error_code.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_code_execution_tool_result_error_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_compact_20260112_edit_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_compaction_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_compaction_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_compaction_content_block_delta.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_compaction_iteration_usage.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_container.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_container_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_container_upload_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_container_upload_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_content_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_content_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_content_block_source_content_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_content_block_source_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_context_management_capability.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_context_management_config_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_context_management_response.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_count_tokens_context_management_response.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_diagnostics.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_diagnostics_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_direct_caller.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_direct_caller_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_document_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_effort_capability.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_encrypted_code_execution_result_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_encrypted_code_execution_result_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_environment.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_environment_delete_response.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_fallback_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_fallback_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_fallback_info.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_fallback_info_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_fallback_message_iteration_usage.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_fallback_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_fallback_refusal_trigger.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_file_document_source_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_file_image_source_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_file_scope.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_image_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_input_json_delta.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_input_tokens_clear_at_least_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_input_tokens_trigger_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_iterations_usage.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_json_output_format_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_limited_network.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_limited_network_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_archived_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_archived_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_message_preview.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_reference.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_thinking_preview.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_tool_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_tool_config_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_toolset20260401.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_toolset20260401_bash_input.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_toolset20260401_edit_input.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_toolset20260401_glob_input.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_toolset20260401_grep_input.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_toolset20260401_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_toolset20260401_read_input.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_toolset20260401_write_input.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_toolset_default_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_toolset_default_config_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_agent_with_overrides_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_always_allow_policy.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_always_allow_policy_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_always_ask_policy.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_always_ask_policy_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_anthropic_skill.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_anthropic_skill_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_branch_checkout.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_branch_checkout_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_cache_creation_usage.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_commit_checkout.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_commit_checkout_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_custom_skill.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_custom_skill_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_custom_tool.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_custom_tool_input_schema.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_custom_tool_input_schema_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_custom_tool_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deleted_memory_store.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deleted_session.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deleted_vault.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_delta_content.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_delta_event.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_delta_type.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deployment.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deployment_initial_event.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deployment_initial_event_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deployment_paused_reason.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deployment_run.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deployment_status.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deployment_system_message_event.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deployment_user_define_outcome_event.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_deployment_user_message_event.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_environment_archived_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_environment_archived_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_environment_not_found_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_environment_not_found_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_error_deployment_paused_reason.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_file_not_found_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_file_not_found_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_file_resource_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_file_resource_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_github_repository_resource_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_github_repository_resource_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_manual_deployment_paused_reason.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_manual_trigger_context.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_mcp_egress_blocked_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_mcp_egress_blocked_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_mcp_server_url_definition.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_mcp_tool_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_mcp_tool_config_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_mcp_toolset.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_mcp_toolset_default_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_mcp_toolset_default_config_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_mcp_toolset_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_memory_store.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_memory_store_archived_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_memory_store_archived_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_memory_store_resource_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_memory_store_resource_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_model.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_model_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_model_config_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_model_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_multiagent.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_multiagent_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_multiagent_roster_entry_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_multiagent_self_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_organization_disabled_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_organization_disabled_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_outcome_evaluation_resource.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_schedule.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_schedule_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_schedule_trigger_context.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_self_hosted_resources_unsupported_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_self_hosted_resources_unsupported_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_agent.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_agent_update_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_creation_rejected_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_multiagent_coordinator.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_rate_limited_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_resource_config.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_resource_not_found_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_resource_not_found_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_stats.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_thread_agent.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_updated_event.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_session_usage.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_skill_not_found_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_skill_not_found_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_skill_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_start_event.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_start_event_preview.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_system_content_block.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_system_content_block_param.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_system_message_event.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_trigger_context.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_trigger_type.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_unknown_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_unknown_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_url_mcp_server_params.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_user_tool_result_event.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_vault.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_vault_archived_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_vault_archived_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_vault_not_found_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_vault_not_found_run_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_workspace_archived_deployment_paused_reason_error.py
+./fine tuning/venv/lib/python3.12/site-packages/anthropic/types/beta/beta_managed_agents_workspace_archived_run_error.py
+./fine tuning/venv/li
+
+... Output truncated at 100000 bytes.
+[Command succeeded with exit code 0]
+[Output was truncated due to size limits]
