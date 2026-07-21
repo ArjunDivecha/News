@@ -1,3 +1,9 @@
+---
+type: "Reference"
+title: "Operations Runbook"
+openwiki_generated: true
+---
+
 # Operations Runbook
 
 This page collects the practical instructions for running the report system safely.

@@ -1,3 +1,9 @@
+---
+type: "Reference"
+title: "Unified Report System Architecture"
+openwiki_generated: true
+---
+
 # Unified Report System Architecture
 
 The production path for this repository is the `report/` package. It generates a daily market-and-portfolio report from live holdings, market prices, portfolio analytics, optional tag views, and scenario risk, then turns the result into Markdown, HTML, and PDF while archiving continuity data in SQLite.

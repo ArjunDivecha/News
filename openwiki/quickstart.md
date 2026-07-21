@@ -1,3 +1,9 @@
+---
+type: "Reference"
+title: "OpenWiki Quickstart"
+openwiki_generated: true
+---
+
 # OpenWiki Quickstart
 
 This repository contains a unified daily market and portfolio reporting system plus the upstream universe-construction work that feeds it. The active day-to-day product lives in `report/`: it pulls Schwab and IBKR holdings, downloads ETF prices from Yahoo Finance, runs portfolio and market analytics, optionally computes tier-3 tag views and scenario risk, asks Claude to write the report, and renders the result to PDF.

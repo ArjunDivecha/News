@@ -1,3 +1,9 @@
+---
+type: "Reference"
+title: "Tag Views and Household Allocation"
+openwiki_generated: true
+---
+
 # Tag Views and Household Allocation
 
 This repository's tag layer adds a second lens on the book: instead of only market beta and peer groups, it classifies holdings across canonical axes and turns those tags into table-first views in the report.

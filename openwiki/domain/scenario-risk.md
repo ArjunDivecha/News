@@ -1,3 +1,9 @@
+---
+type: "Reference"
+title: "Scenario Risk"
+openwiki_generated: true
+---
+
 # Scenario Risk
 
 `report/scenarios.py` is the standing stress engine for the report. It answers the question: what happens to the household if a named historical or hypothetical shock hits the current look-through book?

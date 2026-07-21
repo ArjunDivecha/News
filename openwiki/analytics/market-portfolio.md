@@ -1,3 +1,9 @@
+---
+type: "Reference"
+title: "Market, Portfolio, and Bridge Analytics"
+openwiki_generated: true
+---
+
 # Market, Portfolio, and Bridge Analytics
 
 `report/analytics.py` contains the core financial math for the daily report. This is the main place to study when you need to understand how the report measures returns, exposures, alpha, bridge attribution, or sub-portfolio performance.
