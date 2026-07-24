@@ -26,7 +26,7 @@ load_dotenv(Path(__file__).parent.parent.parent.parent / ".env")
 
 # Runtime configuration (Opus default with bounded latency controls)
 DEFAULT_ANTHROPIC_TIMEOUT_SECONDS = float(os.getenv('ANTHROPIC_TIMEOUT_SECONDS', '90'))
-DEFAULT_REPORT_MODEL = os.getenv('PHASE2_REPORT_MODEL', 'claude-opus-4-6')
+DEFAULT_REPORT_MODEL = os.getenv('PHASE2_REPORT_MODEL', 'claude-opus-5')
 DEFAULT_REPORT_MAX_TOKENS = int(os.getenv('PHASE2_REPORT_MAX_TOKENS', '2600'))
 FALLBACK_REPORT_MODEL = os.getenv('PHASE2_REPORT_FALLBACK_MODEL', '')
 

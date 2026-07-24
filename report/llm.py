@@ -191,7 +191,7 @@ def _generate_report_anthropic_api(data_package: str, model: str,
         # had never been exercised because the CLI always succeeded). extra_body
         # is the documented pre-GA-SDK path. Drop it once the SDK is upgraded.
         kwargs["betas"] = ["server-side-fallback-2026-06-01"]
-        kwargs["extra_body"] = {"fallbacks": [{"model": "claude-opus-4-8"}]}
+        kwargs["extra_body"] = {"fallbacks": [{"model": "claude-opus-5"}]}
         stream_fn = client.beta.messages.stream
     else:
         stream_fn = client.messages.stream
@@ -199,7 +199,7 @@ def _generate_report_anthropic_api(data_package: str, model: str,
     print(f"  LLM API fallback "
           f"(model={model}, thinking=adaptive/{effort}, "
           f"max_tokens={SETTINGS['max_tokens']}, streaming"
-          f"{', refusal-fallback=opus-4-8' if is_fable else ''})...")
+          f"{', refusal-fallback=opus-5' if is_fable else ''})...")
     with stream_fn(**kwargs) as stream:
         response = stream.get_final_message()
 

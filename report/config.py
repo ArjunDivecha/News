@@ -300,7 +300,7 @@ SETTINGS = {
     # max_tokens bounds thinking + visible output TOGETHER on a thinking model.
     # WARNING: 32000 was insufficient with thinking_effort=max — the 2026-06-18
     # report hit EXACTLY 32000 output tokens and truncated mid-table (Risks &
-    # Watchlist and Bottom Line were silently dropped). opus-4-8 allows up to
+    # Watchlist and Bottom Line were silently dropped). opus-5 allows up to
     # 128000; 64000 leaves ample headroom for max-effort thinking plus the full
     # ~9KB report. High max_tokens REQUIRES streaming (see llm.py) so the
     # multi-minute generation does not trip the SDK's non-streaming timeout guard.

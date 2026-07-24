@@ -47,7 +47,7 @@ MODELS = {
         'flash': 'gpt-4o-mini',
     },
     'anthropic': {
-        'daily': 'claude-opus-4-6',  # PRIMARY: Claude Opus 4.6
+        'daily': 'claude-opus-5',  # PRIMARY: Claude Opus 5
         'flash': 'claude-haiku-4-5-20251001',
     },
     'google': {
@@ -142,7 +142,7 @@ def generate_openai(system_prompt: str, user_prompt: str,
 
 
 def generate_anthropic(system_prompt: str, user_prompt: str,
-                       model: str = 'claude-opus-4-6',
+                       model: str = 'claude-opus-5',
                        max_tokens: int = 4000) -> Dict:
     """
     Generate text using Anthropic.
