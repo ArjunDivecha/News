@@ -43,8 +43,8 @@ _google_model = None
 # Primary: Claude Opus 4.6 for daily reports
 MODELS = {
     'openai': {
-        'daily': 'gpt-5.4',  # Legacy/comparison only
-        'flash': 'gpt-4o-mini',
+        'daily': 'gpt-5.6-sol',  # Legacy/comparison only
+        'flash': 'gpt-5.6-sol-mini',
     },
     'anthropic': {
         'daily': 'claude-opus-5',  # PRIMARY: Claude Opus 5
@@ -96,7 +96,7 @@ def _get_google(model_name: str):
 
 
 def generate_openai(system_prompt: str, user_prompt: str, 
-                    model: str = 'gpt-4o', max_tokens: int = 4000) -> Dict:
+                    model: str = 'gpt-5.6-sol', max_tokens: int = 4000) -> Dict:
     """
     Generate text using OpenAI.
     
