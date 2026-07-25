@@ -1,7 +1,7 @@
 ---
 type: "Reference"
 title: "Operations Runbook"
-openwiki_generated: true
+description: "Practical instructions for running the report system: runtime requirements, environment variables, scheduling, PDF rendering, and troubleshooting."
 ---
 
 # Operations Runbook

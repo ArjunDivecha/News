@@ -1,7 +1,7 @@
 ---
 type: "Reference"
 title: "Market, Portfolio, and Bridge Analytics"
-openwiki_generated: true
+description: "Core financial math in report/analytics.py: market analytics, portfolio returns and exposures, alpha, bridge attribution, and sub-portfolio performance."
 ---
 
 # Market, Portfolio, and Bridge Analytics

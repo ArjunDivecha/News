@@ -1,7 +1,7 @@
 ---
 type: "Reference"
 title: "OpenWiki Quickstart"
-openwiki_generated: true
+description: "Entry point for the repository wiki. Covers the daily market-and-portfolio report system, upstream universe construction, analytics, tag views, scenario risk, and operations."
 ---
 
 # OpenWiki Quickstart

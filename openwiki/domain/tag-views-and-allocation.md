@@ -1,7 +1,7 @@
 ---
 type: "Reference"
 title: "Tag Views and Household Allocation"
-openwiki_generated: true
+description: "The tag layer in report/tags.py and report/tag_analytics.py: canonical tag resolution, manual overrides, tier-3 tag views, and household look-through allocation."
 ---
 
 # Tag Views and Household Allocation

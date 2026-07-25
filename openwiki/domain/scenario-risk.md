@@ -1,7 +1,7 @@
 ---
 type: "Reference"
 title: "Scenario Risk"
-openwiki_generated: true
+description: "The standing stress engine in report/scenarios.py: named historical and hypothetical shocks applied to the current look-through book, with household impact, liquidity, and policy-check outputs."
 ---
 
 # Scenario Risk
