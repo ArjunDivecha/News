@@ -49,7 +49,17 @@ import db
 
 def _fetch_yahoo_names(symbols: list) -> dict:
     """Best-effort Yahoo longName/shortName lookup. Failures -> '' (not fatal:
-    a missing name is allowed to fall back to the ticker, per spec)."""
+    a missing name is allowed to fall back to the ticker, per spec).
+
+    Caches each result to report.db as soon as it is known (not just once at
+    the end of the whole batch). This list can include individual muni-bond
+    CUSIPs / futures symbols that Yahoo will never resolve, so a slow or
+    interrupted run (crash, kill, launchd relaunch) must not lose already-
+    attempted lookups - otherwise every restart re-does the same slow,
+    guaranteed-to-fail Yahoo calls from scratch instead of skipping symbols
+    already cached as '' (2026-07-28: this caused a launchd run to still be
+    grinding through the same CUSIP list 30+ minutes after restart).
+    """
     import yfinance as yf
     out = {}
     for s in symbols:
@@ -61,6 +71,7 @@ def _fetch_yahoo_names(symbols: list) -> dict:
             print(f"    name lookup failed for {s}: {e}")
             name = ""
         out[s] = name
+        db.upsert_names({s: name})
     return out
 
 
