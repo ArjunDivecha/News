@@ -202,6 +202,11 @@ Line. The Tier-1/Theme tables were cut from the rendered report (their data
 still feeds the narrative); the WITH/AGAINST structural rows and artifact-beta
 rows are no longer rendered daily.
 
+The My Money section keeps the live Schwab + IBKR book separate from the
+household total, retains every detected broker account (including zero-value
+linked accounts), and renders the separately sourced GMO sleeve as both an
+aggregate performance line and an individual-position detail table.
+
 **Scenario Risk** (`scenarios.py`) is the standing stress panel. Six scenarios,
 each a documented, episode-calibrated shock vector applied to the household's
 actual look-through slices with per-symbol overrides for concentrated names
@@ -340,6 +345,10 @@ This is the same behavior as before.
 - `reports` - every report's executive summary is fed back into the next
   report's prompt, so the narrative has memory (it migrated the legacy
   reports' summaries too)
+
+PDF rendering prefers PrinceXML and falls back to WeasyPrint when Prince is
+missing or unresponsive, so a valid, complete Markdown/HTML report is not lost
+to a local PDF-engine failure.
 
 ## Automated daily run (launchd — every weekday at 1:05 PM PT)
 

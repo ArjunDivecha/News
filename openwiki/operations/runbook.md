@@ -81,7 +81,10 @@ The database is used both for archival continuity and for caches such as names a
 
 ## PDF and report output
 
-`report/pdf.py` renders the final Markdown into HTML and PDF using PrinceXML. The output directories are configured in `report/config.py` and the package README describes the main artifacts:
+`report/pdf.py` renders the final Markdown into HTML and PDF using PrinceXML,
+with a WeasyPrint fallback if Prince is missing or unresponsive. The output
+directories are configured in `report/config.py` and the package README
+describes the main artifacts:
 
 - `outputs/unified/Unified_Report_<date>.pdf`
 - `outputs/unified/Unified_Report_<date>.md`

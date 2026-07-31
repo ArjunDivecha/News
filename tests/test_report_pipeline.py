@@ -369,6 +369,21 @@ class TestTableValidator:
             pdf_mod.render_pdf(md, "2026-06-09", "2026-06-09 12:00",
                                "claude-opus-4-8", tmp_path)
 
+    def test_render_uses_weasyprint_when_prince_unavailable(self, tmp_path,
+                                                            monkeypatch):
+        md = ("## Executive Summary\n\nQuiet day.\n\n## The Tape\n\n"
+              "| Factor | 1d % |\n|---|---|\n| EM | +1.0 |\n\n"
+              "## Bottom Line\n\nNothing changed.\n")
+
+        def missing_prince(*args, **kwargs):
+            raise FileNotFoundError("prince unavailable in test")
+
+        monkeypatch.setattr(pdf_mod.subprocess, "run", missing_prince)
+        out = pdf_mod.render_pdf(
+            md, "2026-06-09", "2026-06-09 12:00", "test", tmp_path)
+        assert out["pdf"].exists()
+        assert out["pdf"].stat().st_size > 0
+
     def test_escaped_pipe_in_cell_is_valid(self):
         # a cell may legitimately contain an escaped pipe (\|); it must NOT be
         # counted as a column separator (the 2026-06-22 false-positive).

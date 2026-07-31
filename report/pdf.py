@@ -35,6 +35,8 @@ USAGE:
 """
 
 import html
+import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -42,6 +44,9 @@ from pathlib import Path
 import markdown as md_lib
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+PRINCE_PROBE_TIMEOUT_S = float(os.getenv("REPORT_PRINCE_PROBE_TIMEOUT_S", "5"))
+PRINCE_RENDER_TIMEOUT_S = float(os.getenv("REPORT_PRINCE_TIMEOUT_S", "120"))
 
 # ---------------------------------------------------------------------------
 # Tufte-inspired CSS — high data-ink, layered hierarchy, earned elements only
@@ -367,14 +372,51 @@ def render_pdf(report_md: str, date: str, generated: str, model: str,
 
     html_path.write_text(html_doc)
 
-    # 3. pdf via Prince
-    result = subprocess.run(
-        ["prince", str(html_path), "-o", str(pdf_path)],
-        capture_output=True, text=True, timeout=120)
-    if result.returncode != 0 or not pdf_path.exists():
+    # 3. pdf via Prince, with a local WeasyPrint fallback.  Prince is the
+    # preferred production engine, but a broken/hung Prince installation must
+    # not prevent the daily viewer from producing a valid PDF when the HTML
+    # has already passed the report-completeness checks above.
+    prince_error = None
+    prince = shutil.which("prince")
+    if prince:
+        try:
+            # Probe first: on this Mac Prince 16.2 has occasionally hung even
+            # on --version, which would otherwise waste the full render
+            # timeout before the fallback can run.
+            probe = subprocess.run(
+                [prince, "--version"], capture_output=True, text=True,
+                timeout=PRINCE_PROBE_TIMEOUT_S)
+            if probe.returncode != 0:
+                prince_error = (f"version probe exit {probe.returncode}: "
+                                f"{probe.stderr.strip()[-300:]}")
+            else:
+                result = subprocess.run(
+                    [prince, str(html_path), "-o", str(pdf_path)],
+                    capture_output=True, text=True,
+                    timeout=PRINCE_RENDER_TIMEOUT_S)
+                if result.returncode == 0 and pdf_path.exists():
+                    return {"md": md_path, "html": html_path, "pdf": pdf_path}
+                prince_error = (f"render exit {result.returncode}: "
+                                f"{result.stderr.strip()[-400:]}")
+        except subprocess.TimeoutExpired as e:
+            prince_error = f"timed out ({e.timeout}s)"
+        except OSError as e:
+            prince_error = str(e)
+    else:
+        prince_error = "PrinceXML not found on PATH"
+
+    print(f"  PrinceXML unavailable ({prince_error}); using WeasyPrint fallback")
+    try:
+        from weasyprint import HTML
+        HTML(filename=str(html_path)).write_pdf(str(pdf_path))
+    except Exception as e:
         raise RuntimeError(
-            f"PrinceXML failed (exit {result.returncode}): "
-            f"{result.stderr.strip()[-400:]}\n"
-            f"Markdown and HTML were saved:\n  {md_path}\n  {html_path}")
+            f"PDF rendering failed: PrinceXML: {prince_error}; "
+            f"WeasyPrint: {e}\n"
+            f"Markdown and HTML were saved:\n  {md_path}\n  {html_path}") from e
+    if not pdf_path.exists():
+        raise RuntimeError(
+            f"WeasyPrint returned without creating {pdf_path}. Markdown and "
+            f"HTML were saved:\n  {md_path}\n  {html_path}")
 
     return {"md": md_path, "html": html_path, "pdf": pdf_path}
