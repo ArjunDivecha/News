@@ -153,6 +153,12 @@ def run(no_llm: bool = False, interactive: bool = True,
     market = analytics.compute_market(prices, universe, asof)
     portfolio = analytics.compute_portfolio(
         holdings_df, prices, asof, holdings_stale=holdings_meta["stale"])
+    gmo_portfolio = (analytics.compute_portfolio(gmo_df, prices, asof)
+                     if not gmo_df.empty else None)
+    if gmo_portfolio is not None:
+        print(f"  GMO: {gmo_portfolio['summary']['n_positions']} positions "
+              f"| ${gmo_portfolio['summary']['total_value']:,.0f} "
+              f"| {gmo_portfolio['summary']['return_1d']:+.2f}% 1d")
     bridge = analytics.compute_bridge(market, portfolio, universe=universe)
 
     # Generic asset-class proxy returns (for looking through no-daily-mark
@@ -181,7 +187,6 @@ def run(no_llm: bool = False, interactive: bool = True,
     # Sub-portfolio returns (per-account + GMO + manual off-broker sleeves).
     # Manual sleeves have no daily mark -> synthesize a return from generic
     # asset-class returns x the sleeve's policy allocation.
-    gmo_df = _load_gmo()
     manual_df = (pd.DataFrame(MANUAL_HOLDINGS) if MANUAL_HOLDINGS
                  else pd.DataFrame())
     sleeve_override = {}
@@ -339,6 +344,8 @@ def run(no_llm: bool = False, interactive: bool = True,
     name_syms = (set(portfolio["positions"].index)
                  | set(market["movers_up"].index)
                  | set(market["movers_down"].index))
+    if gmo_portfolio is not None:
+        name_syms |= set(gmo_portfolio["positions"].index)
     if scenario_risk is not None:
         for _, r in scenario_risk["table"].iterrows():
             name_syms |= {s for s, _ in r["hurts"]} | {s for s, _ in r["helps"]}
@@ -348,6 +355,12 @@ def run(no_llm: bool = False, interactive: bool = True,
     # symbol, so patch in the manual-holding / look-through names where the
     # lookup produced nothing better than the ID itself.
     fallbacks = {h["symbol"]: h["name"] for h in MANUAL_HOLDINGS if h.get("name")}
+    fallbacks.update({
+        "GBMBX": "GMO Benchmark-Free Allocation IV",
+        "GCCHX": "GMO Climate Change III",
+        "GMOQX": "GMO Emerging Country Debt Fund",
+        "IYJ": "iShares U.S. Industrials ETF",
+    })
     fallbacks["IE00BF199475"] = "GMO Equity Dislocation Fund"
     # Broker instrument descriptions last (e.g. the AA sleeve's muni CUSIPs):
     # anything Yahoo could not name renders as Schwab's description, never as
@@ -362,7 +375,8 @@ def run(no_llm: bool = False, interactive: bool = True,
         market, portfolio, bridge, history, prior, holdings_meta,
         subportfolios=subportfolios, name_map=name_map, tag_views=tag_views,
         allocation=allocation, scenario_risk=scenario_risk,
-        policy_check=policy_check, ews=ews_section)
+        policy_check=policy_check, ews=ews_section,
+        gmo_portfolio=gmo_portfolio)
     pkg_path = PATHS["output_dir"] / f"Data_Package_{asof}.md"
     pkg_path.write_text(package)
     print(f"  Data package: {len(package):,} chars -> {pkg_path}")

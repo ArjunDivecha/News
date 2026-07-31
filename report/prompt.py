@@ -372,6 +372,48 @@ def _render_tag_views(tv: dict) -> list:
     return out
 
 
+def _render_gmo_positions(gmo_portfolio: dict, nm, asof: str) -> list:
+    """Render every position in the separately sourced GMO sleeve.
+
+    The live-book position table intentionally excludes GMO so that the live
+    Schwab+IBKR return and the household return are never conflated.  GMO is
+    nevertheless part of the daily viewer, so its underlying five positions
+    get their own deterministic detail table here.
+    """
+    if not gmo_portfolio:
+        return []
+    pos = gmo_portfolio.get("positions")
+    if pos is None or pos.empty:
+        return []
+
+    stale_map = (pos["price_stale"].to_dict()
+                 if "price_stale" in pos.columns else {})
+    show = pd.DataFrame(index=pos.index)
+    show["Name"] = [nm(sym) + ("*" if stale_map.get(sym) else "")
+                    for sym in pos.index]
+    show["Weight %"] = pos["weight"].map(
+        lambda v: f"{v * 100:.2f}" if pd.notna(v) else "—")
+    show["Value"] = pos["market_value_mtm"].map(_money)
+    show["1d %"] = pos["return_1d"].map(lambda v: _num(v, 2))
+    show["1d bps"] = pos["contribution_bps"].map(lambda v: _num(v, 1))
+    show["YTD %"] = pos["return_ytd"].map(lambda v: _num(v, 2))
+    show["Open P&L"] = pos["open_pnl"].map(_money)
+
+    out = [
+        "\n## GMO POSITION DETAIL (included in the household; source: GMO.xlsx)",
+        "Daily and YTD returns use the same price matrix as the rest of the "
+        "viewer; GMO is kept separate from the live Schwab + IBKR book.",
+        _md_table(show.set_index("Name")),
+    ]
+    if any(stale_map.values()):
+        out.append(
+            f"_* = STALE price: this name did not print on {asof}; its values "
+            "are the last available (it is excluded from the sleeve's current "
+            "day return)._"
+        )
+    return out
+
+
 def build_data_package(market: dict, portfolio: dict, bridge: dict,
                        history: pd.DataFrame, prior_summaries: pd.DataFrame,
                        holdings_meta: dict,
@@ -381,7 +423,8 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                        allocation: dict = None,
                        scenario_risk: dict = None,
                        policy_check: dict = None,
-                       ews: str = None) -> str:
+                       ews: str = None,
+                       gmo_portfolio: dict = None) -> str:
     """Assemble the full user-message data package for the LLM.
 
     name_map: {ticker: full security name}. Every asset is shown by NAME, not
@@ -390,6 +433,9 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
     rendered as extra sections when present, omitted entirely when None.
     ews: optional pre-rendered MARKET REGIME — EARLY WARNING SYSTEM markdown
     (see ews.py); inserted after the theme summary, omitted when None.
+    gmo_portfolio: optional computed detail for the separate GMO sleeve;
+    rendered as a dedicated position table so GMO assets are visible without
+    changing the live-book return base.
     """
     parts = []
     asof = market["asof"]
@@ -556,11 +602,12 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
             f"_* = STALE price: this name did not print on {asof}; its values "
             f"are the last available (it is excluded from today's book return)._")
 
+    parts.extend(_render_gmo_positions(gmo_portfolio, nm, asof))
+
     # ---------------- sub-portfolios ----------------
     if subportfolios is not None and not subportfolios.empty:
-        parts.append("\n## SUB-PORTFOLIO RETURNS (per account + GMO)")
+        parts.append("\n## SUB-PORTFOLIO RETURNS (every detected account/sleeve + GMO)")
         sp = subportfolios.copy()
-        sp = sp[sp["total_value"].abs() > 100]
         sp["pnl_1d"] = sp.apply(
             lambda r: r["total_value"] * r["return_1d"] / 100.0
             if pd.notna(r["return_1d"]) else float("nan"), axis=1)
@@ -577,6 +624,9 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
                                      "pnl_1d": "1d $", "return_ytd": "YTD %"})
         parts.append(show.set_index("name").to_markdown())
         parts.append(
+            "_Every detected broker account is retained, including a zero or "
+            "near-zero account; this is an account-coverage table, not a "
+            "recommendation to treat an empty account as invested._\n"
             "_HOUSEHOLD TOTAL spans the live book PLUS the separate GMO sleeve; "
             "the PORTFOLIO SUMMARY above is the live Schwab+IBKR book only "
             "(ex-GMO), so the two value and return bases differ - do not conflate "

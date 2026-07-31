@@ -96,6 +96,25 @@ def main():
                     "open_pnl": 0.0,
                 })
 
+        # accountSummary normally emits a TotalCashValue row for every
+        # managed account, but preserve an explicit zero row if a broker
+        # response omits an empty account.  This keeps the account-level daily
+        # viewer complete without adding exposure to portfolio math.
+        represented = {str(row["account"]) for row in rows}
+        for account in (accounts or "").split(","):
+            account = account.strip()
+            if account and account not in represented:
+                rows.append({
+                    "account": account,
+                    "symbol": "CASH",
+                    "sec_type": "CASH",
+                    "currency": "USD",
+                    "quantity": 0.0,
+                    "market_value": 0.0,
+                    "avg_price": 1.0,
+                    "open_pnl": 0.0,
+                })
+
         if not rows:
             print("IBKR returned no positions", file=sys.stderr)
             sys.exit(3)

@@ -261,6 +261,37 @@ class TestDataPackage:
         # the benchmark label uses S&P 500, not the SPY ticker
         assert "vs S&P 500, 60d" in pkg and "beta x S&P 500" in pkg
 
+    def test_gmo_detail_and_zero_value_account_are_visible(self):
+        prices = _prices()
+        universe = _universe()
+        market = analytics.compute_market(prices, universe, "2026-06-09")
+        holdings = pd.concat([
+            _holdings(),
+            pd.DataFrame([[
+                "A3", "CASH", 0.0, 1.0, 0.0, 0.0, "Schwab", "t"
+            ]], columns=_holdings().columns),
+        ], ignore_index=True)
+        portfolio = analytics.compute_portfolio(holdings, prices, "2026-06-09")
+        bridge = analytics.compute_bridge(market, portfolio, universe=universe)
+        gmo = pd.DataFrame([
+            ["GMO", "AAA", 10., 90., 1000., 100., "GMO", ""],
+            ["GMO", "BBB", 20., 55., 1000., -50., "GMO", ""],
+        ], columns=_holdings().columns)
+        gmo_portfolio = analytics.compute_portfolio(gmo, prices, "2026-06-09")
+        subs = analytics.compute_subportfolios(
+            holdings, prices, "2026-06-09", gmo_holdings=gmo)
+        pkg = prompt_mod.build_data_package(
+            market, portfolio, bridge, pd.DataFrame(), pd.DataFrame(),
+            {"stale": False, "as_of": "2026-06-09", "failures": []},
+            subportfolios=subs,
+            name_map={"AAA": "Asset A Corporation", "BBB": "Asset B Corporation"},
+            gmo_portfolio=gmo_portfolio)
+
+        assert "GMO POSITION DETAIL" in pkg
+        assert "Asset A Corporation" in pkg
+        assert "Schwab A3" in pkg
+        assert "near-zero account" in pkg
+
 
 class TestTagCache:
     def test_empty_cache_is_not_a_hit(self):

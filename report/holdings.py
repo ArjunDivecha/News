@@ -261,9 +261,11 @@ def fetch_schwab() -> pd.DataFrame:
 
     fetched_at = datetime.now().isoformat(timespec="seconds")
     rows = []
+    linked_account_numbers = []
     for account in linked:
         acct_hash = account.get("hashValue")
         acct_num = str(account.get("accountNumber", ""))
+        linked_account_numbers.append(acct_num)
         details = client.account_details(acct_hash, fields="positions").json()
         sec_acct = details.get("securitiesAccount", {})
 
@@ -299,6 +301,23 @@ def fetch_schwab() -> pd.DataFrame:
                 "account": acct_num, "symbol": "CASH",
                 "quantity": float(cash), "avg_price": 1.0,
                 "market_value": float(cash), "open_pnl": 0.0,
+                "broker": "Schwab", "fetched_at": fetched_at,
+                "asset_type": "CASH", "description": "",
+            })
+
+    # Keep an explicit zero row for a linked account with no positions and no
+    # cash.  Otherwise the account disappears before sub-portfolio analytics,
+    # making the daily viewer look as though Schwab returned fewer active
+    # accounts than it actually did.  Zero rows are harmless to portfolio
+    # aggregation (they are dropped as zero exposure) but preserve account
+    # coverage in the per-account view and stale snapshots.
+    represented = {str(r["account"]) for r in rows}
+    for acct_num in linked_account_numbers:
+        if acct_num not in represented:
+            rows.append({
+                "account": acct_num, "symbol": "CASH",
+                "quantity": 0.0, "avg_price": 1.0,
+                "market_value": 0.0, "open_pnl": 0.0,
                 "broker": "Schwab", "fetched_at": fetched_at,
                 "asset_type": "CASH", "description": "",
             })
