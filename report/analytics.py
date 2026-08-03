@@ -73,6 +73,34 @@ def return_over(prices: pd.DataFrame, n_days: int) -> pd.Series:
     return (end / start - 1.0) * 100.0
 
 
+def week_return(prices: pd.DataFrame, asof: Optional[str] = None,
+                n_days: int = 5) -> pd.Series:
+    """
+    % return over the last `n_days` trading sessions, up to asof.
+
+    Same 5-session definition as the asset table's `return_1w`, so "a week"
+    means one thing everywhere in the report. Unlike return_over() this
+    forward-fills, applying the project's STALE > n/a rule: a fund that lags
+    the equity calendar (the Irish-domiciled GMO ISIN prints a day late) still
+    shows its most recent REAL move instead of collapsing to n/a.
+
+    NaN only where a ticker has no history reaching back n_days.
+    """
+    p = prices.sort_index()
+    if p.empty:
+        return pd.Series(dtype=float)
+    if asof is not None:
+        p = p.loc[p.index <= asof]
+    if len(p) <= n_days:
+        return pd.Series(np.nan, index=p.columns)
+    f = p.ffill()
+    end = f.iloc[-1]
+    start = f.iloc[-1 - n_days]
+    out = (end / start - 1.0) * 100.0
+    out[start.isna() | end.isna()] = np.nan
+    return out
+
+
 def ytd_return(prices: pd.DataFrame, asof: Optional[str] = None) -> pd.Series:
     """
     % return from the LAST trading day of the prior year to asof.
@@ -504,6 +532,7 @@ def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
     prices = prices.loc[prices.index <= asof]
     rets = daily_returns(prices)
     ytd = ytd_return(prices, asof)
+    wk = week_return(prices, asof)
 
     # Last-available daily return per ticker, plus the close that immediately
     # PRECEDED it (the correct beginning-of-day base for THAT move). A fund that
@@ -531,12 +560,12 @@ def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
     for (broker, acct), grp in groups:
         label = ACCOUNT_NAMES.get((broker, str(acct)), f"{broker} {acct}")
         res = _subportfolio_returns(grp, last_ret, ytd, bod_price, last_close,
-                                    label, broker, str(acct))
+                                    label, broker, str(acct), wk=wk)
         results.append(res)
 
     if gmo_holdings is not None and not gmo_holdings.empty:
         res = _subportfolio_returns(gmo_holdings, last_ret, ytd, bod_price,
-                                    last_close, "GMO", "GMO", "GMO")
+                                    last_close, "GMO", "GMO", "GMO", wk=wk)
         results.append(res)
 
     # Manual off-broker sleeves (e.g. Baupost) — grouped by their own
@@ -547,7 +576,8 @@ def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
                                                           sort=False):
             label = ACCOUNT_NAMES.get((broker, str(acct)), f"{broker} {acct}")
             res = _subportfolio_returns(grp, last_ret, ytd, bod_price,
-                                        last_close, label, broker, str(acct))
+                                        last_close, label, broker, str(acct),
+                                        wk=wk)
             # No daily mark for a manual sleeve (e.g. an LP): fill its return
             # with a supplied proxy (generic asset-class returns x its policy mix)
             ov = (sleeve_return_override or {}).get((broker, str(acct)))
@@ -577,12 +607,20 @@ def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
             total_ytd = (w * valid_ytd["return_ytd"]).sum()
         else:
             total_ytd = np.nan
+        valid_1w = (out.dropna(subset=["return_1w"]) if "return_1w" in out
+                    else out.iloc[0:0])
+        if not valid_1w.empty and valid_1w["total_value"].abs().sum() > 0:
+            w = valid_1w["total_value"] / valid_1w["total_value"].sum()
+            total_1w = (w * valid_1w["return_1w"]).sum()
+        else:
+            total_1w = np.nan
         total_row = pd.DataFrame([{
             "name": "TOTAL", "broker": "", "account": "",
             "n_positions": total_pos, "total_value": total_val,
             "cash": total_cash, "long_value": total_long,
             "short_value": total_short,
             "return_1d": total_1d, "return_ytd": total_ytd,
+            "return_1w": total_1w,
         }])
         out = pd.concat([out, total_row], ignore_index=True)
 
@@ -592,11 +630,22 @@ def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
 def _subportfolio_returns(positions: pd.DataFrame, last_ret: pd.Series,
                           ytd: pd.Series, bod_price: pd.Series,
                           last_close: pd.Series,
-                          label: str, broker: str, account: str) -> dict:
+                          label: str, broker: str, account: str,
+                          wk: Optional[pd.Series] = None) -> dict:
     """Compute return metrics for a single sub-portfolio.
 
     last_ret : last-available daily % return per ticker (STALE > n/a).
     bod_price: the close that preceded each ticker's last_ret (its BOD base).
+    wk       : trailing 5-session % return per ticker (see week_return).
+
+    NOTE on return_ytd: it is a CURRENT-HOLDINGS proxy — today's weights
+    applied to each name's year-to-date price move — not the sleeve's realised
+    performance. It is wrong for any sleeve that traded during the year and
+    meaningless for one opened mid-year, which is why the sub-portfolio table
+    no longer displays it. It is still computed because compute_policy_check
+    scores the mandate off the household figure (main.py). Replacing it with a
+    true chained return requires persisted per-sleeve history, which does not
+    exist yet.
     """
     df = positions.copy()
     df["symbol"] = df["symbol"].astype(str).str.strip()
@@ -605,16 +654,25 @@ def _subportfolio_returns(positions: pd.DataFrame, last_ret: pd.Series,
     pos = df[~is_cash].copy()
 
     if pos.empty:
+        # All-cash or empty account. 0.0 is the honest price return for cash
+        # over any horizon, not a fabricated stand-in, and it keeps such a
+        # sleeve in the household weighting as the 0%-return ballast it truly
+        # is. Every horizon reports it the same way — a row showing 0.00% for
+        # the day but an em dash for the week would just read as a bug.
+        # Caveat: a money-market fund parked here (SNSXX) does accrue, so this
+        # understates such a sleeve slightly.
         return {
             "name": label, "broker": broker, "account": account,
             "n_positions": 0, "total_value": cash_val, "cash": cash_val,
             "long_value": 0.0, "short_value": 0.0,
-            "return_1d": 0.0, "return_ytd": 0.0,
+            "return_1d": 0.0, "return_ytd": 0.0, "return_1w": 0.0,
         }
 
     # last-available daily return per symbol (STALE > n/a), matching YTD
     pos["return_1d"] = pos["symbol"].map(last_ret)
     pos["return_ytd"] = pos["symbol"].map(ytd)
+    pos["return_1w"] = (pos["symbol"].map(wk) if wk is not None
+                        else np.nan)
 
     # Mark-to-market: use price × quantity where available, else broker value
     pos["price"] = pos["symbol"].map(last_close)
@@ -649,8 +707,16 @@ def _subportfolio_returns(positions: pd.DataFrame, last_ret: pd.Series,
         denom = priced_ytd["weight"].abs().sum()
         ret_ytd = ((priced_ytd["weight"] * priced_ytd["return_ytd"]).sum() / denom
                    if denom > 0 else np.nan)
+        # Same renormalisation for the week: a name without a full 5 sessions
+        # of history must not sit in the denominator and drag the sleeve
+        # toward zero.
+        priced_wk = pos.dropna(subset=["return_1w"])
+        denom_w = priced_wk["weight"].abs().sum()
+        ret_1w = ((priced_wk["weight"] * priced_wk["return_1w"]).sum() / denom_w
+                  if denom_w > 0 else np.nan)
     else:
         ret_ytd = np.nan
+        ret_1w = np.nan
 
     return {
         "name": label, "broker": broker, "account": account,
@@ -661,6 +727,7 @@ def _subportfolio_returns(positions: pd.DataFrame, last_ret: pd.Series,
         "short_value": short_val,
         "return_1d": ret_1d,
         "return_ytd": ret_ytd,
+        "return_1w": ret_1w,
     }
 
 

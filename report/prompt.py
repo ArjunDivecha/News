@@ -608,25 +608,41 @@ def build_data_package(market: dict, portfolio: dict, bridge: dict,
     if subportfolios is not None and not subportfolios.empty:
         parts.append("\n## SUB-PORTFOLIO RETURNS (every detected account/sleeve + GMO)")
         sp = subportfolios.copy()
-        sp["pnl_1d"] = sp.apply(
-            lambda r: r["total_value"] * r["return_1d"] / 100.0
-            if pd.notna(r["return_1d"]) else float("nan"), axis=1)
-        sp["pnl_1d"] = sp["pnl_1d"].map(
-            lambda v: f"${v:+,.0f}" if pd.notna(v) else "—")
+        if "return_1w" not in sp.columns:
+            sp["return_1w"] = float("nan")
+        # Both P&L columns must be derived while total_value is still numeric.
+        for horizon in ("1d", "1w"):
+            sp[f"pnl_{horizon}"] = sp.apply(
+                lambda r, h=horizon: r["total_value"] * r[f"return_{h}"] / 100.0
+                if pd.notna(r[f"return_{h}"]) else float("nan"), axis=1)
+            sp[f"pnl_{horizon}"] = sp[f"pnl_{horizon}"].map(
+                lambda v: f"${v:+,.0f}" if pd.notna(v) else "—")
         sp["total_value"] = sp["total_value"].map(lambda v: f"${v:,.0f}")
-        sp["return_1d"] = sp["return_1d"].map(
-            lambda v: f"{v:+.2f}%" if pd.notna(v) else "—")
-        sp["return_ytd"] = sp["return_ytd"].map(
-            lambda v: f"{v:+.2f}%" if pd.notna(v) else "—")
+        for horizon in ("1d", "1w"):
+            sp[f"return_{horizon}"] = sp[f"return_{horizon}"].map(
+                lambda v: f"{v:+.2f}%" if pd.notna(v) else "—")
         sp["name"] = sp["name"].replace({"TOTAL": "HOUSEHOLD TOTAL"})
-        show = sp[["name", "total_value", "return_1d", "pnl_1d", "return_ytd"]]
+        # Deliberately NO year-to-date column. A sleeve's YTD here could only
+        # ever be a current-holdings proxy (today's weights x each name's move
+        # since January), which is wrong for any account that traded during the
+        # year and pure fiction for one opened mid-year — the Baupost proxy
+        # basket did not exist in January. Day and week are the horizons this
+        # data can actually support.
+        show = sp[["name", "total_value", "return_1d", "pnl_1d",
+                   "return_1w", "pnl_1w"]]
         show = show.rename(columns={"total_value": "value", "return_1d": "1d %",
-                                     "pnl_1d": "1d $", "return_ytd": "YTD %"})
+                                     "pnl_1d": "1d $", "return_1w": "1w %",
+                                     "pnl_1w": "1w $"})
         parts.append(show.set_index("name").to_markdown())
         parts.append(
             "_Every detected broker account is retained, including a zero or "
             "near-zero account; this is an account-coverage table, not a "
             "recommendation to treat an empty account as invested._\n"
+            "_Horizons are 1 day and 1 week (trailing 5 sessions). There is "
+            "deliberately no year-to-date column: sleeve YTD can only be a "
+            "current-holdings proxy, which misstates any account that traded "
+            "during the year and is meaningless for one opened mid-year. Do "
+            "not describe these as year-to-date or full-period performance._\n"
             "_HOUSEHOLD TOTAL spans the live book PLUS the separate GMO sleeve; "
             "the PORTFOLIO SUMMARY above is the live Schwab+IBKR book only "
             "(ex-GMO), so the two value and return bases differ - do not conflate "
