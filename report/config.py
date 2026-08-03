@@ -299,29 +299,32 @@ MANUAL_HOLDINGS = [
     # (vol/beta/scenarios) instead of a policy-mix approximation.
     #
     # THESE ARE NOT ACTUAL HOLDINGS — Baupost does not hold these tickers.
-    # Share counts are calibrated so the basket totals the LP's $13,806,000
-    # mark at the 2026-07-31 close (weights 1.46/10.63/57.44/7.20/23.27).
+    # Share counts are calibrated so the basket totals the LP's NAV at the
+    # 2026-07-31 close, holding the owner-supplied weights exactly
+    # (1.46 / 10.63 / 57.44 / 7.20 / 23.27).
+    #   NAV 2026-08-03: $14,082,120  (was $13,806,000; every share count
+    #   scaled by 1.02, so the weights are untouched)
     # When a new Baupost statement arrives, RECALIBRATE the share counts to
     # the new NAV; do not just edit market_value, or price and value diverge.
     {"account": "U394682-39", "broker": "Baupost", "symbol": "GLD",
-     "quantity": 542.52, "avg_price": float("nan"),
-     "market_value": 201_567.60, "open_pnl": float("nan"),
+     "quantity": 553.37, "avg_price": float("nan"),
+     "market_value": 205_599.09, "open_pnl": float("nan"),
      "fetched_at": "", "name": "Baupost proxy — SPDR Gold Shares"},
     {"account": "U394682-39", "broker": "Baupost", "symbol": "SPSM",
-     "quantity": 25_942.69, "avg_price": float("nan"),
-     "market_value": 1_467_577.80, "open_pnl": float("nan"),
+     "quantity": 26_461.54, "avg_price": float("nan"),
+     "market_value": 1_496_929.32, "open_pnl": float("nan"),
      "fetched_at": "", "name": "Baupost proxy — SPDR S&P 600 Small Cap"},
     {"account": "U394682-39", "broker": "Baupost", "symbol": "VFISX",
-     "quantity": 810_027.21, "avg_price": float("nan"),
-     "market_value": 7_930_166.40, "open_pnl": float("nan"),
+     "quantity": 826_227.75, "avg_price": float("nan"),
+     "market_value": 8_088_769.67, "open_pnl": float("nan"),
      "fetched_at": "", "name": "Baupost proxy — Vanguard Short-Term Treasury"},
     {"account": "U394682-39", "broker": "Baupost", "symbol": "VGTSX",
-     "quantity": 36_545.29, "avg_price": float("nan"),
-     "market_value": 994_032.00, "open_pnl": float("nan"),
+     "quantity": 37_276.20, "avg_price": float("nan"),
+     "market_value": 1_013_912.64, "open_pnl": float("nan"),
      "fetched_at": "", "name": "Baupost proxy — Vanguard Total Intl Stock"},
     {"account": "U394682-39", "broker": "Baupost", "symbol": "VWEHX",
-     "quantity": 591_649.39, "avg_price": float("nan"),
-     "market_value": 3_212_656.20, "open_pnl": float("nan"),
+     "quantity": 603_482.38, "avg_price": float("nan"),
+     "market_value": 3_276_909.32, "open_pnl": float("nan"),
      "fetched_at": "", "name": "Baupost proxy — Vanguard High-Yield Corporate"},
 
     # Private company stakes — no daily price of any kind (not even a policy
