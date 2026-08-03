@@ -128,12 +128,23 @@ def run(no_llm: bool = False, interactive: bool = True,
     aliases = SETTINGS.get("holding_price_aliases", {})
     alias_targets = set(aliases)
     alias_sources = {aliases[s] for s in holding_syms if s in aliases}
+    # Manual off-broker sleeves (JP Morgan, Vontobel, the Baupost proxy) carry
+    # real tickers and share counts, so they must join the price fetch or they
+    # would silently fall back to their frozen statement value and show no
+    # daily return at all. A finite quantity is what separates those from the
+    # private stakes (ANTHROPIC_PVT etc.), whose symbols are not real tickers —
+    # sending those to Yahoo just buys two guaranteed 404s that count against
+    # the 90% coverage gate.
+    manual_priced = pd.DataFrame(
+        [h for h in MANUAL_HOLDINGS if pd.notna(h.get("quantity"))])
+    manual_syms = (holdings_mod.priceable_symbols(manual_priced)
+                   if not manual_priced.empty else [])
     universe_tickers = set(universe["yf_ticker"])
     # Benchmark legs (ACWI/TLT) and the VIX are pulled purely for the tier-3
     # tag views; they are never held, but the fetch must include them.
     extra = set(TAG_VIEW_EXTRA_TICKERS) if SETTINGS.get("enable_tag_views") else set()
     all_tickers = ((universe_tickers | set(holding_syms) | set(gmo_syms)
-                    | alias_sources | extra)
+                    | set(manual_syms) | alias_sources | extra)
                    - (alias_targets - universe_tickers))
     all_tickers = sorted(all_tickers)
     long_df = data_mod.fetch_prices(all_tickers)

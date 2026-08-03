@@ -118,7 +118,9 @@ ACCOUNT_NAMES = {
     ("IBKR", "U1399611"): "IBKR Main",
     ("IBKR", "U14983106"): "IBKR Experiment",
     ("IBKR", "U24887919"): "IBKR Trading",
-    ("Baupost", "Baupost"): "Baupost (LP)",
+    ("JPMorgan", "U394682-38"): "JP Morgan",
+    ("Vontobel", "U394682-4"): "Vontobel",
+    ("Baupost", "U394682-39"): "Baupost (LP proxy)",
     ("Private", "ANTHROPIC"): "Anthropic (Private)",
     ("Private", "PERPLEXITY"): "Perplexity (Private)",
 }
@@ -230,7 +232,11 @@ FUND_LOOKTHROUGH = {
         "class": {"Equities": 1.0},
         "equity_region": {"US": 0.448, "International": 0.211, "EM": 0.342},
     },
-    # Baupost Value Partners LP II — off-broker hedge fund, no daily mark.
+    # Baupost Value Partners LP II — SUPERSEDED 2026-08-03 by the owner-supplied
+    # proxy basket in MANUAL_HOLDINGS, which prices daily off real securities.
+    # This entry is now inert: nothing holds the symbol "BAUPOST", so neither
+    # the allocation look-through nor the blended sleeve return fires. Kept as
+    # the documented policy mix in case the proxy basket is ever withdrawn.
     # Policy allocation supplied by the owner (Equity 30% split US 15 / Intl 10 /
     # EM 5 of TOTAL -> 50/33.3/16.7 of the equity sleeve; Bonds/credit 35%;
     # Cash/opportunistic reserve 35%).
@@ -244,16 +250,80 @@ FUND_LOOKTHROUGH = {
 }
 
 # ---------------------------------------------------------------------------
-# Manual off-broker holdings — assets not in any broker/GMO feed, carried at a
-# fixed value (no daily price). Included in the HOUSEHOLD total and the asset
-# allocation (looked through via FUND_LOOKTHROUGH), NOT in the live "Portfolio"
-# section. Update market_value when a new statement arrives.
+# Manual off-broker holdings — assets not in any broker/GMO feed. Included in
+# the HOUSEHOLD total and the asset allocation, NOT in the live "Portfolio"
+# section.
+#
+# Two kinds of row live here, and they behave differently:
+#   1. Rows WITH a real ticker + share count (JP Morgan, Vontobel, the Baupost
+#      proxy). These are marked to market daily off Yahoo like any holding —
+#      market_value below is only the statement value, used as a fallback if
+#      the price ever goes missing. Update `quantity` when a new statement
+#      arrives; the value takes care of itself.
+#   2. Rows with NO priceable ticker (the private stakes). Carried at a fixed
+#      manual mark, looked through via FUND_LOOKTHROUGH for allocation.
+#
+# Every symbol here is added to the price fetch by main.py — see the
+# manual_syms union there. A ticker that Yahoo cannot price silently falls
+# back to kind 2, so verify new tickers before adding them.
 # ---------------------------------------------------------------------------
 MANUAL_HOLDINGS = [
-    {"account": "Baupost", "broker": "Baupost", "symbol": "BAUPOST",
-     "quantity": float("nan"), "avg_price": float("nan"),
-     "market_value": 13_806_000.0, "open_pnl": float("nan"),
-     "fetched_at": "", "name": "Baupost Value Partners LP II"},
+    # --- JP Morgan (statement U394682-38, as of 2026-08-03) ---
+    {"account": "U394682-38", "broker": "JPMorgan", "symbol": "VCAIX",
+     "quantity": 86_805.56, "avg_price": float("nan"),
+     "market_value": 985_243.11, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "Vanguard CA Interm-Term Tax-Exempt"},
+
+    # --- Vontobel (statement U394682-4, as of 2026-08-03) ---
+    {"account": "U394682-4", "broker": "Vontobel", "symbol": "DFEV",
+     "quantity": 8_700.0, "avg_price": float("nan"),
+     "market_value": 345_477.0, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "Dimensional Emerging Markets Value"},
+    {"account": "U394682-4", "broker": "Vontobel", "symbol": "EWJV",
+     "quantity": 8_000.0, "avg_price": float("nan"),
+     "market_value": 372_960.0, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "iShares MSCI Japan Value"},
+    {"account": "U394682-4", "broker": "Vontobel", "symbol": "GMOI",
+     "quantity": 25_700.0, "avg_price": float("nan"),
+     "market_value": 1_036_224.0, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "GMO International Quality ETF"},
+    {"account": "U394682-4", "broker": "Vontobel", "symbol": "QLTY",
+     "quantity": 17_600.0, "avg_price": float("nan"),
+     "market_value": 735_328.0, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "GMO US Quality ETF"},
+
+    # --- Baupost Value Partners LP II — PROXY BASKET (owner-supplied) ---
+    # The LP itself has no daily mark. Rather than freeze it at a stale NAV,
+    # the owner supplies a basket of liquid securities that stands in for the
+    # fund's exposure, so the sleeve gets a real daily price and real risk
+    # (vol/beta/scenarios) instead of a policy-mix approximation.
+    #
+    # THESE ARE NOT ACTUAL HOLDINGS — Baupost does not hold these tickers.
+    # Share counts are calibrated so the basket totals the LP's $13,806,000
+    # mark at the 2026-07-31 close (weights 1.46/10.63/57.44/7.20/23.27).
+    # When a new Baupost statement arrives, RECALIBRATE the share counts to
+    # the new NAV; do not just edit market_value, or price and value diverge.
+    {"account": "U394682-39", "broker": "Baupost", "symbol": "GLD",
+     "quantity": 542.52, "avg_price": float("nan"),
+     "market_value": 201_567.60, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "Baupost proxy — SPDR Gold Shares"},
+    {"account": "U394682-39", "broker": "Baupost", "symbol": "SPSM",
+     "quantity": 25_942.69, "avg_price": float("nan"),
+     "market_value": 1_467_577.80, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "Baupost proxy — SPDR S&P 600 Small Cap"},
+    {"account": "U394682-39", "broker": "Baupost", "symbol": "VFISX",
+     "quantity": 810_027.21, "avg_price": float("nan"),
+     "market_value": 7_930_166.40, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "Baupost proxy — Vanguard Short-Term Treasury"},
+    {"account": "U394682-39", "broker": "Baupost", "symbol": "VGTSX",
+     "quantity": 36_545.29, "avg_price": float("nan"),
+     "market_value": 994_032.00, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "Baupost proxy — Vanguard Total Intl Stock"},
+    {"account": "U394682-39", "broker": "Baupost", "symbol": "VWEHX",
+     "quantity": 591_649.39, "avg_price": float("nan"),
+     "market_value": 3_212_656.20, "open_pnl": float("nan"),
+     "fetched_at": "", "name": "Baupost proxy — Vanguard High-Yield Corporate"},
+
     # Private company stakes — no daily price of any kind (not even a policy
     # mix to blend a generic return from, unlike Baupost). Carried at the last
     # manual mark; 1d/YTD render as the em-dash "genuinely undefined" case
