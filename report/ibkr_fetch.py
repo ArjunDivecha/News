@@ -100,9 +100,13 @@ def main():
         # managed account, but preserve an explicit zero row if a broker
         # response omits an empty account.  This keeps the account-level daily
         # viewer complete without adding exposure to portfolio math.
+        # ib_insync's managedAccounts() returns a list[str]; older/other
+        # clients hand back a comma-joined string. Normalize both.
         represented = {str(row["account"]) for row in rows}
-        for account in (accounts or "").split(","):
-            account = account.strip()
+        if isinstance(accounts, str):
+            accounts = accounts.split(",")
+        for account in (accounts or []):
+            account = str(account).strip()
             if account and account not in represented:
                 rows.append({
                     "account": account,
