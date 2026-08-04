@@ -24,6 +24,38 @@ The production path for this repository is the `report/` package. It generates a
 
 The root README and package README both describe this as the replacement for the older Phase 0 / Step 4 / Phase 2 flow.
 
+```mermaid
+sequenceDiagram
+    participant Main as main.run()
+    participant H as holdings.py
+    participant D as data.py
+    participant A as analytics.py
+    participant T as tags / tag_analytics
+    participant S as scenarios.py
+    participant P as prompt.py
+    participant L as llm.py
+    participant F as fable_desk.py
+    participant R as pdf.py + db.py
+    participant N as notify.py
+    Main->>H: get Schwab + IBKR holdings
+    Main->>D: load universe, fetch Yahoo prices
+    D-->>Main: clean prices (sparse rows filtered)
+    Main->>A: market, portfolio, bridge, sub-portfolios
+    Main->>T: tag views + household allocation (optional)
+    Main->>S: scenario risk + policy check (optional)
+    Main->>P: build data package
+    Main->>L: generate report (Fable 5, truncation guard)
+    opt Fable's Desk enabled
+        Main->>F: judgment pass (web + ASADO)
+        F-->>Main: appended desk section (additive)
+    end
+    Main->>R: render PDF, archive to report.db
+    Note over N: delivery is separate
+    N->>N: run_daily.sh emails PDF (failure is non-fatal)
+```
+
+End-to-end pipeline: holdings through analytics, LLM report, optional Fable's Desk, render/archive, with email delivery handled outside the main run loop.
+
 ## Main modules
 
 ### `main.py`
@@ -129,6 +161,9 @@ SQLite backing store for:
 - `desk_ideas` — Fable's Desk idea journal (title, action, conviction, horizon, invalidation, status, grade), graded by the Desk itself on subsequent days
 
 The storage layer uses WAL mode, foreign keys, and idempotent upserts.
+
+### `notify.py`
+The delivery layer — emails the rendered PDF to the configured recipient. It is invoked by `report/run_daily.sh` after the render/archive step, not from `report.main.run()`, so a delivery failure can never sink a successful report run. It supports macOS Mail.app (AppleScript, zero-config default) and SMTP (when `SMTP_HOST` is set); see [Operations and runbook](../operations/runbook.md) for the environment variables and the scheduled-path failure policy.
 
 ## Why this architecture exists
 

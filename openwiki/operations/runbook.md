@@ -87,6 +87,33 @@ The database is used both for archival continuity and for caches such as names a
 - `data/report.db`
 - `data/holdings.xlsx`
 
+## Report delivery (email)
+
+The pipeline does not email the report itself — that is the job of `report/notify.py`, a standalone delivery step invoked by `report/run_daily.sh` after the PDF is on disk. It is intentionally outside `report/main.py`'s run loop so a delivery failure can never sink a successful report run.
+
+`notify.send_report()` supports two transports, chosen by environment:
+
+- **Mail.app (default)** — `send_via_mail_app()` drives macOS Mail via AppleScript (`osascript`). Zero config beyond `REPORT_EMAIL_TO`; uses the already-configured Mac Mail account, so no SMTP credentials are needed.
+- **SMTP (when `SMTP_HOST` is set)** — `send_via_smtp()` connects to an SMTP relay (STARTTLS on port 587 by default) with optional `SMTP_USER` / `SMTP_PASS` auth and `SMTP_FROM` for the envelope sender.
+
+The email subject carries the report date and a `STALE` flag when holdings were stale (`--stale`).
+
+Relevant environment variables (root `.env`):
+
+- `REPORT_EMAIL_TO` — recipient address (required to send at all).
+- `SMTP_HOST` / `SMTP_PORT` — switch from Mail.app to SMTP (omit to stay on Mail.app).
+- `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` — optional SMTP credentials and sender.
+
+Run directly:
+
+```bash
+python3 report/notify.py outputs/unified/Unified_Report_<date>.pdf --date <date> [--stale]
+```
+
+### Delivery in the scheduled path
+
+`report/run_daily.sh` is the launchd wrapper (called every weekday at 1:05 PM PT). After running the pipeline non-interactively, it finds the day's PDF and calls `notify.py`. Its failure policy is deliberately lenient: a missing `REPORT_EMAIL_TO` or Mail.app failure logs loudly but exits `0` so launchd sees success and does not retry — the PDF is already on disk and the report is not lost. This is why the delivery step lives in the wrapper, not in `report.main.run()`.
+
 ## Failure modes to know
 
 The codebase is explicit about a few operational failure classes:
@@ -112,6 +139,7 @@ These are not just implementation details; they are part of the operational cont
 - `report/db.py`
 - `report/fable_desk.py`
 - `report/asado.py`
+- `report/notify.py`
 - `report/run_daily.sh`
 
 ## For future changes

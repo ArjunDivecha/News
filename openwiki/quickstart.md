@@ -62,6 +62,7 @@ The main production code is under `report/`. Important files include:
 - `tags.py` — dynamic canonical tag resolution
 - `fable_desk.py` — second LLM pass (Fable's Desk) with live web search and ASADO snapshot
 - `asado.py` — read-only ASADO DuckDB snapshot (34-country value/momentum/FX/risk signals, GDELT news pulse, factor P&L) for Fable's Desk
+- `notify.py` — emails the rendered PDF (Mail.app default, SMTP fallback); invoked by `run_daily.sh`, not by the main run loop (see [Operations and runbook](operations/runbook.md))
 
 ### Universe construction
 The upstream universe pipeline is still documented in the repo root README and `AGENTS.md`. It is the source of the `data/universe.xlsx` file that the report consumes. The historical steps remain relevant when changing tagging, classification, or source data.
