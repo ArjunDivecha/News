@@ -76,6 +76,9 @@ Important tables include:
 
 The database is used both for archival continuity and for caches such as names and tags.
 
+### One-time history migration
+`report/migrate_history.py` is a one-time tool that seeds `data/report.db` from the legacy `market_data.db` and `portfolio.db`: portfolio-level history (`portfolio_summary`) and prior report executive summaries (`reports`) for day-one prompt continuity. Legacy asset prices are deliberately not migrated — legacy daily prices are Bloomberg index levels while the new system tracks ETF prices, so mixing the two across the cutover boundary would corrupt every return; asset history is instead backfilled by a 1-year batched yfinance fetch on the first run. The script takes byte-for-byte backups of both legacy databases before reading. Run once at cutover: `python3 report/migrate_history.py`.
+
 ## PDF and report output
 
 `report/pdf.py` renders the final Markdown into HTML and PDF using PrinceXML. The output directories are configured in `report/config.py` and the package README describes the main artifacts:
@@ -137,6 +140,8 @@ These are not just implementation details; they are part of the operational cont
 - `report/llm.py`
 - `report/pdf.py`
 - `report/db.py`
+- `report/migrate_history.py`
+- `report/build_universe.py`
 - `report/fable_desk.py`
 - `report/asado.py`
 - `report/notify.py`

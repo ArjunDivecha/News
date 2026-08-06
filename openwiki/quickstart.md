@@ -60,6 +60,8 @@ The main production code is under `report/`. Important files include:
 - `pdf.py` — Markdown to PDF rendering
 - `tag_analytics.py` and `scenarios.py` — additive report sections
 - `tags.py` — dynamic canonical tag resolution
+- `names.py` — ticker -> full security name resolution (Yahoo, cached in `report.db`), so the report shows names not symbols
+- `build_universe.py` — one-time tool that builds `data/universe.xlsx` from the Final 1000 list + `etf_map.py` (run after changing source data or the ETF map)
 - `fable_desk.py` — second LLM pass (Fable's Desk) with live web search and ASADO snapshot
 - `asado.py` — read-only ASADO DuckDB snapshot (34-country value/momentum/FX/risk signals, GDELT news pulse, factor P&L) for Fable's Desk
 - `notify.py` — emails the rendered PDF (Mail.app default, SMTP fallback); invoked by `run_daily.sh`, not by the main run loop (see [Operations and runbook](operations/runbook.md))
@@ -92,6 +94,8 @@ Start from the area you intend to change. The table maps each change category to
 | Model invocation, truncation guard, or Fable fallback chain | [Unified report architecture](architecture/report-system.md) | `report/llm.py` | streaming fallback, `stop_reason == "refusal"`, Opus 4.8 fallback | `tests/test_report_pipeline.py` | `python3 -m pytest tests/test_report_pipeline.py -q` |
 | Fable's Desk judgment pass, idea persistence, or grading | [Unified report architecture](architecture/report-system.md) | `report/fable_desk.py`, `report/asado.py`, `report/db.py` | `enable_fable_desk`, `desk_ideas`, ASADO snapshot | `tests/test_fable_desk.py` | `python3 -m pytest tests/test_fable_desk.py -q` |
 | PDF rendering, table validation, or output filenames | [Operations and runbook](operations/runbook.md) | `report/pdf.py`, `report/config.py` | table validation, output paths | `tests/test_report_pipeline.py` | `python3 -m pytest tests/test_report_pipeline.py -q` |
+| Rebuilding the ETF universe, ETF migration map, or Bloomberg->Yahoo proxying | [Unified report architecture](architecture/report-system.md) | `report/build_universe.py`, `report/etf_map.py` | `build_universe()`, `BLOOMBERG_TO_ETF`, `FACTOR_ETF_MAP` | none (one-time tool; no unit tests) | `python3 report/build_universe.py` |
+| One-time history migration from legacy DBs | [Operations and runbook](operations/runbook.md) | `report/migrate_history.py` | `portfolio_summary` + report-summary seeding | none (one-time migration) | `python3 report/migrate_history.py` |
 | Runtime env, scheduling, email delivery, or run_daily.sh | [Operations and runbook](operations/runbook.md) | `report/notify.py`, `report/run_daily.sh`, `report/config.py` | `send_report()`, `send_via_mail_app()`, `send_via_smtp()`, `REPORT_ENABLE_FABLE_DESK` | none (delivery is non-fatal wrapper) | `python3 report/notify.py --help` |
 
 Whole-suite validation, run only when a change spans categories or before a release:

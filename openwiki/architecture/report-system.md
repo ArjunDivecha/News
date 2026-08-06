@@ -165,6 +165,15 @@ The storage layer uses WAL mode, foreign keys, and idempotent upserts.
 ### `notify.py`
 The delivery layer — emails the rendered PDF to the configured recipient. It is invoked by `report/run_daily.sh` after the render/archive step, not from `report.main.run()`, so a delivery failure can never sink a successful report run. It supports macOS Mail.app (AppleScript, zero-config default) and SMTP (when `SMTP_HOST` is set); see [Operations and runbook](../operations/runbook.md) for the environment variables and the scheduled-path failure policy.
 
+### Supporting tooling
+
+A few modules in `report/` are not part of the daily run loop but support the universe and history that the loop depends on.
+
+- **`build_universe.py`** — one-time (re-runnable) tool that consolidates the Final 1000 Asset Master List and the ETF migration map into the single `data/universe.xlsx` file keyed by Yahoo Finance ticker. It collapses Bloomberg indices that map to the same ETF into one row (preserving the original Bloomberg tickers in `proxied_tickers` for audit), guarantees the 15 factor ETFs are present and flagged, and applies hand-verified `ETF_OVERRIDES` corrections for Goldman/Bloomberg-sourced rows that were already proxy-mapped. Run it after changing source data, tagging, or the ETF map: `python3 report/build_universe.py`. The root README documents this as the regenerate step.
+- **`etf_map.py`** — the Bloomberg-index -> Yahoo Finance ETF mapping (`BLOOMBERG_TO_ETF`, `FACTOR_ETF_MAP`, `get_yf_ticker`) that eliminates the Bloomberg Terminal dependency for daily data. It is a module consumed by `build_universe.py`, not a standalone script.
+- **`migrate_history.py`** — one-time migration that seeds `data/report.db` with portfolio history (`portfolio_summary`) and prior report executive summaries from the legacy `market_data.db` / `portfolio.db`. Legacy asset prices are deliberately not migrated (different price scales across the cutover boundary would corrupt returns); asset history is instead backfilled by a 1-year batched yfinance fetch on first run. See [Operations and runbook](../operations/runbook.md).
+- **`names.py`** — resolves ticker symbols to full human-readable security names (e.g. `EWY` -> "iShares MSCI South Korea ETF"). `main.run()` calls `resolve_names()` for held positions plus today's movers plus scenario names so the report uses names, not symbols. Yahoo Finance `longName`/`shortName` is the source of truth because the stored universe names are polluted with Goldman-basket codenames; results are cached per ticker in the `security_names` table so Yahoo is hit once per symbol. Symbols Yahoo cannot resolve map to themselves (the approved fallback), and a cache row with an empty name records a tried-and-failed lookup.
+
 ## Why this architecture exists
 
 The system is built to make one daily report that is:
@@ -210,3 +219,7 @@ Watch out for:
 - `report/pdf.py`
 - `report/db.py`
 - `report/prompts/system.md`
+- `report/build_universe.py`
+- `report/etf_map.py`
+- `report/migrate_history.py`
+- `report/names.py`
