@@ -373,7 +373,14 @@ def compute_portfolio(holdings: pd.DataFrame, prices: pd.DataFrame,
     pos = agg[~agg["is_cash"]].copy().set_index("symbol")
 
     # --- price-based metrics where available ---
-    last_close = prices.iloc[-1]
+    # ffill, per the project's STALE > n/a rule. A holding that did not print
+    # on the as-of date (the Irish-domiciled GMO Equity Dislocation fund runs
+    # a day or two behind the US equity calendar) must be marked at its most
+    # recent REAL close. Taking the as-of row raw left it NaN, which sent
+    # market_value_mtm to the frozen broker/statement value — on 2026-08-03
+    # that carried a $24.1M position at a June 23 statement price, $1.7M light,
+    # silently. price_stale below already flags such a mark for the report.
+    last_close = prices.ffill().iloc[-1]
     asof_str = str(prices.index[-1])
     pos["price"] = last_close.reindex(pos.index)
 
@@ -552,7 +559,10 @@ def compute_subportfolios(raw_holdings: pd.DataFrame, prices: pd.DataFrame,
         bod_price[col] = prices[col].iloc[loc - 1] if loc > 0 else np.nan
     last_ret = pd.Series(last_ret, dtype=float)
     bod_price = pd.Series(bod_price, dtype=float)
-    last_close = prices.iloc[-1]
+    # ffill for the same reason as compute_portfolio: a sleeve holding a fund
+    # that lags the equity calendar must be valued at its last real close, not
+    # dropped back to a stale statement value.
+    last_close = prices.ffill().iloc[-1]
 
     results = []
 

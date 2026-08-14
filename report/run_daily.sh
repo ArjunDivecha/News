@@ -22,6 +22,30 @@ echo "========================================="
 
 cd "$REPO_ROOT"
 
+# Single-instance lock. On 2026-08-14 an external retry ("rerun_once") fired a
+# second pipeline TEN SECONDS after the first, because it read a stderr line as
+# a failure while the first run was still working. Two concurrent runs write the
+# same report.db and the same output paths, and — the expensive part — each
+# burns a full Fable pass against a subscription quota whose exhaustion is the
+# single most common cause of a genuinely failed run. A retry that doubles token
+# spend is worse than no retry, so refuse to start rather than pile on.
+LOCK_DIR="$REPO_ROOT/outputs/unified/.daily_run.lock"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    LOCK_PID=$(cat "$LOCK_DIR/pid" 2>/dev/null || echo "")
+    if [ -n "$LOCK_PID" ] && kill -0 "$LOCK_PID" 2>/dev/null; then
+        echo "[run_daily] ALREADY RUNNING (pid $LOCK_PID) — refusing to start a second pipeline."
+        echo "[run_daily] If this is a retry, wait for the in-flight run to finish."
+        exit 0
+    fi
+    # mkdir won but no live owner: a previous run was killed before cleanup.
+    echo "[run_daily] Clearing stale lock (owner pid '${LOCK_PID:-unknown}' is gone)."
+    rm -rf "$LOCK_DIR"
+    mkdir "$LOCK_DIR" || { echo "[run_daily] !! Could not acquire lock"; exit 1; }
+fi
+echo $$ > "$LOCK_DIR/pid"
+# Release on every exit path, including set -e aborts and SIGTERM from launchd.
+trap 'rm -rf "$LOCK_DIR"' EXIT INT TERM
+
 # launchd starts with a minimal PATH (/usr/bin:/bin) that cannot find
 # Homebrew Python, the Claude CLI, or PrinceXML. Build a proper PATH.
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin:$HOME/bin"
