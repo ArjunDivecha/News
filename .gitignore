@@ -85,3 +85,9 @@ Step 3 Data Analysis/search_based_meme_stocks.json
 venv/
 .venv/
 .venv-*/
+
+# AI agent conversation transcripts — auto-written by pks-export-repo-context.
+# These contain full session history: account numbers, position values, and
+# anything pasted into a prompt. This repo is PUBLIC. Never commit them.
+# The exporter checks git check-ignore and skips staging when ignored.
+.pks/
